@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import Map, { Source, Layer, Popup } from "react-map-gl/maplibre";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
+import IslandModal from "@/components/IslandModal";
 
 // Convert Grepolis Grid (0-1000) to Geographic coordinates
 const gridToLng = (x) => (x / 1000) * 360 - 180;
@@ -84,6 +85,7 @@ export default function WorldMap() {
   const [jumpX, setJumpX] = useState("");
   const [jumpY, setJumpY] = useState("");
   const [customColors, setCustomColors] = useState({});
+  const [selectedIsland, setSelectedIsland] = useState(null);
   
   const mapRef = useRef();
 
@@ -374,6 +376,22 @@ export default function WorldMap() {
               setHoverInfo(null);
             }
           }}
+          onClick={(e) => {
+            if (e.features && e.features.length > 0) {
+              const feature = e.features[0];
+              if (feature.properties.renderType === 'island' || feature.properties.renderType === 'rock') {
+                setSelectedIsland({
+                  id: feature.properties.id,
+                  x: feature.properties.x,
+                  y: feature.properties.y,
+                  availableTowns: feature.properties.availableTowns,
+                  colonizedCount: feature.properties.colonizedCount,
+                  resourcePlus: feature.properties.resourcePlus,
+                  resourceMinus: feature.properties.resourceMinus
+                });
+              }
+            }
+          }}
           onIdle={() => {
             if (!loading) {
               setMapProcessing(false);
@@ -581,6 +599,15 @@ export default function WorldMap() {
                 )}
               </div>
             </Popup>
+          )}
+
+          {/* Detailed Island Modal */}
+          {selectedIsland && (
+            <IslandModal 
+              islandData={selectedIsland} 
+              onClose={() => setSelectedIsland(null)} 
+              customColors={customColors}
+            />
           )}
         </Map>
       </div>
