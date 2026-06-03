@@ -321,7 +321,7 @@ export default function WorldMap() {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-100px)]">
+    <div className="flex flex-col h-[calc(100vh-100px)] relative">
       <div className="flex gap-4 mb-4">
         <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-emerald-400">
           World Map Viewer
@@ -599,9 +599,10 @@ export default function WorldMap() {
             </Popup>
           )}
         </Map>
+      </div>
 
       {/* Sidebar Overlay (Always Visible) */}
-      <div className="absolute top-4 right-4 z-[100] w-80 max-h-[calc(100%-2rem)] overflow-y-auto bg-slate-900/80 backdrop-blur-md border border-white/10 rounded-xl p-4 shadow-2xl flex flex-col gap-6 text-white" style={{ scrollbarWidth: 'none' }}>
+      <div className="absolute top-20 right-4 z-50 w-80 max-h-[calc(100%-6rem)] overflow-y-auto bg-slate-900/80 backdrop-blur-md border border-white/10 rounded-xl p-4 shadow-2xl flex flex-col gap-6 text-white" style={{ scrollbarWidth: 'none' }}>
         
         {/* Data Status */}
         <div className="flex flex-col gap-1">
@@ -679,7 +680,6 @@ export default function WorldMap() {
           )}
         </div>
 
-      </div>
       </div>
     </div>
   );
