@@ -110,12 +110,19 @@ export async function generateGeoJSON() {
     }
 
     const totalCapacity = island.availableTowns + islandTowns.length;
-    const isRock = totalCapacity < 20; 
-    const isTrueRock = totalCapacity === 0;
+    const isRock = totalCapacity === 0;
 
-    if (isTrueRock) continue;
+    if (isRock) continue;
 
-    const islandColor = dominantAlliance ? (allianceColors[dominantAlliance] || "#64748b") : "#1e293b";
+    let islandColor = "#1e293b"; // Default empty island color
+    if (islandTowns.length > 0) {
+      // Populated but not top 10 alliance
+      islandColor = "#e2e8f0"; 
+      
+      if (dominantAlliance && allianceColors[dominantAlliance]) {
+        islandColor = allianceColors[dominantAlliance];
+      }
+    }
 
     outputIslands.push({
       id: island.id,
