@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import https from 'https';
 import zlib from 'zlib';
+import fs from 'fs/promises';
+import path from 'path';
+import { generateGeoJSON } from '@/lib/geojson';
 
 const SERVER = process.env.GREPOLIS_SERVER || 'hu119';
 const BATCH_SIZE = 5000; // Prisma max parameters limit workaround
@@ -223,6 +226,17 @@ export async function GET(request) {
         create: { id: 1, lastSync: new Date() }
       })
     ]);
+
+    // 5. Pre-generate and cache the MapLibre GeoJSON payload directly to the public folder
+    // This allows the map to load the 1MB file in 0 milliseconds globally
+    try {
+      console.log("Generating static GeoJSON...");
+      const geojson = await generateGeoJSON();
+      await fs.writeFile(path.join(process.cwd(), 'public', 'world.json'), JSON.stringify(geojson));
+      console.log("Saved public/world.json");
+    } catch (e) {
+      console.error("Failed to generate static GeoJSON cache:", e);
+    }
 
     return NextResponse.json({ 
       success: true,
