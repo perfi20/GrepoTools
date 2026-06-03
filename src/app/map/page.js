@@ -335,7 +335,7 @@ export default function WorldMap() {
         />
       </div>
 
-      <div className="flex-1 min-h-[600px] rounded-xl overflow-hidden border border-white/10 relative">
+      <div className="flex-1 min-h-[600px] rounded-xl overflow-hidden border border-white/10 relative z-0">
         {(loading || mapProcessing) && (
           <div className="absolute inset-0 z-50 flex items-center justify-center bg-[#0b101e] bg-opacity-90 backdrop-blur-sm transition-opacity duration-500">
             <div className="flex flex-col items-center gap-4">
