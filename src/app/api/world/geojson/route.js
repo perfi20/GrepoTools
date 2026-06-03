@@ -194,9 +194,10 @@ export async function GET() {
 
     console.timeEnd("GeoJSON Generation");
 
-    return NextResponse.json({
-      type: 'FeatureCollection',
-      features
+    return NextResponse.json({ type: 'FeatureCollection', features }, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
+      },
     });
   } catch (error) {
     console.error("GeoJSON generation error:", error);

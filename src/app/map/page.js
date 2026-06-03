@@ -43,18 +43,20 @@ function generateOceanGrid() {
     });
   }
 
-  // Place Ocean labels at 4 spots near the corners of each ocean block so they're visible when zoomed in
+  // Place Ocean labels uniformly across the ocean grid (e.g. every 20 points) to ensure visibility everywhere
   for (let ox = 0; ox < 10; ox++) {
     for (let oy = 0; oy < 10; oy++) {
-      const positions = [[25, 25], [75, 25], [25, 75], [75, 75]];
-      positions.forEach(([dx, dy]) => {
-        features.push({
-          type: "Feature",
-          geometry: {
-            type: "Point",
-            coordinates: [gridToLng(ox * 100 + dx), gridToLat(oy * 100 + dy)]
-          },
-          properties: { label: `O${ox}${oy}` }
+      const offsets = [10, 30, 50, 70, 90];
+      offsets.forEach(dx => {
+        offsets.forEach(dy => {
+          features.push({
+            type: "Feature",
+            geometry: {
+              type: "Point",
+              coordinates: [gridToLng(ox * 100 + dx), gridToLat(oy * 100 + dy)]
+            },
+            properties: { label: `O${ox}${oy}` }
+          });
         });
       });
     }
@@ -66,6 +68,7 @@ function generateOceanGrid() {
 export default function WorldMap() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [mapProcessing, setMapProcessing] = useState(true);
   const [hoverInfo, setHoverInfo] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const mapRef = useRef();
@@ -138,11 +141,13 @@ export default function WorldMap() {
       </div>
 
       <div className="flex-1 min-h-[600px] rounded-xl overflow-hidden border border-white/10 relative">
-        {loading && (
-          <div className="absolute inset-0 z-50 flex items-center justify-center bg-[#0b101e] bg-opacity-90 backdrop-blur-sm">
+        {(loading || mapProcessing) && (
+          <div className="absolute inset-0 z-50 flex items-center justify-center bg-[#0b101e] bg-opacity-90 backdrop-blur-sm transition-opacity duration-500">
             <div className="flex flex-col items-center gap-4">
               <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-              <div className="text-xl font-bold text-white tracking-widest animate-pulse">Initializing Battle Map...</div>
+              <div className="text-xl font-bold text-white tracking-widest animate-pulse">
+                {loading ? "Downloading World Data..." : "Rendering Battle Map..."}
+              </div>
             </div>
           </div>
         )}
@@ -178,6 +183,11 @@ export default function WorldMap() {
               });
             } else {
               setHoverInfo(null);
+            }
+          }}
+          onIdle={() => {
+            if (!loading) {
+              setMapProcessing(false);
             }
           }}
         >
@@ -239,11 +249,11 @@ export default function WorldMap() {
                 paint={{
                   "circle-radius": [
                     "interpolate", ["exponential", 2], ["zoom"],
-                    5, 2.6,
-                    20, 85196
+                    5, 1,
+                    20, 32768
                   ],
                   "circle-color": ["get", "islandColor"],
-                  "circle-opacity": 0.5,
+                  "circle-opacity": 0.4,
                   "circle-stroke-width": 1,
                   "circle-stroke-color": "#0f172a"
                 }}
@@ -251,13 +261,13 @@ export default function WorldMap() {
             </Source>
           )}
 
-          {/* Empty Slots Layer (Only visible when zoomed in >= 5) */}
+          {/* Empty Slots Layer (Only visible when zoomed in >= 6) */}
           {emptySlotsData && (
             <Source id="empty-slots-source" type="geojson" data={emptySlotsData}>
               <Layer 
                 id="empty-slots-points"
                 type="circle"
-                minzoom={5}
+                minzoom={6}
                 paint={{
                   "circle-radius": 3,
                   "circle-color": "#ffffff",
