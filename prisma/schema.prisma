@@ -116,3 +116,8 @@ model TownHistory {
   newPoints Int
   timestamp DateTime @default(now())
 }
+
+model SyncMetadata {
+  id          Int      @id @default(1)
+  lastSync    DateTime @default(now())
+}

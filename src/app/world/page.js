@@ -6,16 +6,35 @@ export default function WorldDashboard() {
   const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState(null);
   const [error, setError] = useState("");
+  const [lastSync, setLastSync] = useState(null);
+  const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    fetch('/api/world/status')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.lastSync) {
+          setLastSync(new Date(data.lastSync));
+        }
+      })
+      .catch(console.error);
+  }, []);
 
   const triggerSync = async () => {
     setLoading(true);
     setError("");
     setStats(null);
+    setMessage("");
     try {
       const res = await fetch("/api/world/sync");
       const data = await res.json();
       if (data.success) {
-        setStats(data.stats);
+        if (data.skipped) {
+            setMessage(data.message);
+        } else {
+            setStats(data.stats);
+        }
+        if (data.lastSync) setLastSync(new Date(data.lastSync));
       } else {
         setError(data.error || "Failed to sync world data.");
       }
@@ -58,6 +77,29 @@ export default function WorldDashboard() {
           )}
         </button>
       </div>
+
+      <div className="bg-white/5 border border-white/10 rounded-lg p-4 mb-8 flex justify-between items-center text-sm">
+         <div className="flex items-center gap-2">
+            <div className={`w-3 h-3 rounded-full ${lastSync ? 'bg-emerald-500 animate-pulse' : 'bg-gray-500'}`}></div>
+            <span className="text-gray-300">
+                Data Freshness: {lastSync ? (
+                    <span className="font-semibold text-white">Last updated {lastSync.toLocaleTimeString()}</span>
+                ) : 'Never synced'}
+            </span>
+         </div>
+         {lastSync && (
+             <div className="text-gray-400">
+                 Next update available at: {new Date(lastSync.getTime() + 50 * 60000).toLocaleTimeString()}
+             </div>
+         )}
+      </div>
+
+      {message && (
+        <div className="bg-blue-500/10 border border-blue-500/50 text-blue-300 p-4 rounded-lg mb-6 flex items-center gap-3">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          <p>{message}</p>
+        </div>
+      )}
 
       {error && (
         <div className="bg-red-500/10 border border-red-500/50 text-red-400 p-4 rounded-lg mb-6">

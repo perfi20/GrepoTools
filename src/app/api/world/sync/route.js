@@ -36,8 +36,19 @@ async function fetchAndDecompress(filename) {
 
 export async function GET(request) {
   // We can add a secret key check here later for Vercel Cron
-  
   try {
+    const meta = await prisma.syncMetadata.findUnique({ where: { id: 1 } });
+    if (meta) {
+      const minutesSinceLastSync = (new Date() - meta.lastSync) / 1000 / 60;
+      if (minutesSinceLastSync < 50) {
+        return NextResponse.json({ 
+          success: true, 
+          message: `Data is fresh. Last synced ${Math.round(minutesSinceLastSync)} minutes ago. Next update available in ${Math.round(50 - minutesSinceLastSync)} minutes.`,
+          skipped: true,
+          lastSync: meta.lastSync
+        });
+      }
+    }
     const [playersRaw, alliancesRaw, townsRaw, islandsRaw] = await Promise.all([
       fetchAndDecompress('players.txt.gz'),
       fetchAndDecompress('alliances.txt.gz'),
@@ -173,11 +184,18 @@ export async function GET(request) {
       // Insert History Deltas
       ...(allianceHistory.length > 0 ? [prisma.allianceHistory.createMany({ data: allianceHistory })] : []),
       ...(playerHistory.length > 0 ? [prisma.playerHistory.createMany({ data: playerHistory })] : []),
-      ...(townHistory.length > 0 ? [prisma.townHistory.createMany({ data: townHistory })] : [])
+      ...(townHistory.length > 0 ? [prisma.townHistory.createMany({ data: townHistory })] : []),
+
+      prisma.syncMetadata.upsert({
+        where: { id: 1 },
+        update: { lastSync: new Date() },
+        create: { id: 1, lastSync: new Date() }
+      })
     ]);
 
     return NextResponse.json({ 
-      success: true, 
+      success: true,
+      lastSync: new Date(),
       stats: {
           alliances: newAlliances.length,
           players: newPlayers.length,
