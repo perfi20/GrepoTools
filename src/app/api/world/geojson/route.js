@@ -115,9 +115,12 @@ export async function GET() {
         }
       }
 
-      // If availableTowns is 0 but it HAS a town, it's a colonized rock (e.g., World Wonder island), treat it as a small rock orbit!
-      const isRock = island.availableTowns < 20; // Small islands (<20) and true rocks (0)
-      const isTrueRock = island.availableTowns === 0 && islandTowns.length === 0;
+      // In Grepolis, availableTowns represents REMAINING empty slots, not total capacity.
+      // Total capacity is the sum of empty slots and currently colonized slots.
+      const totalCapacity = island.availableTowns + islandTowns.length;
+      
+      const isRock = totalCapacity < 20; // Small islands (<20) and true rocks (0)
+      const isTrueRock = totalCapacity === 0;
 
       // Skip rendering empty uncolonizable rocks entirely
       if (isTrueRock) continue;
