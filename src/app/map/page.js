@@ -321,22 +321,9 @@ export default function WorldMap() {
   };
 
   return (
-    <div className="flex flex-col" style={{ height: 'calc(100vh - 100px)', position: 'relative' }}>
-      <div className="flex gap-4 mb-4">
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold' }} className="gradient-text">
-          World Map Viewer
-        </h1>
-        <input 
-          type="text" 
-          placeholder="Search Alliance, Player, or Town..." 
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="input-field"
-          style={{ flex: 1 }}
-        />
-      </div>
+    <div style={{ position: 'fixed', top: '73px', left: 0, right: 0, bottom: 0, backgroundColor: '#0b101e', zIndex: 10 }}>
 
-      <div style={{ flex: 1, minHeight: '600px', borderRadius: '12px', overflow: 'hidden', border: '1px solid var(--border-color)', position: 'relative', zIndex: 0 }}>
+      <div style={{ width: '100%', height: '100%', position: 'relative', zIndex: 0 }}>
         {(loading || mapProcessing) && (
           <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(11, 16, 30, 0.9)', backdropFilter: 'blur(4px)' }}>
             <div className="flex flex-col items-center gap-4">
@@ -598,9 +585,14 @@ export default function WorldMap() {
         </Map>
       </div>
 
-      {/* Sidebar Overlay (Always Visible) */}
-      <div className="glass-panel flex flex-col gap-4" style={{ position: 'absolute', top: '5rem', right: '1rem', zIndex: 50, width: '320px', maxHeight: 'calc(100% - 6rem)', overflowY: 'auto', scrollbarWidth: 'none' }}>
+      {/* LEFT SIDEBAR (General Info & Legend) */}
+      <div className="glass-panel flex flex-col gap-4" style={{ position: 'absolute', top: '1rem', left: '1rem', zIndex: 50, width: '320px', maxHeight: 'calc(100% - 2rem)', overflowY: 'auto', scrollbarWidth: 'none' }}>
         
+        {/* Header */}
+        <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', margin: 0 }} className="gradient-text">
+          World Map Viewer
+        </h1>
+
         {/* Data Status */}
         <div className="flex flex-col" style={{ gap: '0.25rem' }}>
           <h2 style={{ fontSize: '1.125rem', fontWeight: 'bold', color: 'var(--primary)' }}>Data Status</h2>
@@ -608,37 +600,6 @@ export default function WorldMap() {
             {lastSync ? `Synced: ${lastSync.toLocaleString()}` : "Loading..."}
           </div>
         </div>
-
-        {/* Jump & Tracker */}
-        <div className="flex flex-col" style={{ gap: '0.5rem' }}>
-          <h2 style={{ fontSize: '1.125rem', fontWeight: 'bold', color: 'var(--primary)' }}>Navigation</h2>
-          <div style={{ fontSize: '0.875rem', fontFamily: 'monospace', color: '#cbd5e1', background: 'rgba(0,0,0,0.3)', padding: '0.5rem', borderRadius: '4px' }}>
-            Cursor: {cursorGrid ? `${cursorGrid.x}, ${cursorGrid.y}` : "---, ---"}
-          </div>
-          <form onSubmit={handleJump} className="flex" style={{ gap: '0.5rem', marginTop: '0.25rem' }}>
-            <input type="number" placeholder="X" value={jumpX} onChange={e=>setJumpX(e.target.value)} className="input-field" style={{ width: '60px', padding: '0.25rem 0.5rem' }} />
-            <input type="number" placeholder="Y" value={jumpY} onChange={e=>setJumpY(e.target.value)} className="input-field" style={{ width: '60px', padding: '0.25rem 0.5rem' }} />
-            <button type="submit" className="btn btn-primary" style={{ flex: 1, padding: '0.25rem', fontSize: '0.875rem' }}>Jump</button>
-          </form>
-        </div>
-
-        {/* Search Stats */}
-        {searchQuery.trim() && searchStats && (
-          <div className="flex flex-col" style={{ gap: '0.5rem', background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.3)', padding: '0.75rem', borderRadius: '8px' }}>
-            <h2 style={{ fontSize: '1rem', fontWeight: 'bold', color: 'var(--primary)' }}>Search Results</h2>
-            <div className="flex justify-between text-sm">
-              <span className="text-secondary">Matches:</span>
-              <span style={{ fontWeight: 'bold' }}>{searchStats.count.toLocaleString()} towns</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-secondary">Points:</span>
-              <span style={{ fontWeight: 'bold', color: '#10b981' }}>{searchStats.points.toLocaleString()}</span>
-            </div>
-            <button onClick={handleFitBounds} className="btn" style={{ marginTop: '0.5rem', width: '100%', background: 'rgba(59, 130, 246, 0.2)', border: '1px solid var(--primary)', padding: '0.25rem', fontSize: '0.875rem', fontWeight: 'bold' }}>
-              Frame on Map
-            </button>
-          </div>
-        )}
 
         {/* Top 10 Alliances Legend */}
         <div className="flex flex-col" style={{ gap: '0.5rem' }}>
@@ -678,6 +639,54 @@ export default function WorldMap() {
         </div>
 
       </div>
+
+      {/* RIGHT SIDEBAR (Search & Navigation) */}
+      <div className="glass-panel flex flex-col gap-4" style={{ position: 'absolute', top: '1rem', right: '1rem', zIndex: 50, width: '320px', maxHeight: 'calc(100% - 2rem)', overflowY: 'auto', scrollbarWidth: 'none' }}>
+        
+        {/* Search Input */}
+        <div className="flex flex-col" style={{ gap: '0.5rem' }}>
+          <h2 style={{ fontSize: '1.125rem', fontWeight: 'bold', color: 'var(--primary)' }}>Search</h2>
+          <input 
+            type="text" 
+            placeholder="Search Alliance, Player, or Town..." 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="input-field"
+          />
+        </div>
+
+        {/* Search Stats */}
+        {searchQuery.trim() && searchStats && (
+          <div className="flex flex-col" style={{ gap: '0.5rem', background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.3)', padding: '0.75rem', borderRadius: '8px' }}>
+            <div className="flex justify-between text-sm">
+              <span className="text-secondary">Matches:</span>
+              <span style={{ fontWeight: 'bold' }}>{searchStats.count.toLocaleString()} towns</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-secondary">Points:</span>
+              <span style={{ fontWeight: 'bold', color: '#10b981' }}>{searchStats.points.toLocaleString()}</span>
+            </div>
+            <button onClick={handleFitBounds} className="btn" style={{ marginTop: '0.5rem', width: '100%', background: 'rgba(59, 130, 246, 0.2)', border: '1px solid var(--primary)', padding: '0.25rem', fontSize: '0.875rem', fontWeight: 'bold' }}>
+              Frame on Map
+            </button>
+          </div>
+        )}
+
+        {/* Jump & Tracker */}
+        <div className="flex flex-col" style={{ gap: '0.5rem' }}>
+          <h2 style={{ fontSize: '1.125rem', fontWeight: 'bold', color: 'var(--primary)' }}>Navigation</h2>
+          <div style={{ fontSize: '0.875rem', fontFamily: 'monospace', color: '#cbd5e1', background: 'rgba(0,0,0,0.3)', padding: '0.5rem', borderRadius: '4px' }}>
+            Cursor: {cursorGrid ? `${cursorGrid.x}, ${cursorGrid.y}` : "---, ---"}
+          </div>
+          <form onSubmit={handleJump} className="flex" style={{ gap: '0.5rem', marginTop: '0.25rem' }}>
+            <input type="number" placeholder="X" value={jumpX} onChange={e=>setJumpX(e.target.value)} className="input-field" style={{ width: '60px', padding: '0.25rem 0.5rem' }} />
+            <input type="number" placeholder="Y" value={jumpY} onChange={e=>setJumpY(e.target.value)} className="input-field" style={{ width: '60px', padding: '0.25rem 0.5rem' }} />
+            <button type="submit" className="btn btn-primary" style={{ flex: 1, padding: '0.25rem', fontSize: '0.875rem' }}>Jump</button>
+          </form>
+        </div>
+
+      </div>
+
     </div>
   );
 }
