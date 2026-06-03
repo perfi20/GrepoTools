@@ -2,8 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import https from 'https';
 import zlib from 'zlib';
-import { revalidateTag } from 'next/cache';
-import { getCachedGeoJSON } from '@/lib/geojson';
+import { generateGeoJSON } from '@/lib/geojson';
 
 const SERVER = process.env.GREPOLIS_SERVER || 'hu119';
 const BATCH_SIZE = 5000; // Prisma max parameters limit workaround
@@ -221,25 +220,30 @@ export async function GET(request) {
       ...(allianceHistory.length > 0 ? [prisma.allianceHistory.createMany({ data: allianceHistory })] : []),
       ...(playerHistory.length > 0 ? [prisma.playerHistory.createMany({ data: playerHistory })] : []),
       ...(townHistory.length > 0 ? [prisma.townHistory.createMany({ data: townHistory })] : []),
+    ]);
 
-      prisma.syncMetadata.upsert({
+    // 5. Pre-generate and cache the MapLibre GeoJSON payload securely inside the PostgreSQL Database!
+    // This totally bypasses Vercel's 2MB cache limits and read-only filesystem restrictions
+    try {
+      console.log("Generating GeoJSON...");
+      const geojson = await generateGeoJSON();
+      const stringified = JSON.stringify(geojson);
+      
+      console.log(`Saving ${stringified.length} bytes to PostgreSQL...`);
+      await prisma.syncMetadata.upsert({
+        where: { id: 1 },
+        update: { lastSync: new Date(), geoJsonCache: stringified },
+        create: { id: 1, lastSync: new Date(), geoJsonCache: stringified }
+      });
+      console.log("GeoJSON successfully saved to Database!");
+    } catch (e) {
+      console.error("Failed to generate and save GeoJSON:", e);
+      // Ensure sync metadata is updated even if GeoJSON fails
+      await prisma.syncMetadata.upsert({
         where: { id: 1 },
         update: { lastSync: new Date() },
         create: { id: 1, lastSync: new Date() }
-      })
-    ]);
-
-    // 5. Pre-generate and cache the MapLibre GeoJSON payload using Next.js Data Cache
-    // This allows it to work seamlessly on Vercel Serverless Architecture
-    try {
-      console.log("Busting old GeoJSON cache...");
-      revalidateTag('world-geojson');
-      
-      console.log("Pre-warming Next.js Data Cache...");
-      await getCachedGeoJSON();
-      console.log("Cache warmed successfully!");
-    } catch (e) {
-      console.error("Failed to pre-warm cache:", e);
+      });
     }
 
     return NextResponse.json({ 

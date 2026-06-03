@@ -120,4 +120,5 @@ model TownHistory {
 model SyncMetadata {
   id          Int      @id @default(1)
   lastSync    DateTime @default(now())
+  geoJsonCache String? @db.Text
 }
