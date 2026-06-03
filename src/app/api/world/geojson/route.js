@@ -14,9 +14,10 @@ function getOrbitPoint(centerLng, centerLat, radiusDeg, angle) {
 export async function GET() {
   try {
     console.time("GeoJSON Generation");
-    // Fetch all towns with player and alliance data
+    // Fetch towns with only required fields to dramatically reduce memory payload
     const towns = await prisma.town.findMany({
-      include: {
+      select: {
+        id: true, name: true, points: true, islandX: true, islandY: true, islandSlot: true,
         player: {
           select: {
             name: true,
@@ -26,18 +27,13 @@ export async function GET() {
       }
     });
 
-    // Calculate global top alliances
-    const globalAllianceCounts = {};
-    for (const t of towns) {
-      const allyName = t.player && t.player.alliance ? t.player.alliance.name : null;
-      if (allyName) {
-        globalAllianceCounts[allyName] = (globalAllianceCounts[allyName] || 0) + 1;
-      }
-    }
-    
-    const topAlliances = Object.keys(globalAllianceCounts)
-      .sort((a, b) => globalAllianceCounts[b] - globalAllianceCounts[a])
-      .slice(0, 10);
+    // Fetch Top 10 Alliances directly from the alliance table
+    const dbAlliances = await prisma.alliance.findMany({
+      orderBy: { towns: 'desc' },
+      take: 10,
+      select: { name: true }
+    });
+    const topAlliances = dbAlliances.map(a => a.name);
       
     // Pre-assign a specific color palette to the top 10 alliances
     const PALETTE = [
@@ -80,6 +76,9 @@ export async function GET() {
       where: {
         x: { gte: minX, lte: maxX },
         y: { gte: minY, lte: maxY }
+      },
+      select: {
+        id: true, x: true, y: true, availableTowns: true, resourcePlus: true, resourceMinus: true
       }
     });
 
