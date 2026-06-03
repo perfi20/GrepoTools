@@ -167,15 +167,32 @@ export async function GET(request) {
     }
     
     // 4. Process Islands
+    // Build a set of inhabited island coordinates to identify true rocks
+    const populatedSet = new Set();
+    for (const t of newTowns) {
+      populatedSet.add(`${t.islandX},${t.islandY}`);
+    }
+
     const newIslands = [];
     for (const row of islandsRaw) {
-        const [id, x, y, type, towns, rPlus, rMinus] = row;
+        const [idStr, xStr, yStr, type, towns, rPlus, rMinus] = row;
+        const x = parseInt(xStr);
+        const y = parseInt(yStr);
+
+        // Filter 1: Drop islands outside our 250-radius playable world border
+        const distSq = Math.pow(x - 500, 2) + Math.pow(y - 500, 2);
+        if (distSq > 250 * 250) continue;
+
+        // Filter 2: Drop uncolonizable "True Rocks" (0 capacity and 0 towns)
+        const availableTowns = parseInt(towns);
+        if (availableTowns === 0 && !populatedSet.has(`${x},${y}`)) continue;
+
         newIslands.push({
-            id: parseInt(id),
-            x: parseInt(x),
-            y: parseInt(y),
+            id: parseInt(idStr),
+            x,
+            y,
             type: parseInt(type),
-            availableTowns: parseInt(towns),
+            availableTowns,
             resourcePlus: rPlus,
             resourceMinus: rMinus
         });
