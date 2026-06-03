@@ -116,7 +116,7 @@ export default function WorldMap() {
           mapStyle={{
             version: 8,
             sources: {},
-            glyphs: "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf",
+            glyphs: "https://protomaps.github.io/basemaps-assets/fonts/{fontstack}/{range}.pbf",
             layers: [
               {
                 id: "background",
@@ -162,6 +162,7 @@ export default function WorldMap() {
               type="symbol" 
               layout={{
                 "text-field": ["get", "label"],
+                "text-font": ["Noto Sans Regular"],
                 "text-size": 24,
                 "text-anchor": "center"
               }}
@@ -207,7 +208,7 @@ export default function WorldMap() {
                 filter={["has", "point_count"]}
                 layout={{
                   "text-field": "{point_count_abbreviated}",
-                  "text-font": ["Open Sans Regular"],
+                  "text-font": ["Noto Sans Regular"],
                   "text-size": 12
                 }}
                 paint={{
