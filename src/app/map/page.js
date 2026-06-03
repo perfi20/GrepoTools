@@ -116,6 +116,7 @@ export default function WorldMap() {
           mapStyle={{
             version: 8,
             sources: {},
+            glyphs: "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf",
             layers: [
               {
                 id: "background",
@@ -146,7 +147,7 @@ export default function WorldMap() {
           }}
         >
           {/* Ocean Grid Layer */}
-          <Source type="geojson" data={oceanGrid}>
+          <Source id="ocean-grid-source" type="geojson" data={oceanGrid}>
             <Layer 
               id="ocean-lines" 
               type="line" 
@@ -172,7 +173,7 @@ export default function WorldMap() {
 
           {/* Towns Layer */}
           {filterData && (
-            <Source type="geojson" data={filterData} cluster={true} clusterMaxZoom={5} clusterRadius={50}>
+            <Source id="towns-source" type="geojson" data={filterData} cluster={true} clusterMaxZoom={5} clusterRadius={50}>
               {/* Clustered Heatmap/Bubbles */}
               <Layer 
                 id="clusters"
