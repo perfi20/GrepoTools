@@ -223,17 +223,22 @@ export async function GET(request) {
     ]);
 
     // 5. Pre-generate and cache the MapLibre GeoJSON payload securely inside the PostgreSQL Database!
-    // This totally bypasses Vercel's 2MB cache limits and read-only filesystem restrictions
+    // We heavily compress it using GZIP and Base64 encode it. 
+    // This shrinks the 20.2MB payload down to ~1.5MB to bypass Prisma Cloud / tenantManager limits!
     try {
       console.log("Generating GeoJSON...");
       const geojson = await generateGeoJSON();
       const stringified = JSON.stringify(geojson);
       
-      console.log(`Saving ${stringified.length} bytes to PostgreSQL...`);
+      console.log(`Compressing ${stringified.length} bytes using GZIP...`);
+      const gzippedBuffer = zlib.gzipSync(stringified);
+      const base64Gzip = gzippedBuffer.toString('base64');
+      
+      console.log(`Saving ${base64Gzip.length} bytes to PostgreSQL...`);
       await prisma.syncMetadata.upsert({
         where: { id: 1 },
-        update: { lastSync: new Date(), geoJsonCache: stringified },
-        create: { id: 1, lastSync: new Date(), geoJsonCache: stringified }
+        update: { lastSync: new Date(), geoJsonCache: base64Gzip },
+        create: { id: 1, lastSync: new Date(), geoJsonCache: base64Gzip }
       });
       console.log("GeoJSON successfully saved to Database!");
     } catch (e) {

@@ -7,16 +7,21 @@ export async function GET() {
     const meta = await prisma.syncMetadata.findUnique({ where: { id: 1 } });
     
     if (meta && meta.geoJsonCache) {
-      // 0ms string transmission from DB directly to Vercel response
-      return new NextResponse(meta.geoJsonCache, {
+      // Decode Base64 from Postgres back into a raw binary GZIP buffer
+      const gzipBuffer = Buffer.from(meta.geoJsonCache, 'base64');
+      
+      // Serve the compressed binary buffer instantly!
+      // The browser natively unzips it because we specify Content-Encoding: gzip
+      return new NextResponse(gzipBuffer, {
         headers: {
           'Content-Type': 'application/json',
+          'Content-Encoding': 'gzip',
           'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
         },
       });
     }
 
-    // Fallback if cache is empty
+    // Fallback if cache is empty (We don't gzip the fallback to keep it simple, just return raw JSON)
     const geojson = await generateGeoJSON();
 
     return NextResponse.json(geojson, {
