@@ -20,18 +20,19 @@ export async function GET() {
       }
     });
 
-    // Calculate dynamic world border based on the furthest colonized town
-    let maxDistSq = 0;
+    // Create a quick lookup for towns by island coordinates
+    const townLookup = {};
     for (const t of towns) {
-      const distSq = Math.pow(t.islandX - 500, 2) + Math.pow(t.islandY - 500, 2);
-      if (distSq > maxDistSq) {
-        maxDistSq = distSq;
-      }
+      const key = `${t.islandX},${t.islandY}`;
+      if (!townLookup[key]) townLookup[key] = [];
+      townLookup[key].push(t);
     }
-    const maxDist = Math.sqrt(maxDistSq);
-    const worldRadius = Math.ceil(maxDist + 20); // Add 20 islands padding
 
-    // Fetch all islands within the bounding box of the world radius
+    // Hardcode world border radius to 250 (spans from 250 to 750)
+    const worldRadius = 250;
+    const worldRadiusSq = Math.pow(worldRadius, 2);
+    
+    // Fetch all islands within the bounding box of the world radius for fast DB query
     const minX = 500 - worldRadius;
     const maxX = 500 + worldRadius;
     const minY = 500 - worldRadius;
@@ -45,19 +46,10 @@ export async function GET() {
     });
 
     // Filter exactly to the circular world border
-    const worldRadiusSq = Math.pow(worldRadius, 2);
     const islands = allIslandsInBox.filter(i => {
       const distSq = Math.pow(i.x - 500, 2) + Math.pow(i.y - 500, 2);
       return distSq <= worldRadiusSq;
     });
-
-    // Create a quick lookup for towns by island coordinates
-    const townLookup = {};
-    for (const t of towns) {
-      const key = `${t.islandX},${t.islandY}`;
-      if (!townLookup[key]) townLookup[key] = [];
-      townLookup[key].push(t);
-    }
 
     const features = [];
     
