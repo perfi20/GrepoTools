@@ -25,10 +25,8 @@ const MAP_STYLE = {
 function generateOceanGrid() {
   const features = [];
   
-  // Create lines
   for (let i = 0; i <= 10; i++) {
     const coord = i * 100;
-    // Vertical line (Longitude)
     features.push({
       type: "Feature",
       geometry: {
@@ -36,7 +34,6 @@ function generateOceanGrid() {
         coordinates: [[gridToLng(coord), gridToLat(0)], [gridToLng(coord), gridToLat(1000)]]
       }
     });
-    // Horizontal line (Latitude)
     features.push({
       type: "Feature",
       geometry: {
@@ -46,19 +43,15 @@ function generateOceanGrid() {
     });
   }
 
-  // Create Labels
   for (let ox = 0; ox < 10; ox++) {
     for (let oy = 0; oy < 10; oy++) {
       features.push({
         type: "Feature",
         geometry: {
           type: "Point",
-          // Center of the ocean block
           coordinates: [gridToLng(ox * 100 + 50), gridToLat(oy * 100 + 50)]
         },
-        properties: {
-          label: `O${ox}${oy}`
-        }
+        properties: { label: `O${ox}${oy}` }
       });
     }
   }
@@ -85,19 +78,37 @@ export default function WorldMap() {
       .catch(console.error);
   }, []);
 
-  const filterData = useMemo(() => {
+  // Filter and split data into different sources
+  const islandsData = useMemo(() => {
     if (!data) return null;
-    if (!searchQuery.trim()) return data;
+    return { 
+      type: 'FeatureCollection', 
+      features: data.features.filter(f => f.properties.renderType === 'island') 
+    };
+  }, [data]);
 
-    const lowerQuery = searchQuery.toLowerCase();
-    return {
-      ...data,
-      features: data.features.filter(f => 
+  const emptySlotsData = useMemo(() => {
+    if (!data) return null;
+    return { 
+      type: 'FeatureCollection', 
+      features: data.features.filter(f => f.properties.renderType === 'empty-slot') 
+    };
+  }, [data]);
+
+  const townsData = useMemo(() => {
+    if (!data) return null;
+    let towns = data.features.filter(f => f.properties.renderType === 'town');
+    
+    if (searchQuery.trim()) {
+      const lowerQuery = searchQuery.toLowerCase();
+      towns = towns.filter(f => 
         f.properties.player.toLowerCase().includes(lowerQuery) ||
         f.properties.alliance.toLowerCase().includes(lowerQuery) ||
         f.properties.name.toLowerCase().includes(lowerQuery)
-      )
-    };
+      );
+    }
+    
+    return { type: 'FeatureCollection', features: towns };
   }, [data, searchQuery]);
 
   return (
@@ -113,7 +124,7 @@ export default function WorldMap() {
           onChange={(e) => setSearchQuery(e.target.value)}
           className="flex-1 bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500 transition-colors"
         />
-        {loading && <span className="text-blue-400 animate-pulse my-auto">Loading 50,000+ towns...</span>}
+        {loading && <span className="text-blue-400 animate-pulse my-auto">Generating interactive grid...</span>}
       </div>
 
       <div className="flex-1 min-h-[600px] rounded-xl overflow-hidden border border-white/10 relative">
@@ -127,7 +138,7 @@ export default function WorldMap() {
             zoom: 2
           }}
           mapStyle={MAP_STYLE}
-          interactiveLayerIds={["town-points"]}
+          interactiveLayerIds={["town-points", "islands-points", "empty-slots-points"]}
           onMouseEnter={(e) => {
             mapRef.current.getCanvas().style.cursor = "pointer";
           }}
@@ -174,9 +185,76 @@ export default function WorldMap() {
             />
           </Source>
 
-          {/* Towns Layer */}
-          {filterData && (
-            <Source id="towns-source" type="geojson" data={filterData} cluster={true} clusterMaxZoom={5} clusterRadius={50}>
+          {/* Islands Layer (Only visible when zoomed in >= 5) */}
+          {islandsData && (
+            <Source id="islands-source" type="geojson" data={islandsData}>
+              <Layer 
+                id="islands-points"
+                type="circle"
+                minzoom={4}
+                paint={{
+                  "circle-radius": [
+                    "interpolate", ["linear"], ["zoom"],
+                    4, 5,
+                    6, 15,
+                    8, 30
+                  ],
+                  "circle-color": [
+                    "match",
+                    ["get", "resourcePlus"],
+                    "wood", "#15803d", // Greenish
+                    "stone", "#475569", // Slate grayish
+                    "iron", "#94a3b8", // Silver/Iron
+                    "#1e293b" // Default fallback
+                  ],
+                  "circle-opacity": 0.8,
+                  "circle-stroke-width": 2,
+                  "circle-stroke-color": "#0f172a"
+                }}
+              />
+              <Layer 
+                id="islands-labels"
+                type="symbol"
+                minzoom={5.5}
+                layout={{
+                  "text-field": [
+                    "concat", 
+                    "+", ["get", "resourcePlus"], 
+                    "\n-", ["get", "resourceMinus"]
+                  ],
+                  "text-font": ["Noto Sans Regular"],
+                  "text-size": 10,
+                  "text-justify": "center"
+                }}
+                paint={{
+                  "text-color": "#ffffff"
+                }}
+              />
+            </Source>
+          )}
+
+          {/* Empty Slots Layer (Only visible when zoomed in >= 5) */}
+          {emptySlotsData && (
+            <Source id="empty-slots-source" type="geojson" data={emptySlotsData}>
+              <Layer 
+                id="empty-slots-points"
+                type="circle"
+                minzoom={5}
+                paint={{
+                  "circle-radius": 3,
+                  "circle-color": "#ffffff",
+                  "circle-opacity": 0.3,
+                  "circle-stroke-width": 1,
+                  "circle-stroke-color": "#ffffff",
+                  "circle-stroke-opacity": 0.5
+                }}
+              />
+            </Source>
+          )}
+
+          {/* Towns Layer (Always visible, but clustered at low zoom) */}
+          {townsData && (
+            <Source id="towns-source" type="geojson" data={townsData} cluster={true} clusterMaxZoom={4} clusterRadius={50}>
               {/* Clustered Heatmap/Bubbles */}
               <Layer 
                 id="clusters"
@@ -187,18 +265,18 @@ export default function WorldMap() {
                     "step",
                     ["get", "point_count"],
                     "#3b82f6", // Blue for small
-                    100,
+                    50,
                     "#8b5cf6", // Purple for medium
-                    500,
+                    200,
                     "#ec4899"  // Pink for massive
                   ],
                   "circle-radius": [
                     "step",
                     ["get", "point_count"],
                     15,
-                    100,
+                    50,
                     20,
-                    500,
+                    200,
                     30
                   ],
                   "circle-opacity": 0.8
@@ -218,15 +296,20 @@ export default function WorldMap() {
                 }}
               />
 
-              {/* Unclustered Points */}
+              {/* Unclustered Points (Towns) */}
               <Layer 
                 id="town-points"
                 type="circle"
                 filter={["!", ["has", "point_count"]]}
                 paint={{
-                  "circle-color": searchQuery ? "#ef4444" : "#eab308", // Highlight red if searching, else yellow
-                  "circle-radius": 4,
-                  "circle-opacity": 0.8,
+                  "circle-color": searchQuery ? "#ef4444" : "#eab308",
+                  "circle-radius": [
+                    "interpolate", ["linear"], ["zoom"],
+                    2, 3,
+                    6, 6,
+                    8, 8
+                  ],
+                  "circle-opacity": 1,
                   "circle-stroke-width": 1,
                   "circle-stroke-color": "#000000"
                 }}
@@ -246,10 +329,27 @@ export default function WorldMap() {
               className="custom-popup"
             >
               <div className="bg-slate-900 border border-white/10 p-3 rounded shadow-xl text-sm min-w-[200px]">
-                <div className="font-bold text-white text-base mb-1">{hoverInfo.feature.properties.name}</div>
-                <div className="text-gray-300"><span className="text-gray-500">Player:</span> {hoverInfo.feature.properties.player}</div>
-                <div className="text-gray-300"><span className="text-gray-500">Alliance:</span> {hoverInfo.feature.properties.alliance}</div>
-                <div className="text-emerald-400 font-mono mt-1">{hoverInfo.feature.properties.points.toLocaleString()} pts</div>
+                {hoverInfo.feature.properties.renderType === 'town' && (
+                  <>
+                    <div className="font-bold text-white text-base mb-1">{hoverInfo.feature.properties.name}</div>
+                    <div className="text-gray-300"><span className="text-gray-500">Player:</span> {hoverInfo.feature.properties.player}</div>
+                    <div className="text-gray-300"><span className="text-gray-500">Alliance:</span> {hoverInfo.feature.properties.alliance}</div>
+                    <div className="text-emerald-400 font-mono mt-1">{hoverInfo.feature.properties.points.toLocaleString()} pts</div>
+                  </>
+                )}
+                {hoverInfo.feature.properties.renderType === 'island' && (
+                  <>
+                    <div className="font-bold text-white text-base mb-1">Island ({hoverInfo.feature.properties.x}, {hoverInfo.feature.properties.y})</div>
+                    <div className="text-gray-300"><span className="text-gray-500">Buff:</span> +{hoverInfo.feature.properties.resourcePlus} / -{hoverInfo.feature.properties.resourceMinus}</div>
+                    <div className="text-gray-300"><span className="text-gray-500">Towns:</span> {hoverInfo.feature.properties.colonizedCount} / {hoverInfo.feature.properties.availableTowns}</div>
+                  </>
+                )}
+                {hoverInfo.feature.properties.renderType === 'empty-slot' && (
+                  <>
+                    <div className="font-bold text-emerald-400 text-base">Empty Slot</div>
+                    <div className="text-gray-400 text-xs">Ready for colonization</div>
+                  </>
+                )}
               </div>
             </Popup>
           )}
