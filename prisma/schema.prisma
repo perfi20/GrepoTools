@@ -50,3 +50,69 @@ model Report {
   lootedIron     Int      @default(0)
   createdAt      DateTime @default(now())
 }
+
+model Island {
+  id            Int    @id
+  x             Int
+  y             Int
+  type          Int
+  availableTowns Int
+  resourcePlus  String
+  resourceMinus String
+}
+
+model Player {
+  id         Int    @id
+  name       String
+  allianceId Int?
+  points     Int
+  rank       Int
+  towns      Int
+  townsList  Town[]
+  alliance   Alliance? @relation(fields: [allianceId], references: [id])
+}
+
+model PlayerHistory {
+  id        Int      @id @default(autoincrement())
+  playerId  Int
+  oldPoints Int
+  newPoints Int
+  timestamp DateTime @default(now())
+}
+
+model Alliance {
+  id      Int    @id
+  name    String
+  points  Int
+  towns   Int
+  members Int
+  rank    Int
+  players Player[]
+}
+
+model AllianceHistory {
+  id         Int      @id @default(autoincrement())
+  allianceId Int
+  oldPoints  Int
+  newPoints  Int
+  timestamp  DateTime @default(now())
+}
+
+model Town {
+  id       Int    @id
+  playerId Int?
+  name     String
+  islandX  Int
+  islandY  Int
+  islandSlot Int
+  points   Int
+  player   Player? @relation(fields: [playerId], references: [id])
+}
+
+model TownHistory {
+  id        Int      @id @default(autoincrement())
+  townId    Int
+  oldPoints Int
+  newPoints Int
+  timestamp DateTime @default(now())
+}

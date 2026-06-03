@@ -1,4 +1,5 @@
 import './globals.css';
+import Link from 'next/link';
 
 export const metadata = {
   title: 'Grepolis Toolkit',
@@ -13,10 +14,11 @@ export default function RootLayout({ children }) {
           <div className="container flex justify-between items-center" style={{ padding: 0 }}>
             <h1 className="gradient-text" style={{ margin: 0, fontSize: '1.5rem' }}>GrepoTools</h1>
             <div className="nav-links">
-              <a href="/" className="nav-link">Dashboard</a>
-              <a href="/reports" className="nav-link">Reports</a>
-              <a href="/planner" className="nav-link">Planner</a>
-              <a href="/snipe" className="nav-link">Snipe Timer</a>
+              <Link href="/" className="nav-link">Dashboard</Link>
+              <Link href="/reports" className="nav-link">Reports</Link>
+              <Link href="/planner" className="nav-link">Planner</Link>
+              <Link href="/snipe" className="nav-link">Snipe Timer</Link>
+              <Link href="/world" className="nav-link">World Data</Link>
             </div>
           </div>
         </nav>
