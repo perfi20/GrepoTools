@@ -149,7 +149,7 @@ export default function WorldMap() {
             [gridToLng(750), gridToLat(250)]  // North East
           ]}
           mapStyle={MAP_STYLE}
-          interactiveLayerIds={["town-points", "islands-polygons", "rocks-polygons", "empty-slots-points"]}
+          interactiveLayerIds={["town-points", "islands-points", "rocks-points", "empty-slots-points"]}
           onMouseEnter={(e) => {
             mapRef.current.getCanvas().style.cursor = "pointer";
           }}
@@ -196,49 +196,55 @@ export default function WorldMap() {
             />
           </Source>
 
-          {/* Islands Layer (Only visible when zoomed in >= 5) */}
+          {/* Islands Layer */}
           {islandsData && (
             <Source id="islands-source" type="geojson" data={islandsData}>
               <Layer 
-                id="islands-polygons"
-                type="fill"
-                minzoom={4}
+                id="islands-points"
+                type="circle"
+                minzoom={2}
                 paint={{
-                  "fill-color": ["get", "islandColor"],
-                  "fill-opacity": 0.8
-                }}
-              />
-              <Layer 
-                id="islands-polygons-outline"
-                type="line"
-                minzoom={4}
-                paint={{
-                  "line-color": "#0f172a",
-                  "line-width": 2
+                  "circle-radius": [
+                    "interpolate", ["linear"], ["zoom"],
+                    2, 1,
+                    4, 3,
+                    5, 5,
+                    6, 9,
+                    7, 17,
+                    8, 32,
+                    9, 60
+                  ],
+                  "circle-color": ["get", "islandColor"],
+                  "circle-opacity": 0.8,
+                  "circle-stroke-width": 2,
+                  "circle-stroke-color": "#0f172a"
                 }}
               />
             </Source>
           )}
 
-          {/* Rocks Layer (Only visible when zoomed in >= 5) */}
+          {/* Rocks Layer */}
           {rocksData && (
             <Source id="rocks-source" type="geojson" data={rocksData}>
               <Layer 
-                id="rocks-polygons"
-                type="fill"
-                minzoom={5}
+                id="rocks-points"
+                type="circle"
+                minzoom={2}
                 paint={{
-                  "fill-color": ["get", "islandColor"],
-                  "fill-opacity": 0.5
-                }}
-              />
-              <Layer 
-                id="rocks-polygons-outline"
-                type="line"
-                minzoom={5}
-                paint={{
-                  "line-color": "#0f172a",
-                  "line-width": 1
+                  "circle-radius": [
+                    "interpolate", ["linear"], ["zoom"],
+                    2, 0.5,
+                    4, 1.5,
+                    5, 3,
+                    6, 6,
+                    7, 12,
+                    8, 22,
+                    9, 40
+                  ],
+                  "circle-color": ["get", "islandColor"],
+                  "circle-opacity": 0.5,
+                  "circle-stroke-width": 1,
+                  "circle-stroke-color": "#0f172a"
                 }}
               />
             </Source>

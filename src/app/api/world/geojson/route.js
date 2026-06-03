@@ -7,22 +7,8 @@ const gridToLat = (y) => -((y / 1000) * 180 - 90);
 
 function getOrbitPoint(centerLng, centerLat, radiusDeg, angle) {
   const lat = centerLat + Math.sin(angle) * radiusDeg;
-  // Adjust lng based on latitude to maintain visual circularity in Web Mercator
   const lng = centerLng + Math.cos(angle) * radiusDeg / Math.cos(centerLat * Math.PI / 180);
   return [lng, lat];
-}
-
-function createCirclePolygon(centerLng, centerLat, radiusDeg) {
-  const points = [];
-  const segments = 24; 
-  for(let i=0; i<=segments; i++) {
-    const angle = (i/segments) * Math.PI * 2;
-    points.push(getOrbitPoint(centerLng, centerLat, radiusDeg, angle));
-  }
-  return {
-    type: "Polygon",
-    coordinates: [points]
-  };
 }
 
 export async function GET() {
@@ -133,17 +119,19 @@ export async function GET() {
       const isRock = island.availableTowns < 20; // Small islands (<20) and true rocks (0)
       const isTrueRock = island.availableTowns === 0;
 
-      // Sizing
-      const islandRadius = !isRock ? 0.05 : (isTrueRock ? 0.015 : 0.03);
-      const orbitRadius = !isRock ? 0.04 : (isTrueRock ? 0.0 : 0.02); // No orbit for true rocks
+      // Drastically increase orbit so it matches pixel sizes of MapLibre circles
+      const orbitRadius = !isRock ? 0.15 : (isTrueRock ? 0.0 : 0.10); 
       
       // #64748b (Slate) for minor alliances, #1e293b for empty
       const islandColor = dominantAlliance ? (allianceColors[dominantAlliance] || "#64748b") : "#1e293b";
 
-      // Add the Island/Rock feature (Now a perfect Polygon circle!)
+      // Add the Island/Rock feature
       features.push({
         type: 'Feature',
-        geometry: createCirclePolygon(islandLng, islandLat, islandRadius),
+        geometry: {
+          type: 'Point',
+          coordinates: [islandLng, islandLat]
+        },
         properties: {
           renderType: isRock ? 'rock' : 'island',
           id: island.id,
