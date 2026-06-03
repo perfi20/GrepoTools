@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
-import { generateGeoJSON } from '@/lib/geojson';
+import { getCachedGeoJSON } from '@/lib/geojson';
 
 export async function GET() {
   try {
-    const geojson = await generateGeoJSON();
+    const geojson = await getCachedGeoJSON();
 
     return NextResponse.json(geojson, {
       headers: {

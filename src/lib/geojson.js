@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma';
+import { unstable_cache } from 'next/cache';
 
 // Convert Grepolis Grid (0-1000) to Geographic coordinates
 const gridToLng = (x) => (x / 1000) * 360 - 180;
@@ -197,3 +198,11 @@ export async function generateGeoJSON() {
   console.timeEnd("GeoJSON Generation");
   return { type: 'FeatureCollection', features };
 }
+
+export const getCachedGeoJSON = unstable_cache(
+  async () => {
+    return await generateGeoJSON();
+  },
+  ['world-geojson'],
+  { tags: ['world-geojson'] }
+);

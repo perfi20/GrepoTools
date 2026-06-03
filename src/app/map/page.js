@@ -76,15 +76,9 @@ export default function WorldMap() {
   const oceanGrid = useMemo(() => generateOceanGrid(), []);
 
   useEffect(() => {
-    // Try to fetch the lightning-fast static cache first
-    fetch('/world.json')
-      .then(res => {
-        if (!res.ok) {
-          // If the static file hasn't been generated yet (e.g. fresh install without sync), fallback to dynamic API
-          return fetch('/api/world/geojson').then(r => r.json());
-        }
-        return res.json();
-      })
+    // Fetch directly from the Vercel-optimized API route
+    fetch('/api/world/geojson')
+      .then(res => res.json())
       .then(d => {
         setData(d);
         setLoading(false);
