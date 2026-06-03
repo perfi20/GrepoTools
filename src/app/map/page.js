@@ -9,6 +9,19 @@ import "maplibre-gl/dist/maplibre-gl.css";
 const gridToLng = (x) => (x / 1000) * 360 - 180;
 const gridToLat = (y) => -((y / 1000) * 180 - 90);
 
+const MAP_STYLE = {
+  version: 8,
+  sources: {},
+  glyphs: "https://protomaps.github.io/basemaps-assets/fonts/{fontstack}/{range}.pbf",
+  layers: [
+    {
+      id: "background",
+      type: "background",
+      paint: { "background-color": "#0b101e" }
+    }
+  ]
+};
+
 function generateOceanGrid() {
   const features = [];
   
@@ -103,15 +116,17 @@ export default function WorldMap() {
         {loading && <span className="text-blue-400 animate-pulse my-auto">Loading 50,000+ towns...</span>}
       </div>
 
-      <div className="flex-1 rounded-xl overflow-hidden border border-white/10 relative" style={{ minHeight: "600px" }}>
+      <div className="flex-1 min-h-[600px] rounded-xl overflow-hidden border border-white/10 relative">
         <Map
           ref={mapRef}
-          style={{ position: "absolute", top: 0, bottom: 0, left: 0, right: 0 }}
+          mapLibre={maplibregl}
+          style={{ width: "100%", height: "100%", position: "absolute", left: 0, top: 0 }}
           initialViewState={{
-            longitude: 0, // Center of the world (Ocean 55 roughly)
+            longitude: 0,
             latitude: 0,
-            zoom: 1
-          mapStyle="https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json"
+            zoom: 2
+          }}
+          mapStyle={MAP_STYLE}
           interactiveLayerIds={["town-points"]}
           onMouseEnter={(e) => {
             mapRef.current.getCanvas().style.cursor = "pointer";
