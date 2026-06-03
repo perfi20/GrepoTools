@@ -1,0 +1,17 @@
+name: Hourly World Data Sync
+
+on:
+  schedule:
+    # Runs at the top of every hour
+    - cron: '0 * * * *'
+  # Allows you to run this manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Vercel Sync API
+        # We use a GitHub Secret to store your Vercel URL so it isn't hardcoded
+        run: |
+          curl -X GET "${{ secrets.API_URL }}/api/world/sync"
