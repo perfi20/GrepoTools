@@ -11,6 +11,8 @@ function getOrbitPoint(centerLng, centerLat, radiusDeg, angle) {
   return [lng, lat];
 }
 
+// Note: We are no longer generating literal GeoJSON here to save network bandwidth.
+// This function now returns ultra-condensed raw data which the browser will compile.
 export async function generateGeoJSON() {
   console.time("GeoJSON Generation");
   // Fetch towns with only required fields to dramatically reduce memory payload
@@ -87,22 +89,16 @@ export async function generateGeoJSON() {
     return distSq <= worldRadiusSq;
   });
 
-  const features = [];
-  const ORBIT_RADIUS = 0.04; // degrees
+  const outputIslands = [];
+  const outputTowns = [];
 
   for (const island of islands) {
-    const islandLng = gridToLng(island.x);
-    const islandLat = gridToLat(island.y);
-
     const islandTowns = townLookup[`${island.x},${island.y}`] || [];
-    const townSlotMap = {};
     let dominantAlliance = null;
     let maxTowns = 0;
     const localAllyCounts = {};
 
     for (const t of islandTowns) {
-      townSlotMap[t.islandSlot] = t;
-      
       const allyName = t.player && t.player.alliance ? t.player.alliance.name : null;
       if (allyName) {
         localAllyCounts[allyName] = (localAllyCounts[allyName] || 0) + 1;
@@ -113,90 +109,43 @@ export async function generateGeoJSON() {
       }
     }
 
-    // In Grepolis, availableTowns represents REMAINING empty slots, not total capacity.
-    // Total capacity is the sum of empty slots and currently colonized slots.
     const totalCapacity = island.availableTowns + islandTowns.length;
-    
-    const isRock = totalCapacity < 20; // Small islands (<20) and true rocks (0)
+    const isRock = totalCapacity < 20; 
     const isTrueRock = totalCapacity === 0;
 
-    // Skip rendering empty uncolonizable rocks entirely
     if (isTrueRock) continue;
 
-    // Drastically increase orbit so it matches pixel sizes of MapLibre circles
-    const orbitRadius = !isRock ? 0.15 : 0.10; 
-    
-    // #64748b (Slate) for minor alliances, #1e293b for empty
     const islandColor = dominantAlliance ? (allianceColors[dominantAlliance] || "#64748b") : "#1e293b";
 
-    // Add the Island/Rock feature
-    features.push({
-      type: 'Feature',
-      geometry: {
-        type: 'Point',
-        coordinates: [islandLng, islandLat]
-      },
-      properties: {
-        renderType: isRock ? 'rock' : 'island',
-        id: island.id,
-        x: island.x,
-        y: island.y,
-        resourcePlus: island.resourcePlus,
-        resourceMinus: island.resourceMinus,
-        availableTowns: island.availableTowns,
-        colonizedCount: islandTowns.length,
-        islandColor: islandColor,
-        dominantAlliance: dominantAlliance || "None"
-      }
+    outputIslands.push({
+      id: island.id,
+      x: island.x,
+      y: island.y,
+      type: isRock ? 'rock' : 'island',
+      availableTowns: island.availableTowns,
+      resourcePlus: island.resourcePlus,
+      resourceMinus: island.resourceMinus,
+      colonizedCount: islandTowns.length,
+      color: islandColor,
+      alliance: dominantAlliance || "None"
     });
 
-    // Add Towns and Empty Slots orbiting the island
-    const maxSlotOnIsland = Math.max(-1, ...Object.keys(townSlotMap).map(Number));
-    const loopSlots = Math.max(island.availableTowns, maxSlotOnIsland + 1, 1);
-    
-    for (let slot = 0; slot < loopSlots; slot++) {
-      const angle = (slot / loopSlots) * Math.PI * 2;
-      const [slotLng, slotLat] = getOrbitPoint(islandLng, islandLat, orbitRadius, angle);
-
-      const town = townSlotMap[slot];
-      
-      if (town) {
-        // Add colonized town
-        features.push({
-          type: 'Feature',
-          geometry: {
-            type: 'Point',
-            coordinates: [slotLng, slotLat]
-          },
-          properties: {
-            renderType: 'town',
-            id: town.id,
-            name: town.name,
-            points: town.points,
-            player: town.player ? town.player.name : 'Ghost Town',
-            alliance: town.player && town.player.alliance ? town.player.alliance.name : 'None',
-          }
-        });
-      } else if (slot < island.availableTowns) {
-        // Add empty slot
-        features.push({
-          type: 'Feature',
-          geometry: {
-            type: 'Point',
-            coordinates: [slotLng, slotLat]
-          },
-          properties: {
-            renderType: 'empty-slot',
-            islandId: island.id,
-            slot: slot
-          }
-        });
-      }
+    for (const t of islandTowns) {
+      outputTowns.push({
+        id: t.id,
+        islandX: t.islandX,
+        islandY: t.islandY,
+        slot: t.islandSlot,
+        name: t.name,
+        points: t.points,
+        player: t.player ? t.player.name : 'Ghost Town',
+        alliance: t.player && t.player.alliance ? t.player.alliance.name : 'None',
+      });
     }
   }
 
   console.timeEnd("GeoJSON Generation");
-  return { type: 'FeatureCollection', features };
+  return { type: 'RawMapData', islands: outputIslands, towns: outputTowns };
 }
 
 export const getCachedGeoJSON = unstable_cache(

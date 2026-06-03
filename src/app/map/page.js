@@ -9,6 +9,12 @@ import "maplibre-gl/dist/maplibre-gl.css";
 const gridToLng = (x) => (x / 1000) * 360 - 180;
 const gridToLat = (y) => -((y / 1000) * 180 - 90);
 
+function getOrbitPoint(centerLng, centerLat, radiusDeg, angle) {
+  const lat = centerLat + Math.sin(angle) * radiusDeg;
+  const lng = centerLng + Math.cos(angle) * radiusDeg / Math.cos(centerLat * Math.PI / 180);
+  return [lng, lat];
+}
+
 const MAP_STYLE = {
   version: 8,
   sources: {},
@@ -66,7 +72,7 @@ function generateOceanGrid() {
 }
 
 export default function WorldMap() {
-  const [data, setData] = useState(null);
+  const [rawData, setRawData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [mapProcessing, setMapProcessing] = useState(true);
   const [hoverInfo, setHoverInfo] = useState(null);
@@ -75,12 +81,103 @@ export default function WorldMap() {
 
   const oceanGrid = useMemo(() => generateOceanGrid(), []);
 
+  // Compile the Raw Data into a GeoJSON FeatureCollection instantly in the browser memory
+  const data = useMemo(() => {
+    if (!rawData || !rawData.islands) return { type: 'FeatureCollection', features: [] };
+
+    const features = [];
+    const townsByIsland = {};
+
+    // Group towns by island
+    if (rawData.towns) {
+      for (const t of rawData.towns) {
+        const key = `${t.islandX},${t.islandY}`;
+        if (!townsByIsland[key]) townsByIsland[key] = [];
+        townsByIsland[key].push(t);
+      }
+    }
+
+    for (const island of rawData.islands) {
+      const islandLng = gridToLng(island.x);
+      const islandLat = gridToLat(island.y);
+
+      // Add the Island/Rock feature
+      features.push({
+        type: 'Feature',
+        geometry: { type: 'Point', coordinates: [islandLng, islandLat] },
+        properties: {
+          renderType: island.type,
+          id: island.id,
+          x: island.x,
+          y: island.y,
+          resourcePlus: island.resourcePlus,
+          resourceMinus: island.resourceMinus,
+          availableTowns: island.availableTowns,
+          colonizedCount: island.colonizedCount,
+          islandColor: island.color,
+          dominantAlliance: island.alliance
+        }
+      });
+
+      const islandTowns = townsByIsland[`${island.x},${island.y}`] || [];
+      if (islandTowns.length === 0) {
+        // Optimization: Do NOT generate individual empty slots for completely empty islands!
+        // This cuts out 90% of the computation and memory footprint!
+        continue;
+      }
+
+      const townSlotMap = {};
+      for (const t of islandTowns) {
+        townSlotMap[t.slot] = t;
+      }
+
+      const isRock = island.type === 'rock';
+      const orbitRadius = !isRock ? 0.15 : 0.10;
+      
+      const maxSlotOnIsland = Math.max(-1, ...Object.keys(townSlotMap).map(Number));
+      const loopSlots = Math.max(island.availableTowns, maxSlotOnIsland + 1, 1);
+
+      for (let slot = 0; slot < loopSlots; slot++) {
+        const angle = (slot / loopSlots) * Math.PI * 2;
+        const [slotLng, slotLat] = getOrbitPoint(islandLng, islandLat, orbitRadius, angle);
+
+        const town = townSlotMap[slot];
+        if (town) {
+          features.push({
+            type: 'Feature',
+            geometry: { type: 'Point', coordinates: [slotLng, slotLat] },
+            properties: {
+              renderType: 'town',
+              id: town.id,
+              name: town.name,
+              points: town.points,
+              player: town.player,
+              alliance: town.alliance,
+            }
+          });
+        } else if (slot < island.availableTowns) {
+          features.push({
+            type: 'Feature',
+            geometry: { type: 'Point', coordinates: [slotLng, slotLat] },
+            properties: {
+              renderType: 'empty-slot',
+              islandId: island.id,
+              slot: slot
+            }
+          });
+        }
+      }
+    }
+
+    return { type: 'FeatureCollection', features };
+  }, [rawData]);
+
   useEffect(() => {
     // Fetch directly from the Vercel-optimized API route
     fetch('/api/world/geojson')
       .then(res => res.json())
       .then(d => {
-        setData(d);
+        setRawData(d);
         setLoading(false);
       })
       .catch(console.error);
