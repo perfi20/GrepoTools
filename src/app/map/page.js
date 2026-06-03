@@ -149,7 +149,7 @@ export default function WorldMap() {
             [gridToLng(750), gridToLat(250)]  // North East
           ]}
           mapStyle={MAP_STYLE}
-          interactiveLayerIds={["town-points", "islands-points", "rocks-points", "empty-slots-points"]}
+          interactiveLayerIds={["town-points", "islands-polygons", "rocks-polygons", "empty-slots-points"]}
           onMouseEnter={(e) => {
             mapRef.current.getCanvas().style.cursor = "pointer";
           }}
@@ -200,20 +200,21 @@ export default function WorldMap() {
           {islandsData && (
             <Source id="islands-source" type="geojson" data={islandsData}>
               <Layer 
-                id="islands-points"
-                type="circle"
+                id="islands-polygons"
+                type="fill"
                 minzoom={4}
                 paint={{
-                  "circle-radius": [
-                    "interpolate", ["linear"], ["zoom"],
-                    4, 5,
-                    6, 15,
-                    8, 30
-                  ],
-                  "circle-color": ["get", "islandColor"],
-                  "circle-opacity": 0.8,
-                  "circle-stroke-width": 2,
-                  "circle-stroke-color": "#0f172a"
+                  "fill-color": ["get", "islandColor"],
+                  "fill-opacity": 0.8
+                }}
+              />
+              <Layer 
+                id="islands-polygons-outline"
+                type="line"
+                minzoom={4}
+                paint={{
+                  "line-color": "#0f172a",
+                  "line-width": 2
                 }}
               />
             </Source>
@@ -223,20 +224,21 @@ export default function WorldMap() {
           {rocksData && (
             <Source id="rocks-source" type="geojson" data={rocksData}>
               <Layer 
-                id="rocks-points"
-                type="circle"
+                id="rocks-polygons"
+                type="fill"
                 minzoom={5}
                 paint={{
-                  "circle-radius": [
-                    "interpolate", ["linear"], ["zoom"],
-                    5, 2,
-                    6, 5,
-                    8, 10
-                  ],
-                  "circle-color": ["get", "islandColor"],
-                  "circle-opacity": 0.5,
-                  "circle-stroke-width": 1,
-                  "circle-stroke-color": "#0f172a"
+                  "fill-color": ["get", "islandColor"],
+                  "fill-opacity": 0.5
+                }}
+              />
+              <Layer 
+                id="rocks-polygons-outline"
+                type="line"
+                minzoom={5}
+                paint={{
+                  "line-color": "#0f172a",
+                  "line-width": 1
                 }}
               />
             </Source>
@@ -314,8 +316,8 @@ export default function WorldMap() {
                   "circle-color": searchQuery ? "#ef4444" : "#eab308",
                   "circle-radius": [
                     "interpolate", ["linear"], ["zoom"],
-                    2, 3,
-                    6, 6,
+                    4, 1.5,
+                    6, 3,
                     8, 8
                   ],
                   "circle-opacity": 1,

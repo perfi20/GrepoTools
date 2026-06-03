@@ -5,6 +5,26 @@ import { prisma } from '@/lib/prisma';
 const gridToLng = (x) => (x / 1000) * 360 - 180;
 const gridToLat = (y) => -((y / 1000) * 180 - 90);
 
+function getOrbitPoint(centerLng, centerLat, radiusDeg, angle) {
+  const lat = centerLat + Math.sin(angle) * radiusDeg;
+  // Adjust lng based on latitude to maintain visual circularity in Web Mercator
+  const lng = centerLng + Math.cos(angle) * radiusDeg / Math.cos(centerLat * Math.PI / 180);
+  return [lng, lat];
+}
+
+function createCirclePolygon(centerLng, centerLat, radiusDeg) {
+  const points = [];
+  const segments = 24; 
+  for(let i=0; i<=segments; i++) {
+    const angle = (i/segments) * Math.PI * 2;
+    points.push(getOrbitPoint(centerLng, centerLat, radiusDeg, angle));
+  }
+  return {
+    type: "Polygon",
+    coordinates: [points]
+  };
+}
+
 export async function GET() {
   try {
     console.time("GeoJSON Generation");
@@ -110,17 +130,20 @@ export async function GET() {
         }
       }
 
-      const isRock = island.availableTowns === 0;
+      const isRock = island.availableTowns < 20; // Small islands (<20) and true rocks (0)
+      const isTrueRock = island.availableTowns === 0;
+
+      // Sizing
+      const islandRadius = !isRock ? 0.05 : (isTrueRock ? 0.015 : 0.03);
+      const orbitRadius = !isRock ? 0.04 : (isTrueRock ? 0.0 : 0.02); // No orbit for true rocks
+      
       // #64748b (Slate) for minor alliances, #1e293b for empty
       const islandColor = dominantAlliance ? (allianceColors[dominantAlliance] || "#64748b") : "#1e293b";
 
-      // Add the Island/Rock feature
+      // Add the Island/Rock feature (Now a perfect Polygon circle!)
       features.push({
         type: 'Feature',
-        geometry: {
-          type: 'Point',
-          coordinates: [islandLng, islandLat]
-        },
+        geometry: createCirclePolygon(islandLng, islandLat, islandRadius),
         properties: {
           renderType: isRock ? 'rock' : 'island',
           id: island.id,
@@ -136,19 +159,12 @@ export async function GET() {
       });
 
       // Add Towns and Empty Slots orbiting the island
-      // Grepolis islands usually have a max of 20 slots
-      const maxSlots = 20; 
-      
       const maxSlotOnIsland = Math.max(-1, ...Object.keys(townSlotMap).map(Number));
-      const loopSlots = Math.max(island.availableTowns, maxSlotOnIsland + 1);
+      const loopSlots = Math.max(island.availableTowns, maxSlotOnIsland + 1, 1);
       
-      // Only generate slots up to availableTowns count or highest town slot (to prevent losing towns on rocks)
       for (let slot = 0; slot < loopSlots; slot++) {
-        const angle = (slot / maxSlots) * Math.PI * 2;
-        const slotLng = islandLng + Math.cos(angle) * ORBIT_RADIUS;
-        // Adjust latitude orbit for aspect ratio so it looks circular (roughly depends on projection, 
-        // but MapLibre Mercator will stretch it differently at equator vs poles. At lat 0, it's roughly 1:1)
-        const slotLat = islandLat + Math.sin(angle) * ORBIT_RADIUS;
+        const angle = (slot / loopSlots) * Math.PI * 2;
+        const [slotLng, slotLat] = getOrbitPoint(islandLng, islandLat, orbitRadius, angle);
 
         const town = townSlotMap[slot];
         
@@ -169,8 +185,8 @@ export async function GET() {
               alliance: town.player && town.player.alliance ? town.player.alliance.name : 'None',
             }
           });
-        } else {
-          // Add empty slot
+        } else if (!isTrueRock && slot < island.availableTowns) {
+          // Add empty slot (only if it's within availableTowns limit and not a true rock)
           features.push({
             type: 'Feature',
             geometry: {
