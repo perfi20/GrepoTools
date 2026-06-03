@@ -106,6 +106,8 @@ export default function WorldMap() {
       <div className="flex-1 rounded-xl overflow-hidden border border-white/10 relative">
         <Map
           ref={mapRef}
+          mapLibre={maplibregl}
+          style={{ width: "100%", height: "100%" }}
           initialViewState={{
             longitude: 0, // Center of the world (Ocean 55 roughly)
             latitude: 0,
