@@ -116,8 +116,9 @@ export async function GET() {
         }
       }
 
+      // If availableTowns is 0 but it HAS a town, it's a colonized rock (e.g., World Wonder island), treat it as a small rock orbit!
       const isRock = island.availableTowns < 20; // Small islands (<20) and true rocks (0)
-      const isTrueRock = island.availableTowns === 0;
+      const isTrueRock = island.availableTowns === 0 && islandTowns.length === 0;
 
       // Drastically increase orbit so it matches pixel sizes of MapLibre circles
       const orbitRadius = !isRock ? 0.15 : (isTrueRock ? 0.0 : 0.10); 

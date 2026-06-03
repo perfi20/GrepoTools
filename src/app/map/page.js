@@ -43,15 +43,19 @@ function generateOceanGrid() {
     });
   }
 
+  // Place Ocean labels at 4 spots near the corners of each ocean block so they're visible when zoomed in
   for (let ox = 0; ox < 10; ox++) {
     for (let oy = 0; oy < 10; oy++) {
-      features.push({
-        type: "Feature",
-        geometry: {
-          type: "Point",
-          coordinates: [gridToLng(ox * 100 + 50), gridToLat(oy * 100 + 50)]
-        },
-        properties: { label: `O${ox}${oy}` }
+      const positions = [[25, 25], [75, 25], [25, 75], [75, 75]];
+      positions.forEach(([dx, dy]) => {
+        features.push({
+          type: "Feature",
+          geometry: {
+            type: "Point",
+            coordinates: [gridToLng(ox * 100 + dx), gridToLat(oy * 100 + dy)]
+          },
+          properties: { label: `O${ox}${oy}` }
+        });
       });
     }
   }
@@ -131,10 +135,17 @@ export default function WorldMap() {
           onChange={(e) => setSearchQuery(e.target.value)}
           className="flex-1 bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500 transition-colors"
         />
-        {loading && <span className="text-blue-400 animate-pulse my-auto">Generating interactive grid...</span>}
       </div>
 
       <div className="flex-1 min-h-[600px] rounded-xl overflow-hidden border border-white/10 relative">
+        {loading && (
+          <div className="absolute inset-0 z-50 flex items-center justify-center bg-[#0b101e] bg-opacity-90 backdrop-blur-sm">
+            <div className="flex flex-col items-center gap-4">
+              <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+              <div className="text-xl font-bold text-white tracking-widest animate-pulse">Initializing Battle Map...</div>
+            </div>
+          </div>
+        )}
         <Map
           ref={mapRef}
           mapLibre={maplibregl}
@@ -205,14 +216,9 @@ export default function WorldMap() {
                 minzoom={2}
                 paint={{
                   "circle-radius": [
-                    "interpolate", ["linear"], ["zoom"],
-                    2, 1,
-                    4, 3,
-                    5, 5,
-                    6, 9,
-                    7, 17,
-                    8, 32,
-                    9, 60
+                    "interpolate", ["exponential", 2], ["zoom"],
+                    5, 4,
+                    20, 131072
                   ],
                   "circle-color": ["get", "islandColor"],
                   "circle-opacity": 0.8,
@@ -232,14 +238,9 @@ export default function WorldMap() {
                 minzoom={2}
                 paint={{
                   "circle-radius": [
-                    "interpolate", ["linear"], ["zoom"],
-                    2, 0.5,
-                    4, 1.5,
-                    5, 3,
-                    6, 6,
-                    7, 12,
-                    8, 22,
-                    9, 40
+                    "interpolate", ["exponential", 2], ["zoom"],
+                    5, 2.6,
+                    20, 85196
                   ],
                   "circle-color": ["get", "islandColor"],
                   "circle-opacity": 0.5,
@@ -271,11 +272,12 @@ export default function WorldMap() {
 
           {/* Towns Layer (Always visible, but clustered at low zoom) */}
           {townsData && (
-            <Source id="towns-source" type="geojson" data={townsData} cluster={true} clusterMaxZoom={4} clusterRadius={50}>
+            <Source id="towns-source" type="geojson" data={townsData} cluster={true} clusterMaxZoom={5} clusterRadius={50}>
               {/* Clustered Heatmap/Bubbles */}
               <Layer 
                 id="clusters"
                 type="circle"
+                minzoom={6}
                 filter={["has", "point_count"]}
                 paint={{
                   "circle-color": [
@@ -302,6 +304,7 @@ export default function WorldMap() {
               <Layer 
                 id="cluster-count"
                 type="symbol"
+                minzoom={6}
                 filter={["has", "point_count"]}
                 layout={{
                   "text-field": "{point_count_abbreviated}",
@@ -317,12 +320,12 @@ export default function WorldMap() {
               <Layer 
                 id="town-points"
                 type="circle"
+                minzoom={6}
                 filter={["!", ["has", "point_count"]]}
                 paint={{
                   "circle-color": searchQuery ? "#ef4444" : "#eab308",
                   "circle-radius": [
                     "interpolate", ["linear"], ["zoom"],
-                    4, 1.5,
                     6, 3,
                     8, 8
                   ],

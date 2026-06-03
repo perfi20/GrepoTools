@@ -208,3 +208,14 @@ a:hover {
 .text-sm { font-size: 0.875rem; }
 .text-center { text-align: center; }
 .text-secondary { color: var(--text-secondary); }
+
+/* MapLibre Popup Overrides */
+.maplibregl-popup-content {
+  background: transparent !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+}
+.maplibregl-popup-tip {
+  border-top-color: #0f172a !important;
+  border-bottom-color: #0f172a !important;
+}
