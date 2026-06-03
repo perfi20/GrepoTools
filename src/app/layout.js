@@ -19,6 +19,7 @@ export default function RootLayout({ children }) {
               <Link href="/planner" className="nav-link">Planner</Link>
               <Link href="/snipe" className="nav-link">Snipe Timer</Link>
               <Link href="/world" className="nav-link">World Data</Link>
+              <Link href="/map" className="nav-link">World Map</Link>
             </div>
           </div>
         </nav>
