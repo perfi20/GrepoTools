@@ -1,0 +1,52 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Unit {
+  id                  String  @id
+  name                String
+  name_plural         String
+  speed               Int
+  attack              Int
+  description         String
+  resources_wood      Int?
+  resources_stone     Int?
+  resources_iron      Int?
+  favor               Int
+  population          Int
+  build_time          Int
+  god_id              String?
+  is_naval            Boolean
+  unit_function       String
+  category            String
+  is_npc_unit_only    Boolean
+  def_hack            Int
+  def_pierce          Int
+  def_distance        Int
+  booty               Int?
+  infantry            Boolean?
+  flying              Boolean?
+  attack_type         String?
+  capacity            Int?
+}
+
+model Report {
+  id             String   @id @default(uuid())
+  originalId     String?  // The GRCT report ID if applicable
+  attacker       String
+  attackerTown   String?
+  defender       String
+  defenderTown   String?
+  date           DateTime
+  morale         Int?
+  luck           Int?
+  lootedWood     Int      @default(0)
+  lootedStone    Int      @default(0)
+  lootedIron     Int      @default(0)
+  createdAt      DateTime @default(now())
+}
