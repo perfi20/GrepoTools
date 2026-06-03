@@ -269,7 +269,7 @@ export default function WorldMap() {
   }, [townsData, searchQuery]);
 
   const worldStats = useMemo(() => {
-    if (!rawData) return null;
+    if (!rawData || !rawData.islands) return null;
     let populatedIslands = 0;
     rawData.islands.forEach(i => {
       if (i.colonizedCount > 0) populatedIslands++;
