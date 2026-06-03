@@ -321,9 +321,9 @@ export default function WorldMap() {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-100px)] relative">
+    <div className="flex flex-col" style={{ height: 'calc(100vh - 100px)', position: 'relative' }}>
       <div className="flex gap-4 mb-4">
-        <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-emerald-400">
+        <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold' }} className="gradient-text">
           World Map Viewer
         </h1>
         <input 
@@ -331,23 +331,21 @@ export default function WorldMap() {
           placeholder="Search Alliance, Player, or Town..." 
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="flex-1 bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500 transition-colors"
+          className="input-field"
+          style={{ flex: 1 }}
         />
       </div>
 
-      <div className="flex-1 min-h-[600px] rounded-xl overflow-hidden border border-white/10 relative z-0">
+      <div style={{ flex: 1, minHeight: '600px', borderRadius: '12px', overflow: 'hidden', border: '1px solid var(--border-color)', position: 'relative', zIndex: 0 }}>
         {(loading || mapProcessing) && (
-          <div className="absolute inset-0 z-50 flex items-center justify-center bg-[#0b101e] bg-opacity-90 backdrop-blur-sm transition-opacity duration-500">
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(11, 16, 30, 0.9)', backdropFilter: 'blur(4px)' }}>
             <div className="flex flex-col items-center gap-4">
-              <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-              <div className="text-xl font-bold text-white tracking-widest animate-pulse">
+              <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: 'white', letterSpacing: '2px', animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' }}>
                 {loading ? "Downloading World Data..." : "Rendering Battle Map..."}
               </div>
             </div>
           </div>
         )}
-
-
 
         <Map
           ref={mapRef}
@@ -562,37 +560,36 @@ export default function WorldMap() {
               closeOnClick={false}
               anchor="bottom"
               offset={10}
-              className="custom-popup"
             >
-              <div className="bg-slate-900 border border-white/10 p-3 rounded shadow-xl text-sm min-w-[200px]">
+              <div className="glass-panel" style={{ padding: '1rem', minWidth: '200px' }}>
                 {hoverInfo.feature.properties.renderType === 'town' && (
                   <>
-                    <div className="font-bold text-white text-base mb-1">{hoverInfo.feature.properties.name}</div>
-                    <div className="text-gray-300"><span className="text-gray-500">Player:</span> {hoverInfo.feature.properties.player}</div>
-                    <div className="text-gray-300"><span className="text-gray-500">Alliance:</span> {hoverInfo.feature.properties.alliance}</div>
-                    <div className="text-emerald-400 font-mono mt-1">{hoverInfo.feature.properties.points.toLocaleString()} pts</div>
+                    <div style={{ fontWeight: 'bold', fontSize: '1.1rem', marginBottom: '0.25rem' }}>{hoverInfo.feature.properties.name}</div>
+                    <div className="text-secondary">Player: <span style={{ color: 'white' }}>{hoverInfo.feature.properties.player}</span></div>
+                    <div className="text-secondary">Alliance: <span style={{ color: 'white' }}>{hoverInfo.feature.properties.alliance}</span></div>
+                    <div style={{ color: '#10b981', fontFamily: 'monospace', marginTop: '0.5rem', fontWeight: 'bold' }}>{hoverInfo.feature.properties.points.toLocaleString()} pts</div>
                   </>
                 )}
                 {(hoverInfo.feature.properties.renderType === 'island' || hoverInfo.feature.properties.renderType === 'rock') && (
                   <>
-                    <div className="font-bold text-white text-base mb-1">
+                    <div style={{ fontWeight: 'bold', fontSize: '1.1rem', marginBottom: '0.25rem' }}>
                       {hoverInfo.feature.properties.renderType === 'island' ? 'Island' : 'Rock'} ({hoverInfo.feature.properties.x}, {hoverInfo.feature.properties.y})
                     </div>
                     {hoverInfo.feature.properties.dominantAlliance !== "None" && (
-                      <div className="text-gray-300">
-                        <span className="text-gray-500">Dominant:</span> <span style={{color: hoverInfo.feature.properties.islandColor}}>{hoverInfo.feature.properties.dominantAlliance}</span>
+                      <div className="text-secondary">
+                        Dominant: <span style={{color: hoverInfo.feature.properties.islandColor, fontWeight: 'bold'}}>{hoverInfo.feature.properties.dominantAlliance}</span>
                       </div>
                     )}
                     {hoverInfo.feature.properties.renderType === 'island' && (
-                      <div className="text-gray-300"><span className="text-gray-500">Buff:</span> +{hoverInfo.feature.properties.resourcePlus} / -{hoverInfo.feature.properties.resourceMinus}</div>
+                      <div className="text-secondary">Buff: <span style={{ color: 'white' }}>+{hoverInfo.feature.properties.resourcePlus} / -{hoverInfo.feature.properties.resourceMinus}</span></div>
                     )}
-                    <div className="text-gray-300"><span className="text-gray-500">Towns:</span> {hoverInfo.feature.properties.colonizedCount} / {hoverInfo.feature.properties.availableTowns}</div>
+                    <div className="text-secondary">Towns: <span style={{ color: 'white' }}>{hoverInfo.feature.properties.colonizedCount} / {hoverInfo.feature.properties.availableTowns}</span></div>
                   </>
                 )}
                 {hoverInfo.feature.properties.renderType === 'empty-slot' && (
                   <>
-                    <div className="font-bold text-emerald-400 text-base">Empty Slot</div>
-                    <div className="text-gray-400 text-xs">Ready for colonization</div>
+                    <div style={{ fontWeight: 'bold', color: '#10b981', fontSize: '1.1rem' }}>Empty Slot</div>
+                    <div className="text-secondary" style={{ fontSize: '0.8rem' }}>Ready for colonization</div>
                   </>
                 )}
               </div>
@@ -602,81 +599,81 @@ export default function WorldMap() {
       </div>
 
       {/* Sidebar Overlay (Always Visible) */}
-      <div className="absolute top-20 right-4 z-50 w-80 max-h-[calc(100%-6rem)] overflow-y-auto bg-slate-900/80 backdrop-blur-md border border-white/10 rounded-xl p-4 shadow-2xl flex flex-col gap-6 text-white" style={{ scrollbarWidth: 'none' }}>
+      <div className="glass-panel flex flex-col gap-4" style={{ position: 'absolute', top: '5rem', right: '1rem', zIndex: 50, width: '320px', maxHeight: 'calc(100% - 6rem)', overflowY: 'auto', scrollbarWidth: 'none' }}>
         
         {/* Data Status */}
-        <div className="flex flex-col gap-1">
-          <h2 className="text-lg font-bold text-blue-400">Data Status</h2>
-          <div className="text-sm text-gray-300">
+        <div className="flex flex-col" style={{ gap: '0.25rem' }}>
+          <h2 style={{ fontSize: '1.125rem', fontWeight: 'bold', color: 'var(--primary)' }}>Data Status</h2>
+          <div className="text-secondary" style={{ fontSize: '0.875rem' }}>
             {lastSync ? `Synced: ${lastSync.toLocaleString()}` : "Loading..."}
           </div>
         </div>
 
         {/* Jump & Tracker */}
-        <div className="flex flex-col gap-2">
-          <h2 className="text-lg font-bold text-blue-400">Navigation</h2>
-          <div className="text-sm font-mono text-gray-300 bg-black/30 p-2 rounded">
+        <div className="flex flex-col" style={{ gap: '0.5rem' }}>
+          <h2 style={{ fontSize: '1.125rem', fontWeight: 'bold', color: 'var(--primary)' }}>Navigation</h2>
+          <div style={{ fontSize: '0.875rem', fontFamily: 'monospace', color: '#cbd5e1', background: 'rgba(0,0,0,0.3)', padding: '0.5rem', borderRadius: '4px' }}>
             Cursor: {cursorGrid ? `${cursorGrid.x}, ${cursorGrid.y}` : "---, ---"}
           </div>
-          <form onSubmit={handleJump} className="flex gap-2 mt-1">
-            <input type="number" placeholder="X" value={jumpX} onChange={e=>setJumpX(e.target.value)} className="w-16 bg-black/30 border border-white/10 rounded px-2 py-1 text-sm outline-none" />
-            <input type="number" placeholder="Y" value={jumpY} onChange={e=>setJumpY(e.target.value)} className="w-16 bg-black/30 border border-white/10 rounded px-2 py-1 text-sm outline-none" />
-            <button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-500 rounded px-2 py-1 text-sm font-bold transition-colors">Jump</button>
+          <form onSubmit={handleJump} className="flex" style={{ gap: '0.5rem', marginTop: '0.25rem' }}>
+            <input type="number" placeholder="X" value={jumpX} onChange={e=>setJumpX(e.target.value)} className="input-field" style={{ width: '60px', padding: '0.25rem 0.5rem' }} />
+            <input type="number" placeholder="Y" value={jumpY} onChange={e=>setJumpY(e.target.value)} className="input-field" style={{ width: '60px', padding: '0.25rem 0.5rem' }} />
+            <button type="submit" className="btn btn-primary" style={{ flex: 1, padding: '0.25rem', fontSize: '0.875rem' }}>Jump</button>
           </form>
         </div>
 
         {/* Search Stats */}
         {searchQuery.trim() && searchStats && (
-          <div className="flex flex-col gap-2 bg-blue-900/20 border border-blue-500/30 p-3 rounded-lg">
-            <h2 className="text-md font-bold text-blue-400">Search Results</h2>
+          <div className="flex flex-col" style={{ gap: '0.5rem', background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.3)', padding: '0.75rem', borderRadius: '8px' }}>
+            <h2 style={{ fontSize: '1rem', fontWeight: 'bold', color: 'var(--primary)' }}>Search Results</h2>
             <div className="flex justify-between text-sm">
-              <span className="text-gray-400">Matches:</span>
-              <span className="font-bold">{searchStats.count.toLocaleString()} towns</span>
+              <span className="text-secondary">Matches:</span>
+              <span style={{ fontWeight: 'bold' }}>{searchStats.count.toLocaleString()} towns</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-gray-400">Points:</span>
-              <span className="font-bold text-emerald-400">{searchStats.points.toLocaleString()}</span>
+              <span className="text-secondary">Points:</span>
+              <span style={{ fontWeight: 'bold', color: '#10b981' }}>{searchStats.points.toLocaleString()}</span>
             </div>
-            <button onClick={handleFitBounds} className="mt-2 w-full bg-blue-600/50 hover:bg-blue-500/50 border border-blue-500 rounded py-1 text-sm font-bold transition-colors">
+            <button onClick={handleFitBounds} className="btn" style={{ marginTop: '0.5rem', width: '100%', background: 'rgba(59, 130, 246, 0.2)', border: '1px solid var(--primary)', padding: '0.25rem', fontSize: '0.875rem', fontWeight: 'bold' }}>
               Frame on Map
             </button>
           </div>
         )}
 
         {/* Top 10 Alliances Legend */}
-        <div className="flex flex-col gap-2">
-          <h2 className="text-lg font-bold text-blue-400">Top 10 Alliances</h2>
-          <div className="flex flex-col gap-1">
+        <div className="flex flex-col" style={{ gap: '0.5rem' }}>
+          <h2 style={{ fontSize: '1.125rem', fontWeight: 'bold', color: 'var(--primary)' }}>Top 10 Alliances</h2>
+          <div className="flex flex-col" style={{ gap: '0.25rem' }}>
             {rawData && rawData.topAlliances ? rawData.topAlliances.map((ally) => {
               const activeColor = customColors[ally.name] || ally.color;
               return (
-                <div key={ally.name} className="flex items-center justify-between text-sm group hover:bg-white/5 p-1 rounded transition-colors">
-                  <span className="truncate pr-2 text-gray-300 font-medium">{ally.name}</span>
+                <div key={ally.name} className="flex items-center justify-between" style={{ fontSize: '0.875rem', padding: '0.25rem', borderRadius: '4px', transition: 'background 0.2s' }}>
+                  <span style={{ color: '#cbd5e1', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: '0.5rem' }}>{ally.name}</span>
                   <input 
                     type="color" 
                     value={activeColor}
                     onChange={(e) => setCustomColors(prev => ({...prev, [ally.name]: e.target.value}))}
-                    className="w-5 h-5 rounded cursor-pointer border-none bg-transparent"
+                    style={{ width: '20px', height: '20px', border: 'none', background: 'transparent', cursor: 'pointer', padding: 0 }}
                   />
                 </div>
               );
             }) : (
-              <div className="text-sm text-gray-500 animate-pulse">Loading...</div>
+              <div className="text-secondary text-sm" style={{ animation: 'pulse 2s infinite' }}>Loading...</div>
             )}
           </div>
         </div>
 
         {/* World Stats */}
-        <div className="flex flex-col gap-2">
-          <h2 className="text-lg font-bold text-blue-400">World Overview</h2>
+        <div className="flex flex-col" style={{ gap: '0.5rem' }}>
+          <h2 style={{ fontSize: '1.125rem', fontWeight: 'bold', color: 'var(--primary)' }}>World Overview</h2>
           {worldStats ? (
-            <div className="flex flex-col gap-1 text-sm bg-black/20 p-3 rounded-lg border border-white/5">
-              <div className="flex justify-between"><span className="text-gray-400">Players:</span><span className="font-bold text-white">{worldStats.players.toLocaleString()}</span></div>
-              <div className="flex justify-between"><span className="text-gray-400">Active Towns:</span><span className="font-bold text-white">{worldStats.totalTowns.toLocaleString()}</span></div>
-              <div className="flex justify-between"><span className="text-gray-400">Pop. Islands:</span><span className="font-bold text-white">{worldStats.populatedIslands.toLocaleString()} <span className="text-gray-500 font-normal">/ {worldStats.totalIslands.toLocaleString()}</span></span></div>
+            <div className="flex flex-col" style={{ gap: '0.25rem', fontSize: '0.875rem', background: 'rgba(0,0,0,0.2)', padding: '0.75rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+              <div className="flex justify-between"><span className="text-secondary">Players:</span><span style={{ fontWeight: 'bold', color: 'white' }}>{worldStats.players.toLocaleString()}</span></div>
+              <div className="flex justify-between"><span className="text-secondary">Active Towns:</span><span style={{ fontWeight: 'bold', color: 'white' }}>{worldStats.totalTowns.toLocaleString()}</span></div>
+              <div className="flex justify-between"><span className="text-secondary">Pop. Islands:</span><span style={{ fontWeight: 'bold', color: 'white' }}>{worldStats.populatedIslands.toLocaleString()} <span style={{ color: 'var(--text-secondary)', fontWeight: 'normal' }}>/ {worldStats.totalIslands.toLocaleString()}</span></span></div>
             </div>
           ) : (
-            <div className="text-sm text-gray-500 animate-pulse">Loading...</div>
+            <div className="text-secondary text-sm" style={{ animation: 'pulse 2s infinite' }}>Loading...</div>
           )}
         </div>
 
