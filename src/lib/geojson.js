@@ -152,7 +152,18 @@ export async function generateGeoJSON() {
   }
 
   console.timeEnd("GeoJSON Generation");
-  return { type: 'RawMapData', islands: outputIslands, towns: outputTowns };
+  
+  const topAlliancesData = topAlliances.map(name => ({
+    name,
+    color: allianceColors[name]
+  }));
+
+  return { 
+    type: 'RawMapData', 
+    islands: outputIslands, 
+    towns: outputTowns,
+    topAlliances: topAlliancesData
+  };
 }
 
 export const getCachedGeoJSON = unstable_cache(

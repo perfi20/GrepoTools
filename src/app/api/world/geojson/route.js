@@ -19,6 +19,7 @@ export async function GET() {
           'Content-Type': 'application/json',
           'Content-Encoding': 'gzip',
           'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
+          'X-Last-Sync': meta.lastSync.toISOString(),
         },
       });
     }

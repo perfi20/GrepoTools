@@ -77,6 +77,15 @@ export default function WorldMap() {
   const [mapProcessing, setMapProcessing] = useState(true);
   const [hoverInfo, setHoverInfo] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
+  
+  // New States
+  const [lastSync, setLastSync] = useState(null);
+  const [cursorGrid, setCursorGrid] = useState(null);
+  const [jumpX, setJumpX] = useState("");
+  const [jumpY, setJumpY] = useState("");
+  const [customColors, setCustomColors] = useState({});
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  
   const mapRef = useRef();
 
   const oceanGrid = useMemo(() => generateOceanGrid(), []);
@@ -175,7 +184,11 @@ export default function WorldMap() {
   useEffect(() => {
     // Fetch directly from the Vercel-optimized API route
     fetch('/api/world/geojson')
-      .then(res => res.json())
+      .then(res => {
+        const syncHeader = res.headers.get('X-Last-Sync');
+        if (syncHeader) setLastSync(new Date(syncHeader));
+        return res.json();
+      })
       .then(d => {
         setRawData(d);
         setLoading(false);
@@ -185,7 +198,22 @@ export default function WorldMap() {
 
   const islandsData = useMemo(() => {
     if (!data) return null;
-    const features = data.features.filter(f => f.properties.renderType === 'island');
+    let features = data.features.filter(f => f.properties.renderType === 'island');
+    
+    // Apply custom colors if present
+    if (Object.keys(customColors).length > 0) {
+      features = features.map(f => {
+        const ally = f.properties.dominantAlliance;
+        if (ally && ally !== "None" && customColors[ally]) {
+          return {
+            ...f,
+            properties: { ...f.properties, islandColor: customColors[ally] }
+          };
+        }
+        return f;
+      });
+    }
+
     // Sort so empty dark islands render FIRST, colored inhabited islands render ON TOP
     features.sort((a, b) => {
       const aEmpty = a.properties.islandColor === "#1e293b";
@@ -195,7 +223,7 @@ export default function WorldMap() {
       return 0;
     });
     return { type: 'FeatureCollection', features };
-  }, [data]);
+  }, [data, customColors]);
 
   const rocksData = useMemo(() => {
     if (!data) return null;
@@ -229,6 +257,70 @@ export default function WorldMap() {
     return { type: 'FeatureCollection', features: towns };
   }, [data, searchQuery]);
 
+  const searchStats = useMemo(() => {
+    if (!townsData || !searchQuery.trim()) return null;
+    const towns = townsData.features;
+    let totalPoints = 0;
+    towns.forEach(t => totalPoints += t.properties.points);
+    return {
+      count: towns.length,
+      points: totalPoints
+    };
+  }, [townsData, searchQuery]);
+
+  const worldStats = useMemo(() => {
+    if (!rawData) return null;
+    let populatedIslands = 0;
+    rawData.islands.forEach(i => {
+      if (i.colonizedCount > 0) populatedIslands++;
+    });
+    const playersSet = new Set();
+    if (rawData.towns) {
+      rawData.towns.forEach(t => {
+        if (t.player && t.player !== 'Ghost Town') playersSet.add(t.player);
+      });
+    }
+    return {
+      totalTowns: rawData.towns ? rawData.towns.length : 0,
+      totalIslands: rawData.islands.length,
+      populatedIslands,
+      players: playersSet.size
+    };
+  }, [rawData]);
+
+  const handleJump = (e) => {
+    e.preventDefault();
+    if (!jumpX || !jumpY) return;
+    const x = parseInt(jumpX);
+    const y = parseInt(jumpY);
+    if (isNaN(x) || isNaN(y)) return;
+    if (mapRef.current) {
+      mapRef.current.flyTo({
+        center: [gridToLng(x), gridToLat(y)],
+        zoom: 6,
+        duration: 1000
+      });
+    }
+  };
+
+  const handleFitBounds = () => {
+    if (!townsData || townsData.features.length === 0 || !mapRef.current) return;
+    let minLng = 180, maxLng = -180, minLat = 90, maxLat = -90;
+    townsData.features.forEach(f => {
+      const [lng, lat] = f.geometry.coordinates;
+      if (lng < minLng) minLng = lng;
+      if (lng > maxLng) maxLng = lng;
+      if (lat < minLat) minLat = lat;
+      if (lat > maxLat) maxLat = lat;
+    });
+    minLng -= 0.5; maxLng += 0.5;
+    minLat -= 0.5; maxLat += 0.5;
+    mapRef.current.fitBounds(
+      [[minLng, minLat], [maxLng, maxLat]], 
+      { padding: 50, duration: 1000 }
+    );
+  };
+
   return (
     <div className="flex flex-col h-[calc(100vh-100px)]">
       <div className="flex gap-4 mb-4">
@@ -255,6 +347,99 @@ export default function WorldMap() {
             </div>
           </div>
         )}
+
+      {/* Floating Toggle Button */}
+      <button 
+        onClick={() => setSidebarOpen(!sidebarOpen)}
+        className="absolute top-4 right-4 z-[60] bg-slate-800/90 hover:bg-slate-700/90 backdrop-blur border border-white/10 p-2 rounded-lg text-white shadow-lg transition-all"
+        style={{ marginRight: sidebarOpen ? '21rem' : '0' }}
+      >
+        {sidebarOpen ? '→' : '←'}
+      </button>
+
+      {/* Sidebar Overlay */}
+      {sidebarOpen && (
+        <div className="absolute top-4 right-4 z-50 w-80 max-h-[calc(100%-2rem)] overflow-y-auto bg-slate-900/80 backdrop-blur-md border border-white/10 rounded-xl p-4 shadow-2xl flex flex-col gap-6 text-white" style={{ scrollbarWidth: 'none' }}>
+          
+          {/* Data Status */}
+          <div className="flex flex-col gap-1">
+            <h2 className="text-lg font-bold text-blue-400">Data Status</h2>
+            <div className="text-sm text-gray-300">
+              {lastSync ? `Synced: ${lastSync.toLocaleString()}` : "Loading..."}
+            </div>
+          </div>
+
+          {/* Jump & Tracker */}
+          <div className="flex flex-col gap-2">
+            <h2 className="text-lg font-bold text-blue-400">Navigation</h2>
+            <div className="text-sm font-mono text-gray-300 bg-black/30 p-2 rounded">
+              Cursor: {cursorGrid ? `${cursorGrid.x}, ${cursorGrid.y}` : "---, ---"}
+            </div>
+            <form onSubmit={handleJump} className="flex gap-2 mt-1">
+              <input type="number" placeholder="X" value={jumpX} onChange={e=>setJumpX(e.target.value)} className="w-16 bg-black/30 border border-white/10 rounded px-2 py-1 text-sm outline-none" />
+              <input type="number" placeholder="Y" value={jumpY} onChange={e=>setJumpY(e.target.value)} className="w-16 bg-black/30 border border-white/10 rounded px-2 py-1 text-sm outline-none" />
+              <button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-500 rounded px-2 py-1 text-sm font-bold transition-colors">Jump</button>
+            </form>
+          </div>
+
+          {/* Search Stats */}
+          {searchQuery.trim() && searchStats && (
+            <div className="flex flex-col gap-2 bg-blue-900/20 border border-blue-500/30 p-3 rounded-lg">
+              <h2 className="text-md font-bold text-blue-400">Search Results</h2>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-400">Matches:</span>
+                <span className="font-bold">{searchStats.count.toLocaleString()} towns</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-400">Points:</span>
+                <span className="font-bold text-emerald-400">{searchStats.points.toLocaleString()}</span>
+              </div>
+              <button onClick={handleFitBounds} className="mt-2 w-full bg-blue-600/50 hover:bg-blue-500/50 border border-blue-500 rounded py-1 text-sm font-bold transition-colors">
+                Frame on Map
+              </button>
+            </div>
+          )}
+
+          {/* Top 10 Alliances Legend */}
+          <div className="flex flex-col gap-2">
+            <h2 className="text-lg font-bold text-blue-400">Top 10 Alliances</h2>
+            <div className="flex flex-col gap-1">
+              {rawData && rawData.topAlliances ? rawData.topAlliances.map((ally) => {
+                const activeColor = customColors[ally.name] || ally.color;
+                return (
+                  <div key={ally.name} className="flex items-center justify-between text-sm group hover:bg-white/5 p-1 rounded transition-colors">
+                    <span className="truncate pr-2 text-gray-300 font-medium">{ally.name}</span>
+                    <input 
+                      type="color" 
+                      value={activeColor}
+                      onChange={(e) => setCustomColors(prev => ({...prev, [ally.name]: e.target.value}))}
+                      className="w-5 h-5 rounded cursor-pointer border-none bg-transparent"
+                    />
+                  </div>
+                );
+              }) : (
+                <div className="text-sm text-gray-500 animate-pulse">Loading...</div>
+              )}
+            </div>
+          </div>
+
+          {/* World Stats */}
+          <div className="flex flex-col gap-2">
+            <h2 className="text-lg font-bold text-blue-400">World Overview</h2>
+            {worldStats ? (
+              <div className="flex flex-col gap-1 text-sm bg-black/20 p-3 rounded-lg border border-white/5">
+                <div className="flex justify-between"><span className="text-gray-400">Players:</span><span className="font-bold text-white">{worldStats.players.toLocaleString()}</span></div>
+                <div className="flex justify-between"><span className="text-gray-400">Active Towns:</span><span className="font-bold text-white">{worldStats.totalTowns.toLocaleString()}</span></div>
+                <div className="flex justify-between"><span className="text-gray-400">Pop. Islands:</span><span className="font-bold text-white">{worldStats.populatedIslands.toLocaleString()} <span className="text-gray-500 font-normal">/ {worldStats.totalIslands.toLocaleString()}</span></span></div>
+              </div>
+            ) : (
+              <div className="text-sm text-gray-500 animate-pulse">Loading...</div>
+            )}
+          </div>
+
+        </div>
+      )}
+
         <Map
           ref={mapRef}
           mapLibre={maplibregl}
@@ -278,6 +463,12 @@ export default function WorldMap() {
             setHoverInfo(null);
           }}
           onMouseMove={(e) => {
+            const lng = e.lngLat.lng;
+            const lat = e.lngLat.lat;
+            const gridX = Math.round((lng + 180) / 360 * 1000);
+            const gridY = Math.round((90 - lat) / 0.18);
+            setCursorGrid({ x: gridX, y: gridY });
+
             if (e.features && e.features.length > 0) {
               setHoverInfo({
                 feature: e.features[0],
