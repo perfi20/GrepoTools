@@ -84,7 +84,6 @@ export default function WorldMap() {
   const [jumpX, setJumpX] = useState("");
   const [jumpY, setJumpY] = useState("");
   const [customColors, setCustomColors] = useState({});
-  const [sidebarOpen, setSidebarOpen] = useState(true);
   
   const mapRef = useRef();
 
@@ -601,97 +600,86 @@ export default function WorldMap() {
           )}
         </Map>
 
-      {/* Floating Toggle Button */}
-      <button 
-        onClick={() => setSidebarOpen(!sidebarOpen)}
-        className="absolute top-4 right-4 z-[60] bg-slate-800/90 hover:bg-slate-700/90 backdrop-blur border border-white/10 p-2 rounded-lg text-white shadow-lg transition-all"
-        style={{ marginRight: sidebarOpen ? '21rem' : '0' }}
-      >
-        {sidebarOpen ? '→' : '←'}
-      </button>
+      {/* Sidebar Overlay (Always Visible) */}
+      <div className="absolute top-4 right-4 z-[100] w-80 max-h-[calc(100%-2rem)] overflow-y-auto bg-slate-900/80 backdrop-blur-md border border-white/10 rounded-xl p-4 shadow-2xl flex flex-col gap-6 text-white" style={{ scrollbarWidth: 'none' }}>
+        
+        {/* Data Status */}
+        <div className="flex flex-col gap-1">
+          <h2 className="text-lg font-bold text-blue-400">Data Status</h2>
+          <div className="text-sm text-gray-300">
+            {lastSync ? `Synced: ${lastSync.toLocaleString()}` : "Loading..."}
+          </div>
+        </div>
 
-      {/* Sidebar Overlay */}
-      {sidebarOpen && (
-        <div className="absolute top-4 right-4 z-50 w-80 max-h-[calc(100%-2rem)] overflow-y-auto bg-slate-900/80 backdrop-blur-md border border-white/10 rounded-xl p-4 shadow-2xl flex flex-col gap-6 text-white" style={{ scrollbarWidth: 'none' }}>
-          
-          {/* Data Status */}
+        {/* Jump & Tracker */}
+        <div className="flex flex-col gap-2">
+          <h2 className="text-lg font-bold text-blue-400">Navigation</h2>
+          <div className="text-sm font-mono text-gray-300 bg-black/30 p-2 rounded">
+            Cursor: {cursorGrid ? `${cursorGrid.x}, ${cursorGrid.y}` : "---, ---"}
+          </div>
+          <form onSubmit={handleJump} className="flex gap-2 mt-1">
+            <input type="number" placeholder="X" value={jumpX} onChange={e=>setJumpX(e.target.value)} className="w-16 bg-black/30 border border-white/10 rounded px-2 py-1 text-sm outline-none" />
+            <input type="number" placeholder="Y" value={jumpY} onChange={e=>setJumpY(e.target.value)} className="w-16 bg-black/30 border border-white/10 rounded px-2 py-1 text-sm outline-none" />
+            <button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-500 rounded px-2 py-1 text-sm font-bold transition-colors">Jump</button>
+          </form>
+        </div>
+
+        {/* Search Stats */}
+        {searchQuery.trim() && searchStats && (
+          <div className="flex flex-col gap-2 bg-blue-900/20 border border-blue-500/30 p-3 rounded-lg">
+            <h2 className="text-md font-bold text-blue-400">Search Results</h2>
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-400">Matches:</span>
+              <span className="font-bold">{searchStats.count.toLocaleString()} towns</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-400">Points:</span>
+              <span className="font-bold text-emerald-400">{searchStats.points.toLocaleString()}</span>
+            </div>
+            <button onClick={handleFitBounds} className="mt-2 w-full bg-blue-600/50 hover:bg-blue-500/50 border border-blue-500 rounded py-1 text-sm font-bold transition-colors">
+              Frame on Map
+            </button>
+          </div>
+        )}
+
+        {/* Top 10 Alliances Legend */}
+        <div className="flex flex-col gap-2">
+          <h2 className="text-lg font-bold text-blue-400">Top 10 Alliances</h2>
           <div className="flex flex-col gap-1">
-            <h2 className="text-lg font-bold text-blue-400">Data Status</h2>
-            <div className="text-sm text-gray-300">
-              {lastSync ? `Synced: ${lastSync.toLocaleString()}` : "Loading..."}
-            </div>
-          </div>
-
-          {/* Jump & Tracker */}
-          <div className="flex flex-col gap-2">
-            <h2 className="text-lg font-bold text-blue-400">Navigation</h2>
-            <div className="text-sm font-mono text-gray-300 bg-black/30 p-2 rounded">
-              Cursor: {cursorGrid ? `${cursorGrid.x}, ${cursorGrid.y}` : "---, ---"}
-            </div>
-            <form onSubmit={handleJump} className="flex gap-2 mt-1">
-              <input type="number" placeholder="X" value={jumpX} onChange={e=>setJumpX(e.target.value)} className="w-16 bg-black/30 border border-white/10 rounded px-2 py-1 text-sm outline-none" />
-              <input type="number" placeholder="Y" value={jumpY} onChange={e=>setJumpY(e.target.value)} className="w-16 bg-black/30 border border-white/10 rounded px-2 py-1 text-sm outline-none" />
-              <button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-500 rounded px-2 py-1 text-sm font-bold transition-colors">Jump</button>
-            </form>
-          </div>
-
-          {/* Search Stats */}
-          {searchQuery.trim() && searchStats && (
-            <div className="flex flex-col gap-2 bg-blue-900/20 border border-blue-500/30 p-3 rounded-lg">
-              <h2 className="text-md font-bold text-blue-400">Search Results</h2>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-400">Matches:</span>
-                <span className="font-bold">{searchStats.count.toLocaleString()} towns</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-400">Points:</span>
-                <span className="font-bold text-emerald-400">{searchStats.points.toLocaleString()}</span>
-              </div>
-              <button onClick={handleFitBounds} className="mt-2 w-full bg-blue-600/50 hover:bg-blue-500/50 border border-blue-500 rounded py-1 text-sm font-bold transition-colors">
-                Frame on Map
-              </button>
-            </div>
-          )}
-
-          {/* Top 10 Alliances Legend */}
-          <div className="flex flex-col gap-2">
-            <h2 className="text-lg font-bold text-blue-400">Top 10 Alliances</h2>
-            <div className="flex flex-col gap-1">
-              {rawData && rawData.topAlliances ? rawData.topAlliances.map((ally) => {
-                const activeColor = customColors[ally.name] || ally.color;
-                return (
-                  <div key={ally.name} className="flex items-center justify-between text-sm group hover:bg-white/5 p-1 rounded transition-colors">
-                    <span className="truncate pr-2 text-gray-300 font-medium">{ally.name}</span>
-                    <input 
-                      type="color" 
-                      value={activeColor}
-                      onChange={(e) => setCustomColors(prev => ({...prev, [ally.name]: e.target.value}))}
-                      className="w-5 h-5 rounded cursor-pointer border-none bg-transparent"
-                    />
-                  </div>
-                );
-              }) : (
-                <div className="text-sm text-gray-500 animate-pulse">Loading...</div>
-              )}
-            </div>
-          </div>
-
-          {/* World Stats */}
-          <div className="flex flex-col gap-2">
-            <h2 className="text-lg font-bold text-blue-400">World Overview</h2>
-            {worldStats ? (
-              <div className="flex flex-col gap-1 text-sm bg-black/20 p-3 rounded-lg border border-white/5">
-                <div className="flex justify-between"><span className="text-gray-400">Players:</span><span className="font-bold text-white">{worldStats.players.toLocaleString()}</span></div>
-                <div className="flex justify-between"><span className="text-gray-400">Active Towns:</span><span className="font-bold text-white">{worldStats.totalTowns.toLocaleString()}</span></div>
-                <div className="flex justify-between"><span className="text-gray-400">Pop. Islands:</span><span className="font-bold text-white">{worldStats.populatedIslands.toLocaleString()} <span className="text-gray-500 font-normal">/ {worldStats.totalIslands.toLocaleString()}</span></span></div>
-              </div>
-            ) : (
+            {rawData && rawData.topAlliances ? rawData.topAlliances.map((ally) => {
+              const activeColor = customColors[ally.name] || ally.color;
+              return (
+                <div key={ally.name} className="flex items-center justify-between text-sm group hover:bg-white/5 p-1 rounded transition-colors">
+                  <span className="truncate pr-2 text-gray-300 font-medium">{ally.name}</span>
+                  <input 
+                    type="color" 
+                    value={activeColor}
+                    onChange={(e) => setCustomColors(prev => ({...prev, [ally.name]: e.target.value}))}
+                    className="w-5 h-5 rounded cursor-pointer border-none bg-transparent"
+                  />
+                </div>
+              );
+            }) : (
               <div className="text-sm text-gray-500 animate-pulse">Loading...</div>
             )}
           </div>
-
         </div>
-      )}
+
+        {/* World Stats */}
+        <div className="flex flex-col gap-2">
+          <h2 className="text-lg font-bold text-blue-400">World Overview</h2>
+          {worldStats ? (
+            <div className="flex flex-col gap-1 text-sm bg-black/20 p-3 rounded-lg border border-white/5">
+              <div className="flex justify-between"><span className="text-gray-400">Players:</span><span className="font-bold text-white">{worldStats.players.toLocaleString()}</span></div>
+              <div className="flex justify-between"><span className="text-gray-400">Active Towns:</span><span className="font-bold text-white">{worldStats.totalTowns.toLocaleString()}</span></div>
+              <div className="flex justify-between"><span className="text-gray-400">Pop. Islands:</span><span className="font-bold text-white">{worldStats.populatedIslands.toLocaleString()} <span className="text-gray-500 font-normal">/ {worldStats.totalIslands.toLocaleString()}</span></span></div>
+            </div>
+          ) : (
+            <div className="text-sm text-gray-500 animate-pulse">Loading...</div>
+          )}
+        </div>
+
+      </div>
       </div>
     </div>
   );
