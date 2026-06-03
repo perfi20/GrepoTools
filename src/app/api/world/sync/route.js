@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/prisma';
 import https from 'https';
 import zlib from 'zlib';
@@ -241,6 +242,7 @@ export async function GET(request) {
         create: { id: 1, lastSync: new Date(), geoJsonCache: base64Gzip }
       });
       console.log("GeoJSON successfully saved to Database!");
+      revalidatePath('/api/world/geojson'); // Purge Vercel CDN Edge Cache
     } catch (e) {
       console.error("Failed to generate and save GeoJSON:", e);
       // Ensure sync metadata is updated even if GeoJSON fails

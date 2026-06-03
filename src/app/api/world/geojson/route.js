@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { generateGeoJSON } from '@/lib/geojson';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     const meta = await prisma.syncMetadata.findUnique({ where: { id: 1 } });
