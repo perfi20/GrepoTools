@@ -103,28 +103,15 @@ export default function WorldMap() {
         {loading && <span className="text-blue-400 animate-pulse my-auto">Loading 50,000+ towns...</span>}
       </div>
 
-      <div className="flex-1 rounded-xl overflow-hidden border border-white/10 relative">
+      <div className="flex-1 rounded-xl overflow-hidden border border-white/10 relative" style={{ minHeight: "600px" }}>
         <Map
           ref={mapRef}
-          mapLibre={maplibregl}
-          style={{ width: "100%", height: "100%" }}
+          style={{ position: "absolute", top: 0, bottom: 0, left: 0, right: 0 }}
           initialViewState={{
             longitude: 0, // Center of the world (Ocean 55 roughly)
             latitude: 0,
             zoom: 1
-          }}
-          mapStyle={{
-            version: 8,
-            sources: {},
-            glyphs: "https://protomaps.github.io/basemaps-assets/fonts/{fontstack}/{range}.pbf",
-            layers: [
-              {
-                id: "background",
-                type: "background",
-                paint: { "background-color": "#0b101e" } // Deep dark sea color
-              }
-            ]
-          }}
+          mapStyle="https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json"
           interactiveLayerIds={["town-points"]}
           onMouseEnter={(e) => {
             mapRef.current.getCanvas().style.cursor = "pointer";
