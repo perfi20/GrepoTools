@@ -94,11 +94,18 @@ export async function GET(request) {
     const currentPlayers = await prisma.player.findMany();
     const playerMap = new Map(currentPlayers.map(p => [p.id, p]));
 
+    const validAllianceIds = new Set(newAlliances.map(a => a.id));
+
     for (const row of playersRaw) {
       const [idStr, name, allianceIdStr, pointsStr, rankStr, townsStr] = row;
       const id = parseInt(idStr);
       const points = parseInt(pointsStr);
-      const allianceId = allianceIdStr ? parseInt(allianceIdStr) : null;
+      let allianceId = allianceIdStr ? parseInt(allianceIdStr) : null;
+      
+      // Ensure referential integrity (Grepolis data dumps can sometimes have orphaned players)
+      if (allianceId && !validAllianceIds.has(allianceId)) {
+          allianceId = null;
+      }
 
       newPlayers.push({
         id,
@@ -126,11 +133,18 @@ export async function GET(request) {
     const currentTowns = await prisma.town.findMany({ select: { id: true, points: true } });
     const townMap = new Map(currentTowns.map(t => [t.id, t.points]));
 
+    const validPlayerIds = new Set(newPlayers.map(p => p.id));
+
     for (const row of townsRaw) {
       const [idStr, playerIdStr, name, xStr, yStr, slotStr, pointsStr] = row;
       const id = parseInt(idStr);
       const points = parseInt(pointsStr);
-      const playerId = playerIdStr ? parseInt(playerIdStr) : null;
+      let playerId = playerIdStr ? parseInt(playerIdStr) : null;
+      
+      // Ensure referential integrity (Orphaned towns become ghost towns)
+      if (playerId && !validPlayerIds.has(playerId)) {
+          playerId = null;
+      }
 
       newTowns.push({
         id,
