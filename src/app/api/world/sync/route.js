@@ -37,10 +37,13 @@ async function fetchAndDecompress(filename) {
 }
 
 export async function GET(request) {
+  const { searchParams } = new URL(request.url);
+  const force = searchParams.get('force') === 'true';
+
   // We can add a secret key check here later for Vercel Cron
   try {
     const meta = await prisma.syncMetadata.findUnique({ where: { id: 1 } });
-    if (meta) {
+    if (meta && !force) {
       const minutesSinceLastSync = (new Date() - meta.lastSync) / 1000 / 60;
       if (minutesSinceLastSync < 50) {
         return NextResponse.json({ 
