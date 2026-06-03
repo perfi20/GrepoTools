@@ -8,13 +8,6 @@ const gridToLat = (y) => -((y / 1000) * 180 - 90);
 export async function GET() {
   try {
     console.time("GeoJSON Generation");
-    // Fetch all playable islands
-    const islands = await prisma.island.findMany({
-      where: {
-        availableTowns: { gt: 0 }
-      }
-    });
-
     // Fetch all towns with player and alliance data
     const towns = await prisma.town.findMany({
       include: {
@@ -25,6 +18,37 @@ export async function GET() {
           }
         }
       }
+    });
+
+    // Calculate dynamic world border based on the furthest colonized town
+    let maxDistSq = 0;
+    for (const t of towns) {
+      const distSq = Math.pow(t.islandX - 500, 2) + Math.pow(t.islandY - 500, 2);
+      if (distSq > maxDistSq) {
+        maxDistSq = distSq;
+      }
+    }
+    const maxDist = Math.sqrt(maxDistSq);
+    const worldRadius = Math.ceil(maxDist + 20); // Add 20 islands padding
+
+    // Fetch all islands within the bounding box of the world radius
+    const minX = 500 - worldRadius;
+    const maxX = 500 + worldRadius;
+    const minY = 500 - worldRadius;
+    const maxY = 500 + worldRadius;
+
+    const allIslandsInBox = await prisma.island.findMany({
+      where: {
+        x: { gte: minX, lte: maxX },
+        y: { gte: minY, lte: maxY }
+      }
+    });
+
+    // Filter exactly to the circular world border
+    const worldRadiusSq = Math.pow(worldRadius, 2);
+    const islands = allIslandsInBox.filter(i => {
+      const distSq = Math.pow(i.x - 500, 2) + Math.pow(i.y - 500, 2);
+      return distSq <= worldRadiusSq;
     });
 
     // Create a quick lookup for towns by island coordinates
