@@ -78,12 +78,19 @@ export default function WorldMap() {
       .catch(console.error);
   }, []);
 
-  // Filter and split data into different sources
   const islandsData = useMemo(() => {
     if (!data) return null;
     return { 
       type: 'FeatureCollection', 
       features: data.features.filter(f => f.properties.renderType === 'island') 
+    };
+  }, [data]);
+
+  const rocksData = useMemo(() => {
+    if (!data) return null;
+    return { 
+      type: 'FeatureCollection', 
+      features: data.features.filter(f => f.properties.renderType === 'rock') 
     };
   }, [data]);
 
@@ -137,8 +144,12 @@ export default function WorldMap() {
             latitude: 0,
             zoom: 2
           }}
+          maxBounds={[
+            [gridToLng(250), gridToLat(750)], // South West
+            [gridToLng(750), gridToLat(250)]  // North East
+          ]}
           mapStyle={MAP_STYLE}
-          interactiveLayerIds={["town-points", "islands-points", "empty-slots-points"]}
+          interactiveLayerIds={["town-points", "islands-points", "rocks-points", "empty-slots-points"]}
           onMouseEnter={(e) => {
             mapRef.current.getCanvas().style.cursor = "pointer";
           }}
@@ -199,35 +210,33 @@ export default function WorldMap() {
                     6, 15,
                     8, 30
                   ],
-                  "circle-color": [
-                    "match",
-                    ["get", "resourcePlus"],
-                    "wood", "#15803d", // Greenish
-                    "stone", "#475569", // Slate grayish
-                    "iron", "#94a3b8", // Silver/Iron
-                    "#1e293b" // Default fallback
-                  ],
+                  "circle-color": ["get", "islandColor"],
                   "circle-opacity": 0.8,
                   "circle-stroke-width": 2,
                   "circle-stroke-color": "#0f172a"
                 }}
               />
+            </Source>
+          )}
+
+          {/* Rocks Layer (Only visible when zoomed in >= 5) */}
+          {rocksData && (
+            <Source id="rocks-source" type="geojson" data={rocksData}>
               <Layer 
-                id="islands-labels"
-                type="symbol"
-                minzoom={5.5}
-                layout={{
-                  "text-field": [
-                    "concat", 
-                    "+", ["get", "resourcePlus"], 
-                    "\n-", ["get", "resourceMinus"]
-                  ],
-                  "text-font": ["Noto Sans Regular"],
-                  "text-size": 10,
-                  "text-justify": "center"
-                }}
+                id="rocks-points"
+                type="circle"
+                minzoom={5}
                 paint={{
-                  "text-color": "#ffffff"
+                  "circle-radius": [
+                    "interpolate", ["linear"], ["zoom"],
+                    5, 2,
+                    6, 5,
+                    8, 10
+                  ],
+                  "circle-color": ["get", "islandColor"],
+                  "circle-opacity": 0.5,
+                  "circle-stroke-width": 1,
+                  "circle-stroke-color": "#0f172a"
                 }}
               />
             </Source>
@@ -337,10 +346,19 @@ export default function WorldMap() {
                     <div className="text-emerald-400 font-mono mt-1">{hoverInfo.feature.properties.points.toLocaleString()} pts</div>
                   </>
                 )}
-                {hoverInfo.feature.properties.renderType === 'island' && (
+                {(hoverInfo.feature.properties.renderType === 'island' || hoverInfo.feature.properties.renderType === 'rock') && (
                   <>
-                    <div className="font-bold text-white text-base mb-1">Island ({hoverInfo.feature.properties.x}, {hoverInfo.feature.properties.y})</div>
-                    <div className="text-gray-300"><span className="text-gray-500">Buff:</span> +{hoverInfo.feature.properties.resourcePlus} / -{hoverInfo.feature.properties.resourceMinus}</div>
+                    <div className="font-bold text-white text-base mb-1">
+                      {hoverInfo.feature.properties.renderType === 'island' ? 'Island' : 'Rock'} ({hoverInfo.feature.properties.x}, {hoverInfo.feature.properties.y})
+                    </div>
+                    {hoverInfo.feature.properties.dominantAlliance !== "None" && (
+                      <div className="text-gray-300">
+                        <span className="text-gray-500">Dominant:</span> <span style={{color: hoverInfo.feature.properties.islandColor}}>{hoverInfo.feature.properties.dominantAlliance}</span>
+                      </div>
+                    )}
+                    {hoverInfo.feature.properties.renderType === 'island' && (
+                      <div className="text-gray-300"><span className="text-gray-500">Buff:</span> +{hoverInfo.feature.properties.resourcePlus} / -{hoverInfo.feature.properties.resourceMinus}</div>
+                    )}
                     <div className="text-gray-300"><span className="text-gray-500">Towns:</span> {hoverInfo.feature.properties.colonizedCount} / {hoverInfo.feature.properties.availableTowns}</div>
                   </>
                 )}

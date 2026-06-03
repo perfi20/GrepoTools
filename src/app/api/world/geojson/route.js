@@ -20,6 +20,38 @@ export async function GET() {
       }
     });
 
+    // Calculate global top alliances
+    const globalAllianceCounts = {};
+    for (const t of towns) {
+      const allyName = t.player && t.player.alliance ? t.player.alliance.name : null;
+      if (allyName) {
+        globalAllianceCounts[allyName] = (globalAllianceCounts[allyName] || 0) + 1;
+      }
+    }
+    
+    const topAlliances = Object.keys(globalAllianceCounts)
+      .sort((a, b) => globalAllianceCounts[b] - globalAllianceCounts[a])
+      .slice(0, 10);
+      
+    // Pre-assign a specific color palette to the top 10 alliances
+    const PALETTE = [
+      "#ef4444", // Red
+      "#3b82f6", // Blue
+      "#22c55e", // Green
+      "#a855f7", // Purple
+      "#f97316", // Orange
+      "#ec4899", // Pink
+      "#eab308", // Yellow
+      "#06b6d4", // Cyan
+      "#84cc16", // Lime
+      "#14b8a6"  // Teal
+    ];
+    
+    const allianceColors = {};
+    topAlliances.forEach((name, i) => {
+      allianceColors[name] = PALETTE[i];
+    });
+
     // Create a quick lookup for towns by island coordinates
     const townLookup = {};
     for (const t of towns) {
@@ -61,11 +93,28 @@ export async function GET() {
 
       const islandTowns = townLookup[`${island.x},${island.y}`] || [];
       const townSlotMap = {};
+      let dominantAlliance = null;
+      let maxTowns = 0;
+      const localAllyCounts = {};
+
       for (const t of islandTowns) {
         townSlotMap[t.islandSlot] = t;
+        
+        const allyName = t.player && t.player.alliance ? t.player.alliance.name : null;
+        if (allyName) {
+          localAllyCounts[allyName] = (localAllyCounts[allyName] || 0) + 1;
+          if (localAllyCounts[allyName] > maxTowns) {
+            maxTowns = localAllyCounts[allyName];
+            dominantAlliance = allyName;
+          }
+        }
       }
 
-      // Add the Island feature
+      const isRock = island.availableTowns === 0;
+      // #64748b (Slate) for minor alliances, #1e293b for empty
+      const islandColor = dominantAlliance ? (allianceColors[dominantAlliance] || "#64748b") : "#1e293b";
+
+      // Add the Island/Rock feature
       features.push({
         type: 'Feature',
         geometry: {
@@ -73,14 +122,16 @@ export async function GET() {
           coordinates: [islandLng, islandLat]
         },
         properties: {
-          renderType: 'island',
+          renderType: isRock ? 'rock' : 'island',
           id: island.id,
           x: island.x,
           y: island.y,
           resourcePlus: island.resourcePlus,
           resourceMinus: island.resourceMinus,
           availableTowns: island.availableTowns,
-          colonizedCount: islandTowns.length
+          colonizedCount: islandTowns.length,
+          islandColor: islandColor,
+          dominantAlliance: dominantAlliance || "None"
         }
       });
 
@@ -88,8 +139,11 @@ export async function GET() {
       // Grepolis islands usually have a max of 20 slots
       const maxSlots = 20; 
       
-      // Only generate slots up to availableTowns count
-      for (let slot = 0; slot < island.availableTowns; slot++) {
+      const maxSlotOnIsland = Math.max(-1, ...Object.keys(townSlotMap).map(Number));
+      const loopSlots = Math.max(island.availableTowns, maxSlotOnIsland + 1);
+      
+      // Only generate slots up to availableTowns count or highest town slot (to prevent losing towns on rocks)
+      for (let slot = 0; slot < loopSlots; slot++) {
         const angle = (slot / maxSlots) * Math.PI * 2;
         const slotLng = islandLng + Math.cos(angle) * ORBIT_RADIUS;
         // Adjust latitude orbit for aspect ratio so it looks circular (roughly depends on projection, 
