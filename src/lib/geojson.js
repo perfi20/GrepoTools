@@ -110,9 +110,10 @@ export async function generateGeoJSON() {
     }
 
     const totalCapacity = island.availableTowns + islandTowns.length;
-    const isRock = totalCapacity === 0;
+    
+    if (totalCapacity === 0) continue; // Skip purely decorative rocks that cannot be colonized
 
-    if (isRock) continue;
+    const isRock = totalCapacity <= 13;
 
     let islandColor = "#1e293b"; // Default empty island color
     if (islandTowns.length > 0) {
