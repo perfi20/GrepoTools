@@ -3,21 +3,25 @@ import { prisma } from '@/lib/prisma';
 
 export async function GET() {
   try {
+    // Fetch all towns to know which islands are populated
+    const towns = await prisma.town.findMany({
+      select: { islandX: true, islandY: true }
+    });
+    
+    const populatedSet = new Set();
+    for (const t of towns) {
+      populatedSet.add(`${t.islandX},${t.islandY}`);
+    }
+
     const allIslands = await prisma.island.findMany({ 
-      select: { 
-        id: true, 
-        x: true, 
-        y: true, 
-        availableTowns: true, 
-        _count: { select: { towns: true } } 
-      } 
+      select: { id: true, x: true, y: true, availableTowns: true } 
     });
     
     const toDelete = allIslands.filter(i => {
       const distSq = Math.pow(i.x - 500, 2) + Math.pow(i.y - 500, 2);
       const outside = distSq > 250 * 250;
-      const totalCapacity = i.availableTowns + i._count.towns;
-      const emptyRock = totalCapacity === 0;
+      const hasTowns = populatedSet.has(`${i.x},${i.y}`);
+      const emptyRock = i.availableTowns === 0 && !hasTowns;
       return outside || emptyRock;
     }).map(i => i.id);
 
