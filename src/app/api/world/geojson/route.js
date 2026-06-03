@@ -119,8 +119,11 @@ export async function GET() {
       const isRock = island.availableTowns < 20; // Small islands (<20) and true rocks (0)
       const isTrueRock = island.availableTowns === 0 && islandTowns.length === 0;
 
+      // Skip rendering empty uncolonizable rocks entirely
+      if (isTrueRock) continue;
+
       // Drastically increase orbit so it matches pixel sizes of MapLibre circles
-      const orbitRadius = !isRock ? 0.15 : (isTrueRock ? 0.0 : 0.10); 
+      const orbitRadius = !isRock ? 0.15 : 0.10; 
       
       // #64748b (Slate) for minor alliances, #1e293b for empty
       const islandColor = dominantAlliance ? (allianceColors[dominantAlliance] || "#64748b") : "#1e293b";
@@ -173,8 +176,8 @@ export async function GET() {
               alliance: town.player && town.player.alliance ? town.player.alliance.name : 'None',
             }
           });
-        } else if (!isTrueRock && slot < island.availableTowns) {
-          // Add empty slot (only if it's within availableTowns limit and not a true rock)
+        } else if (slot < island.availableTowns) {
+          // Add empty slot
           features.push({
             type: 'Feature',
             geometry: {

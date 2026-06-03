@@ -87,10 +87,16 @@ export default function WorldMap() {
 
   const islandsData = useMemo(() => {
     if (!data) return null;
-    return { 
-      type: 'FeatureCollection', 
-      features: data.features.filter(f => f.properties.renderType === 'island') 
-    };
+    const features = data.features.filter(f => f.properties.renderType === 'island');
+    // Sort so empty dark islands render FIRST, colored inhabited islands render ON TOP
+    features.sort((a, b) => {
+      const aEmpty = a.properties.islandColor === "#1e293b";
+      const bEmpty = b.properties.islandColor === "#1e293b";
+      if (aEmpty && !bEmpty) return -1;
+      if (!aEmpty && bEmpty) return 1;
+      return 0;
+    });
+    return { type: 'FeatureCollection', features };
   }, [data]);
 
   const rocksData = useMemo(() => {
@@ -227,8 +233,9 @@ export default function WorldMap() {
                 paint={{
                   "circle-radius": [
                     "interpolate", ["exponential", 2], ["zoom"],
-                    5, 4,
-                    20, 131072
+                    2, 3,
+                    6, 16,
+                    20, 262144
                   ],
                   "circle-color": ["get", "islandColor"],
                   "circle-opacity": 0.8,
@@ -249,8 +256,9 @@ export default function WorldMap() {
                 paint={{
                   "circle-radius": [
                     "interpolate", ["exponential", 2], ["zoom"],
-                    5, 1,
-                    20, 32768
+                    2, 1,
+                    6, 10,
+                    20, 163840
                   ],
                   "circle-color": ["get", "islandColor"],
                   "circle-opacity": 0.4,
