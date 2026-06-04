@@ -154,6 +154,11 @@ export async function generateGeoJSON() {
 
   console.timeEnd("GeoJSON Generation");
   
+  const topAlliancesData = topAlliances.map(name => ({
+    name,
+    color: allianceColors[name]
+  }));
+
   // Fetch Top 10 Players
   const dbPlayers = await prisma.player.findMany({
     orderBy: { points: 'desc' },
