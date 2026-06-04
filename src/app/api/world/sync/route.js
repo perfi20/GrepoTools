@@ -205,23 +205,30 @@ export async function GET(request) {
 
     // Execute Database Transactions
     // Delete existing base data (fastest way to "upsert" 50k rows in prisma without blowing up parameters)
-    // Then createMany new data. 
-    await prisma.$transaction([
+    // Then createMany new data.
+    const tx = [
       prisma.town.deleteMany(),
       prisma.player.deleteMany(),
       prisma.alliance.deleteMany(),
       prisma.island.deleteMany(),
-      
-      prisma.alliance.createMany({ data: newAlliances }),
-      prisma.player.createMany({ data: newPlayers }),
-      prisma.town.createMany({ data: newTowns }),
-      prisma.island.createMany({ data: newIslands }),
-      
-      // Insert History Deltas
-      ...(allianceHistory.length > 0 ? [prisma.allianceHistory.createMany({ data: allianceHistory })] : []),
-      ...(playerHistory.length > 0 ? [prisma.playerHistory.createMany({ data: playerHistory })] : []),
-      ...(townHistory.length > 0 ? [prisma.townHistory.createMany({ data: townHistory })] : []),
-    ]);
+    ];
+
+    const chunkArray = (arr, size) => {
+      const chunks = [];
+      for (let i = 0; i < arr.length; i += size) chunks.push(arr.slice(i, i + size));
+      return chunks;
+    };
+
+    chunkArray(newAlliances, BATCH_SIZE).forEach(chunk => tx.push(prisma.alliance.createMany({ data: chunk })));
+    chunkArray(newPlayers, BATCH_SIZE).forEach(chunk => tx.push(prisma.player.createMany({ data: chunk })));
+    chunkArray(newTowns, BATCH_SIZE).forEach(chunk => tx.push(prisma.town.createMany({ data: chunk })));
+    chunkArray(newIslands, BATCH_SIZE).forEach(chunk => tx.push(prisma.island.createMany({ data: chunk })));
+
+    if (allianceHistory.length > 0) chunkArray(allianceHistory, BATCH_SIZE).forEach(chunk => tx.push(prisma.allianceHistory.createMany({ data: chunk })));
+    if (playerHistory.length > 0) chunkArray(playerHistory, BATCH_SIZE).forEach(chunk => tx.push(prisma.playerHistory.createMany({ data: chunk })));
+    if (townHistory.length > 0) chunkArray(townHistory, BATCH_SIZE).forEach(chunk => tx.push(prisma.townHistory.createMany({ data: chunk })));
+
+    await prisma.$transaction(tx);
 
     // 5. Pre-generate and cache the MapLibre GeoJSON payload securely inside the PostgreSQL Database!
     // We heavily compress it using GZIP and Base64 encode it. 
