@@ -18,20 +18,14 @@ export async function GET() {
         headers: {
           'Content-Type': 'application/json',
           'Content-Encoding': 'gzip',
-          'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
           'X-Last-Sync': meta.lastSync.toISOString(),
         },
       });
     }
 
-    // Fallback if cache is empty (We don't gzip the fallback to keep it simple, just return raw JSON)
     const geojson = await generateGeoJSON();
 
-    return NextResponse.json(geojson, {
-      headers: {
-        'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
-      },
-    });
+    return NextResponse.json(geojson);
   } catch (error) {
     console.error("GeoJSON generation error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
