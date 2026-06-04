@@ -574,17 +574,9 @@ export default function WorldMap() {
                     searchQuery ? "#ef4444" : "#eab308"
                   ],
                   "circle-radius": [
-                    "case",
-                    ["has", "highlightColor"], [
-                      "interpolate", ["linear"], ["zoom"],
-                      6, 5,
-                      8, 12
-                    ],
-                    [
-                      "interpolate", ["linear"], ["zoom"],
-                      6, 3,
-                      8, 8
-                    ]
+                    "interpolate", ["linear"], ["zoom"],
+                    6, ["case", ["has", "highlightColor"], 5, 3],
+                    8, ["case", ["has", "highlightColor"], 12, 8]
                   ],
                   "circle-opacity": 1,
                   "circle-stroke-width": ["case", ["has", "highlightColor"], 2, 1],
