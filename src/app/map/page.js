@@ -73,11 +73,12 @@ function generateOceanGrid() {
 }
 
 export default function WorldMap() {
-  const [rawData, setRawData] = useState(null);
+  const [rawData, setRawData] = useState({ islands: [], towns: [], topAlliances: [], topPlayers: [] });
   const [loading, setLoading] = useState(true);
   const [mapProcessing, setMapProcessing] = useState(true);
   const [hoverInfo, setHoverInfo] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [worldStats, setWorldStats] = useState(null);
   
   // New States
   const [lastSync, setLastSync] = useState(null);
@@ -186,18 +187,65 @@ export default function WorldMap() {
   }, [rawData]);
 
   useEffect(() => {
-    // Fetch directly from the Vercel-optimized API route
-    fetch('/api/world/geojson')
-      .then(res => {
-        const syncHeader = res.headers.get('X-Last-Sync');
-        if (syncHeader) setLastSync(new Date(syncHeader));
-        return res.json();
-      })
-      .then(d => {
-        setRawData(d);
+    async function loadData() {
+      try {
+        // 1. Fetch Meta
+        const metaRes = await fetch('/api/world/meta');
+        const meta = await metaRes.json();
+        
+        setRawData(prev => ({
+          ...prev,
+          topAlliances: meta.topAlliances,
+          topPlayers: meta.topPlayers
+        }));
+        setWorldStats(meta.stats);
+        if (meta.lastSync) setLastSync(new Date(meta.lastSync));
+
+        // 2. Define Ocean Batches
+        const core = ["44","45","54","55"];
+        const inner = [];
+        for (let x=3; x<=6; x++) {
+          for (let y=3; y<=6; y++) {
+            const id = `${x}${y}`;
+            if (!core.includes(id)) inner.push(id);
+          }
+        }
+        
+        const outer = [];
+        for (let x=2; x<=7; x++) {
+          for (let y=2; y<=7; y++) {
+            const id = `${x}${y}`;
+            if (!core.includes(id) && !inner.includes(id)) outer.push(id);
+          }
+        }
+
+        const fetchOceanBatch = async (ids) => {
+          const res = await fetch(`/api/world/ocean?id=${ids.join(',')}`);
+          const batchData = await res.json();
+          if (batchData && batchData.islands) {
+            setRawData(prev => ({
+              ...prev,
+              islands: [...prev.islands, ...batchData.islands],
+              towns: [...prev.towns, ...(batchData.towns || [])]
+            }));
+          }
+        };
+
+        // Fetch Core First (awaited so we can dismiss loading screen)
+        await fetchOceanBatch(core);
         setLoading(false);
-      })
-      .catch(console.error);
+
+        // Fetch remaining asynchronously
+        await fetchOceanBatch(inner);
+        await fetchOceanBatch(outer);
+
+      } catch (error) {
+        console.error("Map load error:", error);
+        setLoading(false);
+      }
+    }
+
+    loadData();
   }, []);
 
   const islandsData = useMemo(() => {
@@ -295,25 +343,8 @@ export default function WorldMap() {
     };
   }, [townsData, searchQuery]);
 
-  const worldStats = useMemo(() => {
-    if (!rawData || !rawData.islands) return null;
-    let populatedIslands = 0;
-    rawData.islands.forEach(i => {
-      if (i.colonizedCount > 0) populatedIslands++;
-    });
-    const playersSet = new Set();
-    if (rawData.towns) {
-      rawData.towns.forEach(t => {
-        if (t.player && t.player !== 'Ghost Town') playersSet.add(t.player);
-      });
-    }
-    return {
-      totalTowns: rawData.towns ? rawData.towns.length : 0,
-      totalIslands: rawData.islands.length,
-      populatedIslands,
-      players: playersSet.size
-    };
-  }, [rawData]);
+  // World Stats comes directly from Meta now
+
 
   const handleJump = (e) => {
     e.preventDefault();
