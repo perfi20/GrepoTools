@@ -86,6 +86,9 @@ export default function WorldMap() {
   const [jumpY, setJumpY] = useState("");
   const [customColors, setCustomColors] = useState({});
   const [selectedIsland, setSelectedIsland] = useState(null);
+  const [highlightedPlayers, setHighlightedPlayers] = useState({});
+  const [highlightedAlliances, setHighlightedAlliances] = useState({});
+  const [manualHighlightInput, setManualHighlightInput] = useState("");
   
   const mapRef = useRef();
 
@@ -246,6 +249,22 @@ export default function WorldMap() {
     if (!data) return null;
     let towns = data.features.filter(f => f.properties.renderType === 'town');
     
+    // Apply highlights
+    if (Object.keys(highlightedPlayers).length > 0 || Object.keys(highlightedAlliances).length > 0) {
+      towns = towns.map(t => {
+        const pName = t.properties.player;
+        const aName = t.properties.alliance;
+        let hColor = null;
+        if (highlightedPlayers[pName]) hColor = highlightedPlayers[pName];
+        else if (highlightedAlliances[aName]) hColor = highlightedAlliances[aName];
+
+        if (hColor) {
+          return { ...t, properties: { ...t.properties, highlightColor: hColor } };
+        }
+        return t;
+      });
+    }
+
     if (searchQuery.trim()) {
       const lowerQuery = searchQuery.toLowerCase();
       towns = towns.filter(f => 
@@ -255,8 +274,15 @@ export default function WorldMap() {
       );
     }
     
+    // Sort so highlighted towns render on top
+    towns.sort((a, b) => {
+      if (a.properties.highlightColor && !b.properties.highlightColor) return 1;
+      if (!a.properties.highlightColor && b.properties.highlightColor) return -1;
+      return 0;
+    });
+
     return { type: 'FeatureCollection', features: towns };
-  }, [data, searchQuery]);
+  }, [data, searchQuery, highlightedPlayers, highlightedAlliances]);
 
   const searchStats = useMemo(() => {
     if (!townsData || !searchQuery.trim()) return null;
@@ -542,15 +568,27 @@ export default function WorldMap() {
                 minzoom={6}
                 filter={["!", ["has", "point_count"]]}
                 paint={{
-                  "circle-color": searchQuery ? "#ef4444" : "#eab308",
+                  "circle-color": [
+                    "case",
+                    ["has", "highlightColor"], ["get", "highlightColor"],
+                    searchQuery ? "#ef4444" : "#eab308"
+                  ],
                   "circle-radius": [
-                    "interpolate", ["linear"], ["zoom"],
-                    6, 3,
-                    8, 8
+                    "case",
+                    ["has", "highlightColor"], [
+                      "interpolate", ["linear"], ["zoom"],
+                      6, 5,
+                      8, 12
+                    ],
+                    [
+                      "interpolate", ["linear"], ["zoom"],
+                      6, 3,
+                      8, 8
+                    ]
                   ],
                   "circle-opacity": 1,
-                  "circle-stroke-width": 1,
-                  "circle-stroke-color": "#000000"
+                  "circle-stroke-width": ["case", ["has", "highlightColor"], 2, 1],
+                  "circle-stroke-color": ["case", ["has", "highlightColor"], "#ffffff", "#000000"]
                 }}
               />
             </Source>
@@ -637,12 +675,38 @@ export default function WorldMap() {
               return (
                 <div key={ally.name} className="flex items-center justify-between" style={{ fontSize: '0.875rem', padding: '0.25rem', borderRadius: '4px', transition: 'background 0.2s' }}>
                   <span style={{ color: '#cbd5e1', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: '0.5rem' }}>{ally.name}</span>
-                  <input 
-                    type="color" 
-                    value={activeColor}
-                    onChange={(e) => setCustomColors(prev => ({...prev, [ally.name]: e.target.value}))}
-                    style={{ width: '20px', height: '20px', border: 'none', background: 'transparent', cursor: 'pointer', padding: 0 }}
-                  />
+                  <div className="flex gap-2 items-center">
+                    <button 
+                      onClick={() => {
+                        setHighlightedAlliances(prev => {
+                          const next = {...prev};
+                          if (next[ally.name]) delete next[ally.name];
+                          else next[ally.name] = activeColor;
+                          return next;
+                        });
+                      }}
+                      style={{ 
+                        background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, 
+                        opacity: highlightedAlliances[ally.name] ? 1 : 0.3,
+                        filter: highlightedAlliances[ally.name] ? `drop-shadow(0 0 5px ${activeColor})` : 'none'
+                      }}
+                      title="Highlight all towns on map"
+                    >
+                      👁️
+                    </button>
+                    <input 
+                      type="color" 
+                      value={activeColor}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setCustomColors(prev => ({...prev, [ally.name]: val}));
+                        if (highlightedAlliances[ally.name]) {
+                          setHighlightedAlliances(prev => ({...prev, [ally.name]: val}));
+                        }
+                      }}
+                      style={{ width: '20px', height: '20px', border: 'none', background: 'transparent', cursor: 'pointer', padding: 0 }}
+                    />
+                  </div>
                 </div>
               );
             }) : (
@@ -670,6 +734,107 @@ export default function WorldMap() {
       {/* RIGHT SIDEBAR (Search & Navigation) */}
       <div className="glass-panel flex flex-col gap-4" style={{ position: 'absolute', top: '1rem', right: '1rem', zIndex: 50, width: '320px', maxHeight: 'calc(100% - 2rem)', overflowY: 'auto', scrollbarWidth: 'none' }}>
         
+        {/* Top 10 Players */}
+        <div className="flex flex-col" style={{ gap: '0.5rem' }}>
+          <h2 style={{ fontSize: '1.125rem', fontWeight: 'bold', color: 'var(--primary)' }}>Top 10 Players</h2>
+          <div className="flex flex-col" style={{ gap: '0.25rem' }}>
+            {rawData && rawData.topPlayers ? rawData.topPlayers.map((player) => {
+              const isHighlighted = highlightedPlayers[player.name];
+              const highlightColor = isHighlighted || customColors[player.alliance] || '#3b82f6';
+              return (
+                <div key={player.name} className="flex flex-col" style={{ fontSize: '0.875rem', padding: '0.5rem', borderRadius: '6px', background: isHighlighted ? `rgba(59, 130, 246, 0.1)` : 'rgba(255,255,255,0.03)', border: `1px solid ${isHighlighted ? highlightColor : 'transparent'}`, transition: 'all 0.2s' }}>
+                  <div className="flex items-center justify-between">
+                    <span style={{ color: 'white', fontWeight: 'bold', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{player.name}</span>
+                    <button 
+                      onClick={() => {
+                        setHighlightedPlayers(prev => {
+                          const next = {...prev};
+                          if (next[player.name]) delete next[player.name];
+                          else next[player.name] = highlightColor;
+                          return next;
+                        });
+                      }}
+                      style={{ background: 'transparent', border: 'none', cursor: 'pointer', opacity: isHighlighted ? 1 : 0.3 }}
+                      title="Highlight player's towns"
+                    >
+                      👁️
+                    </button>
+                  </div>
+                  <div className="flex justify-between text-secondary" style={{ fontSize: '0.75rem', marginTop: '2px' }}>
+                    <span>{player.points.toLocaleString()} pts • {player.towns} towns</span>
+                    <span style={{ color: customColors[player.alliance] || '#94a3b8' }}>{player.alliance}</span>
+                  </div>
+                </div>
+              );
+            }) : (
+              <div className="text-secondary text-sm" style={{ animation: 'pulse 2s infinite' }}>Loading...</div>
+            )}
+          </div>
+        </div>
+
+        {/* Manual Highlighting */}
+        <div className="flex flex-col" style={{ gap: '0.5rem' }}>
+          <h2 style={{ fontSize: '1.125rem', fontWeight: 'bold', color: 'var(--primary)' }}>Custom Highlights</h2>
+          <form 
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (manualHighlightInput.trim()) {
+                setHighlightedPlayers(prev => ({
+                  ...prev,
+                  [manualHighlightInput.trim()]: '#ef4444' // default red for manual
+                }));
+                setManualHighlightInput("");
+              }
+            }}
+            className="flex" style={{ gap: '0.5rem' }}
+          >
+            <input 
+              type="text" 
+              placeholder="Player Name..." 
+              value={manualHighlightInput}
+              onChange={e => setManualHighlightInput(e.target.value)}
+              className="input-field"
+              style={{ flex: 1 }}
+            />
+            <button type="submit" className="btn btn-primary" style={{ padding: '0.25rem 0.5rem' }}>Add</button>
+          </form>
+          
+          {/* Active Manual Highlights */}
+          {Object.entries(highlightedPlayers).length > 0 && (
+            <div className="flex flex-col gap-2 mt-2">
+              {Object.entries(highlightedPlayers).map(([name, color]) => {
+                // Skip if it's already in Top 10 (we show it above)
+                const isTop10 = rawData?.topPlayers?.some(p => p.name === name);
+                if (isTop10) return null;
+                return (
+                  <div key={name} className="flex items-center justify-between" style={{ fontSize: '0.875rem', padding: '0.5rem', borderRadius: '6px', background: 'rgba(255,255,255,0.03)', border: `1px solid ${color}` }}>
+                    <span style={{ color: 'white', fontWeight: 'bold' }}>{name}</span>
+                    <div className="flex gap-2 items-center">
+                      <input 
+                        type="color" 
+                        value={color}
+                        onChange={(e) => setHighlightedPlayers(prev => ({...prev, [name]: e.target.value}))}
+                        style={{ width: '20px', height: '20px', border: 'none', background: 'transparent', cursor: 'pointer', padding: 0 }}
+                      />
+                      <button 
+                        onClick={() => setHighlightedPlayers(prev => {
+                          const next = {...prev};
+                          delete next[name];
+                          return next;
+                        })}
+                        style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer' }}
+                        title="Remove highlight"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
         {/* Search Input */}
         <div className="flex flex-col" style={{ gap: '0.5rem' }}>
           <h2 style={{ fontSize: '1.125rem', fontWeight: 'bold', color: 'var(--primary)' }}>Search</h2>
