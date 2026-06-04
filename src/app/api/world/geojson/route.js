@@ -25,7 +25,12 @@ export async function GET() {
 
     const geojson = await generateGeoJSON();
 
-    return NextResponse.json(geojson);
+    return NextResponse.json(geojson, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
+        'X-Last-Sync': meta ? meta.lastSync.toISOString() : new Date().toISOString(),
+      },
+    });
   } catch (error) {
     console.error("GeoJSON generation error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
