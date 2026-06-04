@@ -10,8 +10,8 @@ export const dynamic = 'force-static';
 
 export async function generateStaticParams() {
   const oceans = [];
-  for (let x = 0; x <= 9; x++) {
-    for (let y = 0; y <= 9; y++) {
+  for (let x = 2; x <= 7; x++) {
+    for (let y = 2; y <= 7; y++) {
       oceans.push({ id: `${x}${y}` });
     }
   }
