@@ -220,13 +220,24 @@ export default function WorldMap() {
         }
 
         const fetchOceanBatch = async (ids) => {
-          const res = await fetch(`/api/world/ocean?id=${ids.join(',')}`);
-          const batchData = await res.json();
-          if (batchData && batchData.islands) {
+          const responses = await Promise.all(ids.map(id => fetch(`/api/world/ocean/${id}`)));
+          
+          const batchIslands = [];
+          const batchTowns = [];
+
+          for (const res of responses) {
+            if (res.ok) {
+              const data = await res.json();
+              if (data.islands) batchIslands.push(...data.islands);
+              if (data.towns) batchTowns.push(...data.towns);
+            }
+          }
+
+          if (batchIslands.length > 0) {
             setRawData(prev => ({
               ...prev,
-              islands: [...prev.islands, ...batchData.islands],
-              towns: [...prev.towns, ...(batchData.towns || [])]
+              islands: [...prev.islands, ...batchIslands],
+              towns: [...prev.towns, ...batchTowns]
             }));
           }
         };

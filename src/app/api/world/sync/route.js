@@ -232,34 +232,20 @@ export async function GET(request) {
 
     await prisma.$transaction(tx);
 
-    // 5. Pre-generate and cache the MapLibre GeoJSON payload securely inside the PostgreSQL Database!
-    // We heavily compress it using GZIP and Base64 encode it. 
-    // This shrinks the 20.2MB payload down to ~1.5MB to bypass Prisma Cloud / tenantManager limits!
+    // 5. Purge Vercel CDN Edge Cache for all world map APIs
     try {
-      console.log("Generating GeoJSON...");
-      const geojson = await generateGeoJSON();
-      const stringified = JSON.stringify(geojson);
+      console.log("Revalidating Next.js cache for /api/world...");
+      revalidatePath('/api/world', 'layout');
       
-      console.log(`Compressing ${stringified.length} bytes using GZIP...`);
-      const gzippedBuffer = zlib.gzipSync(stringified);
-      const base64Gzip = gzippedBuffer.toString('base64');
-      
-      console.log(`Saving ${base64Gzip.length} bytes to PostgreSQL...`);
-      await prisma.syncMetadata.upsert({
-        where: { id: 1 },
-        update: { lastSync: new Date(), geoJsonCache: base64Gzip },
-        create: { id: 1, lastSync: new Date(), geoJsonCache: base64Gzip }
-      });
-      console.log("GeoJSON successfully saved to Database!");
-      revalidatePath('/api/world/geojson'); // Purge Vercel CDN Edge Cache
-    } catch (e) {
-      console.error("Failed to generate and save GeoJSON:", e);
-      // Ensure sync metadata is updated even if GeoJSON fails
+      // Update sync metadata
       await prisma.syncMetadata.upsert({
         where: { id: 1 },
         update: { lastSync: new Date() },
         create: { id: 1, lastSync: new Date() }
       });
+      console.log("Sync metadata updated and cache purged!");
+    } catch (e) {
+      console.error("Failed to update metadata or purge cache:", e);
     }
 
     return NextResponse.json({ 

@@ -6,18 +6,28 @@ const PALETTE = [
   "#ec4899", "#eab308", "#06b6d4", "#84cc16", "#14b8a6"
 ];
 
-export async function GET(request) {
+export const dynamic = 'force-static';
+
+export async function generateStaticParams() {
+  const oceans = [];
+  for (let x = 0; x <= 9; x++) {
+    for (let y = 0; y <= 9; y++) {
+      oceans.push({ id: `${x}${y}` });
+    }
+  }
+  return oceans;
+}
+
+export async function GET(request, props) {
   try {
-    const { searchParams } = new URL(request.url);
-    const ids = searchParams.get('id'); // e.g. "44,45,54"
-    if (!ids) {
-      return NextResponse.json({ error: "Missing 'id' parameter" }, { status: 400 });
+    const params = await props.params;
+    const oceanId = params.id;
+    
+    if (!oceanId || oceanId.length !== 2) {
+      return NextResponse.json({ error: "Invalid ocean ID" }, { status: 400 });
     }
 
-    const oceanIds = ids.split(',').map(n => parseInt(n, 10)).filter(n => !isNaN(n));
-    if (oceanIds.length === 0) {
-      return NextResponse.json({ error: "Invalid 'id' parameter" }, { status: 400 });
-    }
+    const oceanIds = [parseInt(oceanId, 10)];
 
     // Determine the bounding box for all requested oceans
     // Ocean NN means X between (N%10)*100 and (N%10)*100+100
