@@ -1,0 +1,1372 @@
+{
+    "main": {
+        "id": "main",
+        "name": "Szenátus",
+        "controller": "building_main",
+        "image": null,
+        "description": "A szenátusban emelhetsz új épületeket, vagy bővíthetsz meglévőket. Minél magasabb szintű a szenátus, annál gyorsabban fejeződik be az építkezés. ",
+        "level": null,
+        "max_level": 25,
+        "min_level": 1,
+        "requiredBuildings": null,
+        "coordinates": "375,203,442,233,470,219,499,211,541,190,560,174,550,146,489,116,469,124,446,145,395,161,382,188",
+        "resources": {
+            "wood": 6,
+            "stone": 2,
+            "iron": 2
+        },
+        "pop": 1,
+        "wood_factor": 2.15,
+        "stone_factor": 2.53,
+        "iron_factor": 2.3,
+        "pop_factor": 1.5,
+        "hide_factor": null,
+        "points": 100,
+        "points_factor": 1.1,
+        "build_time": 100,
+        "build_time_factor": 1.8,
+        "build_time_reduction": 0.3,
+        "bolt_protected": null,
+        "image_levels": [
+            1,
+            8,
+            16
+        ],
+        "dependencies": [],
+        "fixed_building_times": {
+            "1": 50,
+            "2": 200,
+            "3": 310,
+            "4": 315,
+            "5": 320,
+            "6": 360
+        },
+        "level_build_time_factors": {
+            "7": {
+                "level": 15,
+                "factor": 0.08
+            },
+            "8": {
+                "level": 15,
+                "factor": 0.16
+            },
+            "9": {
+                "level": 15,
+                "factor": 0.28
+            },
+            "10": {
+                "level": 15,
+                "factor": 0.42
+            },
+            "11": {
+                "level": 15,
+                "factor": 0.58
+            },
+            "12": {
+                "level": 15,
+                "factor": 0.7
+            },
+            "13": {
+                "level": 15,
+                "factor": 0.8
+            },
+            "14": {
+                "level": 15,
+                "factor": 0.9
+            }
+        },
+        "special": false,
+        "resourcesFor": null,
+        "resourcesForLevelFixed": [],
+        "resourcesForLevelFactor": {
+            "1": 0.1,
+            "2": 0.2,
+            "3": 0.4,
+            "4": 0.6,
+            "5": 0.8
+        },
+        "resourcesForLevelReduceFactor": [],
+        "offset_value_map": []
+    },
+    "hide": {
+        "id": "hide",
+        "name": "Verem",
+        "controller": "building_hide",
+        "image": null,
+        "description": "A veremben bízhatsz meg kémeket ellenséges városok megfigyelésére.",
+        "level": null,
+        "max_level": 10,
+        "min_level": 1,
+        "requiredBuildings": null,
+        "coordinates": "419,326,417,345,442,341,445,325,434,316,401,329,405,347",
+        "resources": {
+            "wood": 200,
+            "stone": 400,
+            "iron": 700
+        },
+        "pop": 3,
+        "wood_factor": 1.3,
+        "stone_factor": 1,
+        "iron_factor": 0.9,
+        "pop_factor": 0.5,
+        "hide_factor": null,
+        "points": 50,
+        "points_factor": 1.2,
+        "build_time": 140,
+        "build_time_factor": 1.456,
+        "build_time_reduction": 0,
+        "bolt_protected": null,
+        "image_levels": [
+            1,
+            4,
+            7
+        ],
+        "dependencies": {
+            "main": 10,
+            "storage": 7,
+            "market": 4
+        },
+        "fixed_building_times": [],
+        "level_build_time_factors": [],
+        "special": false,
+        "resourcesFor": null,
+        "resourcesForLevelFixed": [],
+        "resourcesForLevelFactor": [],
+        "resourcesForLevelReduceFactor": [],
+        "offset_value_map": []
+    },
+    "place": {
+        "id": "place",
+        "name": "Agóra",
+        "controller": "building_place",
+        "image": null,
+        "description": "Az agórán teljes képet kapsz a városban és a városon kívül állomásozó csapatokról. Itt csodálhatod meg városod kulturális vívmányait is, illetve megtervezheted következő hadjárataidat a harci szimulátorral.",
+        "level": null,
+        "max_level": 1,
+        "min_level": 1,
+        "requiredBuildings": null,
+        "coordinates": "491,254,492,240,501,231,512,222,527,230,539,242,542,258,530,270,515,268,498,266",
+        "resources": {
+            "wood": 10,
+            "stone": 0,
+            "iron": 0
+        },
+        "pop": 1,
+        "wood_factor": 2,
+        "stone_factor": 2,
+        "iron_factor": 2,
+        "pop_factor": 0,
+        "hide_factor": null,
+        "points": 30,
+        "points_factor": 1.11,
+        "build_time": 0.3333333333333333,
+        "build_time_factor": 2.17,
+        "build_time_reduction": 0,
+        "bolt_protected": true,
+        "image_levels": [
+            1,
+            4,
+            7
+        ],
+        "dependencies": [],
+        "fixed_building_times": [],
+        "level_build_time_factors": [],
+        "special": false,
+        "resourcesFor": null,
+        "resourcesForLevelFixed": [],
+        "resourcesForLevelFactor": [],
+        "resourcesForLevelReduceFactor": [],
+        "offset_value_map": []
+    },
+    "lumber": {
+        "id": "lumber",
+        "name": "Fatelep",
+        "controller": "building_lumber",
+        "image": null,
+        "description": "A poliszod körüli sűrű erdőkben favágóid vágják a városod növekedéséhez és csapataid felszereléséhez szükséges masszív fákat. Minél magasabb a fatelep bővítési szintje, annál több haszonfát termelnek ki favágóid.",
+        "level": null,
+        "max_level": 40,
+        "min_level": 1,
+        "requiredBuildings": null,
+        "coordinates": "467,372,458,390,474,417,518,426,537,407,518,378,488,375",
+        "resources": {
+            "wood": 2.6,
+            "stone": 2,
+            "iron": 1.49
+        },
+        "pop": 1,
+        "wood_factor": 1.9,
+        "stone_factor": 2.1,
+        "iron_factor": 2.1,
+        "pop_factor": 1.25,
+        "hide_factor": null,
+        "points": 20,
+        "points_factor": 1.1,
+        "build_time": 40,
+        "build_time_factor": 1.9,
+        "build_time_reduction": 1,
+        "bolt_protected": null,
+        "image_levels": [
+            1,
+            14,
+            28
+        ],
+        "dependencies": [],
+        "fixed_building_times": {
+            "1": 50,
+            "2": 200,
+            "3": 310,
+            "4": 315,
+            "5": 320,
+            "6": 360
+        },
+        "level_build_time_factors": {
+            "7": {
+                "level": 15,
+                "factor": 0.2
+            },
+            "8": {
+                "level": 15,
+                "factor": 0.3
+            },
+            "9": {
+                "level": 15,
+                "factor": 0.4
+            },
+            "10": {
+                "level": 15,
+                "factor": 0.5
+            },
+            "11": {
+                "level": 15,
+                "factor": 0.6
+            },
+            "12": {
+                "level": 15,
+                "factor": 0.7
+            },
+            "13": {
+                "level": 15,
+                "factor": 0.8
+            },
+            "14": {
+                "level": 15,
+                "factor": 0.9
+            }
+        },
+        "special": false,
+        "resourcesFor": null,
+        "resourcesForLevelFixed": [],
+        "resourcesForLevelFactor": [],
+        "resourcesForLevelReduceFactor": [],
+        "offset_value_map": []
+    },
+    "stoner": {
+        "id": "stoner",
+        "name": "Kőfejtő",
+        "controller": "building_stoner",
+        "image": null,
+        "description": "A kőfejtőben fejtik munkásaid a város fejlődéséhez nélkülözhetetlen követ. Minél magasabb a bővítési szintje, annál több követ fejtenek.",
+        "level": null,
+        "max_level": 40,
+        "min_level": 1,
+        "requiredBuildings": null,
+        "coordinates": "37,194,45,208,73,265,86,297,144,310,249,285,220,269,182,252,117,234,108,198,62,188",
+        "resources": {
+            "wood": 1.3,
+            "stone": 2.6,
+            "iron": 2.4
+        },
+        "pop": 1,
+        "wood_factor": 2.1,
+        "stone_factor": 1.9,
+        "iron_factor": 2.1,
+        "pop_factor": 1.25,
+        "hide_factor": null,
+        "points": 20,
+        "points_factor": 1.1,
+        "build_time": 100,
+        "build_time_factor": 1.62,
+        "build_time_reduction": 1,
+        "bolt_protected": null,
+        "image_levels": [
+            1,
+            14,
+            28
+        ],
+        "dependencies": [],
+        "fixed_building_times": {
+            "1": 220,
+            "2": 305,
+            "3": 310,
+            "4": 330,
+            "5": 360,
+            "6": 360
+        },
+        "level_build_time_factors": {
+            "7": {
+                "level": 15,
+                "factor": 0.2
+            },
+            "8": {
+                "level": 15,
+                "factor": 0.3
+            },
+            "9": {
+                "level": 15,
+                "factor": 0.4
+            },
+            "10": {
+                "level": 15,
+                "factor": 0.5
+            },
+            "11": {
+                "level": 15,
+                "factor": 0.6
+            },
+            "12": {
+                "level": 15,
+                "factor": 0.7
+            },
+            "13": {
+                "level": 15,
+                "factor": 0.8
+            },
+            "14": {
+                "level": 15,
+                "factor": 0.9
+            }
+        },
+        "special": false,
+        "resourcesFor": null,
+        "resourcesForLevelFixed": [],
+        "resourcesForLevelFactor": [],
+        "resourcesForLevelReduceFactor": [],
+        "offset_value_map": []
+    },
+    "ironer": {
+        "id": "ironer",
+        "name": "Ezüstbánya",
+        "controller": "building_ironer",
+        "image": null,
+        "description": "Az ezüstbányában bányásszák munkásaid az értékes ezüstércet, amiből az ezüstpénzeket verik. Minél magasabb a bánya bővítési szintje, annál több ezüstpénzt verhetsz.",
+        "level": null,
+        "max_level": 40,
+        "min_level": 1,
+        "requiredBuildings": null,
+        "coordinates": "117,70,130,78,157,64,150,38,112,16,100,26,98,45",
+        "resources": {
+            "wood": 5,
+            "stone": 2,
+            "iron": 4
+        },
+        "pop": 1,
+        "wood_factor": 1.9,
+        "stone_factor": 2,
+        "iron_factor": 1.8,
+        "pop_factor": 1.25,
+        "hide_factor": null,
+        "points": 20,
+        "points_factor": 1.1,
+        "build_time": 200,
+        "build_time_factor": 1.41,
+        "build_time_reduction": 0.5,
+        "bolt_protected": null,
+        "image_levels": [
+            1,
+            14,
+            28
+        ],
+        "dependencies": {
+            "lumber": 1
+        },
+        "fixed_building_times": {
+            "1": 250,
+            "2": 305,
+            "3": 310,
+            "4": 315,
+            "5": 320,
+            "6": 360
+        },
+        "level_build_time_factors": {
+            "7": {
+                "level": 15,
+                "factor": 0.2
+            },
+            "8": {
+                "level": 15,
+                "factor": 0.3
+            },
+            "9": {
+                "level": 15,
+                "factor": 0.4
+            },
+            "10": {
+                "level": 15,
+                "factor": 0.5
+            },
+            "11": {
+                "level": 15,
+                "factor": 0.6
+            },
+            "12": {
+                "level": 15,
+                "factor": 0.7
+            },
+            "13": {
+                "level": 15,
+                "factor": 0.8
+            },
+            "14": {
+                "level": 15,
+                "factor": 0.9
+            }
+        },
+        "special": false,
+        "resourcesFor": null,
+        "resourcesForLevelFixed": [],
+        "resourcesForLevelFactor": [],
+        "resourcesForLevelReduceFactor": [],
+        "offset_value_map": []
+    },
+    "market": {
+        "id": "market",
+        "name": "Piac",
+        "controller": "building_market",
+        "image": null,
+        "description": "A piactéren lehetőséged nyílik más játékosoknak nyersanyagot küldeni. Itt kereskedhetsz szigeted falvaival is.",
+        "level": null,
+        "max_level": 30,
+        "min_level": 1,
+        "requiredBuildings": null,
+        "coordinates": "565,238,577,252,592,267,631,260,667,260,659,242,636,222,625,206,606,200,575,225",
+        "resources": {
+            "wood": 50,
+            "stone": 20,
+            "iron": 5
+        },
+        "pop": 2,
+        "wood_factor": 1.48,
+        "stone_factor": 1.62,
+        "iron_factor": 1.98,
+        "pop_factor": 1.1,
+        "hide_factor": null,
+        "points": 100,
+        "points_factor": 1.08,
+        "build_time": 160,
+        "build_time_factor": 1.6,
+        "build_time_reduction": 0.4,
+        "bolt_protected": null,
+        "image_levels": [
+            1,
+            10,
+            20
+        ],
+        "dependencies": {
+            "main": 3,
+            "storage": 5
+        },
+        "fixed_building_times": [],
+        "level_build_time_factors": [],
+        "special": false,
+        "resourcesFor": null,
+        "resourcesForLevelFixed": [],
+        "resourcesForLevelFactor": [],
+        "resourcesForLevelReduceFactor": [],
+        "offset_value_map": []
+    },
+    "docks": {
+        "id": "docks",
+        "name": "Kikötő",
+        "controller": "building_docks",
+        "image": null,
+        "description": "A kikötőben bővítheted flottádat. Itt szállító- és hadihajókat is építhetsz. A hajógyári munkások hajóépítési sebessége a kikötő bővítési szintjétől függ. ",
+        "level": null,
+        "max_level": 30,
+        "min_level": 1,
+        "requiredBuildings": null,
+        "coordinates": "220,384,255,407,281,419,302,410,317,417,349,402,387,390,373,359,344,345,316,315,287,326,268,336,243,356,230,378",
+        "resources": {
+            "wood": 400,
+            "stone": 200,
+            "iron": 100
+        },
+        "pop": 4,
+        "wood_factor": 0.9,
+        "stone_factor": 0.98,
+        "iron_factor": 1.1,
+        "pop_factor": 1,
+        "hide_factor": null,
+        "points": 60,
+        "points_factor": 1.1,
+        "build_time": 500,
+        "build_time_factor": 1.1,
+        "build_time_reduction": 0,
+        "bolt_protected": null,
+        "image_levels": [
+            1,
+            8,
+            16
+        ],
+        "dependencies": {
+            "main": 14,
+            "lumber": 15,
+            "ironer": 10
+        },
+        "fixed_building_times": [],
+        "level_build_time_factors": [],
+        "special": false,
+        "resourcesFor": null,
+        "resourcesForLevelFixed": [],
+        "resourcesForLevelFactor": [],
+        "resourcesForLevelReduceFactor": [],
+        "offset_value_map": []
+    },
+    "barracks": {
+        "id": "barracks",
+        "name": "Kaszárnya",
+        "controller": "building_barracks",
+        "image": null,
+        "description": "A kaszárnyában hivatásos hadsereget és mitológiai egységeket toborozhatsz. Minél magasabb a kaszárnya bővítési szintje, annál gyorsabban képzi ki a csapatokat.",
+        "level": null,
+        "max_level": 30,
+        "min_level": 1,
+        "requiredBuildings": null,
+        "coordinates": "152,188,171,186,216,205,250,210,312,177,310,156,253,129,250,116,242,110,232,114,181,161,161,182",
+        "resources": {
+            "wood": 70,
+            "stone": 20,
+            "iron": 40
+        },
+        "pop": 1,
+        "wood_factor": 1.22,
+        "stone_factor": 1.67,
+        "iron_factor": 1.54,
+        "pop_factor": 1.3,
+        "hide_factor": null,
+        "points": 30,
+        "points_factor": 1.115,
+        "build_time": 300,
+        "build_time_factor": 1.25,
+        "build_time_reduction": 0.5,
+        "bolt_protected": null,
+        "image_levels": [
+            1,
+            10,
+            20
+        ],
+        "dependencies": {
+            "main": 2,
+            "farm": 3,
+            "ironer": 1
+        },
+        "fixed_building_times": {
+            "1": 280,
+            "2": 305,
+            "3": 310,
+            "4": 315,
+            "5": 320,
+            "6": 360
+        },
+        "level_build_time_factors": {
+            "7": {
+                "level": 15,
+                "factor": 0.13
+            },
+            "8": {
+                "level": 15,
+                "factor": 0.2
+            },
+            "9": {
+                "level": 15,
+                "factor": 0.32
+            },
+            "10": {
+                "level": 15,
+                "factor": 0.44
+            },
+            "11": {
+                "level": 15,
+                "factor": 0.56
+            },
+            "12": {
+                "level": 15,
+                "factor": 0.68
+            },
+            "13": {
+                "level": 15,
+                "factor": 0.8
+            },
+            "14": {
+                "level": 15,
+                "factor": 0.9
+            }
+        },
+        "special": false,
+        "resourcesFor": null,
+        "resourcesForLevelFixed": [],
+        "resourcesForLevelFactor": [],
+        "resourcesForLevelReduceFactor": [],
+        "offset_value_map": []
+    },
+    "wall": {
+        "id": "wall",
+        "name": "Városfal",
+        "controller": "building_wall",
+        "image": null,
+        "description": "A városfal védi meg poliszodat az ellenséges csapatoktól. Megnöveli a város alapvető védelmét, valamint az itt állomásozó csapatok védekezési értékét is. ",
+        "level": null,
+        "max_level": 25,
+        "min_level": 0,
+        "requiredBuildings": null,
+        "coordinates": "1,128,22,149,70,156,125,152,125,179,159,207,217,217,277,228,276,267,316,275,380,296,445,289,472,278,476,329,526,356,593,355,631,350,585,371,537,375,487,360,463,343,439,306,379,314,326,298,276,289,263,241,184,232,131,207,113,170,66,172,12,162,2,155",
+        "resources": {
+            "wood": 400,
+            "stone": 350,
+            "iron": 200
+        },
+        "pop": 2,
+        "wood_factor": 0,
+        "stone_factor": 1,
+        "iron_factor": 1.1,
+        "pop_factor": 1.16,
+        "hide_factor": null,
+        "points": 30,
+        "points_factor": 1.12,
+        "build_time": 300,
+        "build_time_factor": 1.3,
+        "build_time_reduction": 0,
+        "bolt_protected": null,
+        "image_levels": [
+            1,
+            8,
+            16
+        ],
+        "dependencies": {
+            "main": 5,
+            "temple": 3
+        },
+        "fixed_building_times": [],
+        "level_build_time_factors": [],
+        "special": false,
+        "resourcesFor": null,
+        "resourcesForLevelFixed": [],
+        "resourcesForLevelFactor": [],
+        "resourcesForLevelReduceFactor": [],
+        "offset_value_map": [],
+        "catapult_factor": 1.05,
+        "catapult_power": 0.5,
+        "def_factor_per_level": 1.037
+    },
+    "storage": {
+        "id": "storage",
+        "name": "Raktár",
+        "controller": "building_storage",
+        "image": null,
+        "description": "Városod a raktárban tárolja nyersanyagait. Minél magasabb a raktár bővítési szintje, annál több nyersanyagot tárolhatsz itt. Minden bővítési szint minden nyersanyagból 100-at véd meg a fosztogatókkal szemben.",
+        "level": null,
+        "max_level": 35,
+        "min_level": 1,
+        "requiredBuildings": null,
+        "coordinates": "322,248,403,287,428,276,426,235,393,218,375,224,344,210,325,224",
+        "resources": {
+            "wood": 35,
+            "stone": 55,
+            "iron": 15
+        },
+        "pop": 0,
+        "wood_factor": 1.52,
+        "stone_factor": 1.52,
+        "iron_factor": 1.66,
+        "pop_factor": 1,
+        "hide_factor": 100,
+        "points": 13,
+        "points_factor": 1.14,
+        "build_time": 600,
+        "build_time_factor": 1.23,
+        "build_time_reduction": 0.4,
+        "bolt_protected": null,
+        "image_levels": [
+            1,
+            10,
+            20,
+            30
+        ],
+        "dependencies": [],
+        "fixed_building_times": {
+            "1": 50,
+            "2": 250,
+            "3": 310,
+            "4": 315,
+            "5": 320,
+            "6": 360
+        },
+        "level_build_time_factors": {
+            "7": {
+                "level": 15,
+                "factor": 0.07
+            },
+            "8": {
+                "level": 15,
+                "factor": 0.11
+            },
+            "9": {
+                "level": 15,
+                "factor": 0.18
+            },
+            "10": {
+                "level": 15,
+                "factor": 0.3
+            },
+            "11": {
+                "level": 15,
+                "factor": 0.45
+            },
+            "12": {
+                "level": 15,
+                "factor": 0.6
+            },
+            "13": {
+                "level": 15,
+                "factor": 0.7
+            },
+            "14": {
+                "level": 15,
+                "factor": 0.85
+            }
+        },
+        "special": false,
+        "resourcesFor": null,
+        "resourcesForLevelFixed": [],
+        "resourcesForLevelFactor": {
+            "1": 0.02,
+            "2": 0.1,
+            "3": 0.2,
+            "4": 0.4,
+            "5": 0.6,
+            "6": 0.8
+        },
+        "resourcesForLevelReduceFactor": [],
+        "offset_value_map": [
+            700,
+            600,
+            480,
+            360,
+            245,
+            150,
+            75,
+            25,
+            5
+        ],
+        "storage_factor": 200,
+        "storage_pow": 1.35399
+    },
+    "farm": {
+        "id": "farm",
+        "name": "Tanya",
+        "controller": "building_farm",
+        "image": null,
+        "description": "A tanya ételt ad munkásaidnak és csapataidnak. Ahhoz, hogy városod növekedjen, bővítened kell a gazdaságot. Minél magasabb a tanya bővítési szintje, annál több lakost tud ellátni, és annál több katonát tud élelmezni.",
+        "level": null,
+        "max_level": 45,
+        "min_level": 1,
+        "requiredBuildings": null,
+        "coordinates": "552,108,604,134,609,153,659,178,709,155,734,139,681,111,630,89,583,100,579,54,533,65",
+        "resources": {
+            "wood": 8,
+            "stone": 5,
+            "iron": 1
+        },
+        "pop": 0,
+        "wood_factor": 1.87,
+        "stone_factor": 2.03,
+        "iron_factor": 2.4,
+        "pop_factor": 0,
+        "hide_factor": null,
+        "points": 15,
+        "points_factor": 1.12,
+        "build_time": 100,
+        "build_time_factor": 1.7,
+        "build_time_reduction": 1,
+        "bolt_protected": null,
+        "image_levels": [
+            1,
+            14,
+            28,
+            40
+        ],
+        "dependencies": [],
+        "fixed_building_times": {
+            "1": 50,
+            "2": 125,
+            "3": 250,
+            "4": 315,
+            "5": 320,
+            "6": 360
+        },
+        "level_build_time_factors": {
+            "7": {
+                "level": 15,
+                "factor": 0.15
+            },
+            "8": {
+                "level": 15,
+                "factor": 0.21
+            },
+            "9": {
+                "level": 15,
+                "factor": 0.33
+            },
+            "10": {
+                "level": 15,
+                "factor": 0.45
+            },
+            "11": {
+                "level": 15,
+                "factor": 0.56
+            },
+            "12": {
+                "level": 15,
+                "factor": 0.68
+            },
+            "13": {
+                "level": 15,
+                "factor": 0.8
+            },
+            "14": {
+                "level": 15,
+                "factor": 0.9
+            }
+        },
+        "special": false,
+        "resourcesFor": null,
+        "resourcesForLevelFixed": [],
+        "resourcesForLevelFactor": {
+            "1": 0.1,
+            "2": 0.2,
+            "3": 0.4,
+            "4": 0.6,
+            "5": 0.8
+        },
+        "resourcesForLevelReduceFactor": [],
+        "offset_value_map": [
+            100,
+            83,
+            65,
+            47,
+            30,
+            17,
+            8,
+            3,
+            1
+        ]
+    },
+    "academy": {
+        "id": "academy",
+        "name": "Akadémia",
+        "controller": "building_academy",
+        "image": null,
+        "description": "Az akadémián fejlesztést végezhetsz. A Grepolisban különböző technológiákkal erősítheted meg csapataidat, teheted hatékonyabbá az építészetet vagy tanulhatsz új harci taktikákat. Minél magasabb az akadémia bővítési szintje, annál több technológiát fejleszthetsz ki.",
+        "level": null,
+        "max_level": 36,
+        "min_level": 1,
+        "requiredBuildings": null,
+        "coordinates": "343,96,411,122,472,90,464,66,452,38,405,18,360,38,354,57,347,83",
+        "resources": {
+            "wood": 100,
+            "stone": 200,
+            "iron": 120
+        },
+        "pop": 3,
+        "wood_factor": 1.21,
+        "stone_factor": 1.1,
+        "iron_factor": 1.2,
+        "pop_factor": 1,
+        "hide_factor": null,
+        "points": 60,
+        "points_factor": 1.12,
+        "build_time": 400,
+        "build_time_factor": 1.25,
+        "build_time_reduction": 0,
+        "bolt_protected": null,
+        "image_levels": [
+            1,
+            8,
+            16,
+            30
+        ],
+        "dependencies": {
+            "main": 8,
+            "farm": 6,
+            "barracks": 5
+        },
+        "fixed_building_times": [],
+        "level_build_time_factors": [],
+        "special": false,
+        "resourcesFor": null,
+        "resourcesForLevelFixed": [],
+        "resourcesForLevelFactor": [],
+        "resourcesForLevelReduceFactor": [],
+        "offset_value_map": []
+    },
+    "temple": {
+        "id": "temple",
+        "name": "Templom",
+        "controller": "building_temple",
+        "image": null,
+        "description": "A templomban imádhatod választott istenedet. A Grepolisban mindegyik isten különböző isteni erőkkel rendelkezik és más-más mitológiai egységeket kelthet életre. Ezekhez egyaránt isteni áldásra van szükség, amelyet az imádott isten a templomban hoz létre. Minél magasabb a templom bővítési szintje, annál több áldást kaphatsz az istenektől. ",
+        "level": null,
+        "max_level": 30,
+        "min_level": 1,
+        "requiredBuildings": null,
+        "coordinates": "73,137,114,135,109,114,95,89,81,63,68,60,51,71,47,93,41,115,41,130,56,135",
+        "resources": {
+            "wood": 500,
+            "stone": 900,
+            "iron": 600
+        },
+        "pop": 5,
+        "wood_factor": 0.865,
+        "stone_factor": 0.7,
+        "iron_factor": 0.82,
+        "pop_factor": 1,
+        "hide_factor": null,
+        "points": 200,
+        "points_factor": 1.08,
+        "build_time": 1200,
+        "build_time_factor": 1.145,
+        "build_time_reduction": 0,
+        "bolt_protected": null,
+        "image_levels": [
+            1,
+            8,
+            16,
+            25
+        ],
+        "dependencies": {
+            "stoner": 1
+        },
+        "fixed_building_times": {
+            "1": 200,
+            "2": 305,
+            "3": 310,
+            "4": 315,
+            "5": 320,
+            "6": 360
+        },
+        "level_build_time_factors": {
+            "7": {
+                "level": 15,
+                "factor": 0.035
+            },
+            "8": {
+                "level": 15,
+                "factor": 0.07
+            },
+            "9": {
+                "level": 15,
+                "factor": 0.13
+            },
+            "10": {
+                "level": 15,
+                "factor": 0.24
+            },
+            "11": {
+                "level": 15,
+                "factor": 0.37
+            },
+            "12": {
+                "level": 15,
+                "factor": 0.53
+            },
+            "13": {
+                "level": 15,
+                "factor": 0.68
+            },
+            "14": {
+                "level": 15,
+                "factor": 0.84
+            }
+        },
+        "special": false,
+        "resourcesFor": null,
+        "resourcesForLevelFixed": [],
+        "resourcesForLevelFactor": {
+            "1": 0.05,
+            "2": 0.1,
+            "3": 0.15,
+            "4": 0.2,
+            "5": 0.4,
+            "6": 0.6,
+            "7": 0.8
+        },
+        "resourcesForLevelReduceFactor": [],
+        "offset_value_map": []
+    },
+    "theater": {
+        "id": "theater",
+        "name": "Színház",
+        "controller": "building_theater",
+        "image": null,
+        "description": "A színház megépítésével remek drámákat vihetsz színpadra néped örömére, így növelve városod kulturális értékét. ",
+        "level": null,
+        "max_level": 1,
+        "min_level": 0,
+        "requiredBuildings": null,
+        "coordinates": "286,83,334,66,340,33,309,10,254,6,223,17,206,38,210,56,243,70,272,80",
+        "resources": {
+            "wood": 8000,
+            "stone": 8000,
+            "iron": 8000
+        },
+        "pop": 60,
+        "wood_factor": 2,
+        "stone_factor": 2,
+        "iron_factor": 2,
+        "pop_factor": 1,
+        "hide_factor": null,
+        "points": 500,
+        "points_factor": 1,
+        "build_time": 21600,
+        "build_time_factor": 2.17,
+        "build_time_reduction": 0,
+        "bolt_protected": true,
+        "image_levels": [
+            1
+        ],
+        "dependencies": {
+            "main": 24,
+            "lumber": 35,
+            "ironer": 32,
+            "docks": 5,
+            "academy": 5
+        },
+        "fixed_building_times": [],
+        "level_build_time_factors": [],
+        "special": true,
+        "resourcesFor": null,
+        "resourcesForLevelFixed": [],
+        "resourcesForLevelFactor": [],
+        "resourcesForLevelReduceFactor": [],
+        "offset_value_map": []
+    },
+    "thermal": {
+        "id": "thermal",
+        "name": "Termálfürdők",
+        "controller": "building_thermal",
+        "image": null,
+        "description": "Az ókori görögök nagy hangsúlyt fektettek a higiéniára. Termálfürdők építésével javíthatod a népesség egészségi állapotát és 10%-kal növelheted a népesség lélekszámát.",
+        "level": null,
+        "max_level": 1,
+        "min_level": 0,
+        "requiredBuildings": null,
+        "coordinates": "213,53,269,79,348,42,355,12,319,1,273,2,222,24,210,42",
+        "resources": {
+            "wood": 9000,
+            "stone": 6000,
+            "iron": 9000
+        },
+        "pop": 60,
+        "wood_factor": 2,
+        "stone_factor": 2,
+        "iron_factor": 2,
+        "pop_factor": 1,
+        "hide_factor": null,
+        "points": 500,
+        "points_factor": 1,
+        "build_time": 21600,
+        "build_time_factor": 2.17,
+        "build_time_reduction": 0,
+        "bolt_protected": true,
+        "image_levels": [
+            1
+        ],
+        "dependencies": {
+            "main": 24,
+            "farm": 35,
+            "docks": 5,
+            "academy": 5
+        },
+        "fixed_building_times": [],
+        "level_build_time_factors": [],
+        "special": true,
+        "resourcesFor": null,
+        "resourcesForLevelFixed": [],
+        "resourcesForLevelFactor": [],
+        "resourcesForLevelReduceFactor": [],
+        "offset_value_map": [],
+        "thermal_pow": 1.1
+    },
+    "library": {
+        "id": "library",
+        "name": "Könyvtár",
+        "controller": "building_library",
+        "image": null,
+        "description": "A tudás hatalom. Könyvtár építésével 12 extra fejlesztési pontot kapsz, amit új technológiák kifejlesztésére fordíthatsz az akadémián.",
+        "level": null,
+        "max_level": 1,
+        "min_level": 0,
+        "requiredBuildings": null,
+        "coordinates": "204,54,243,71,304,53,338,46,334,32,325,3,263,1,218,22,212,43",
+        "resources": {
+            "wood": 9500,
+            "stone": 7500,
+            "iron": 7000
+        },
+        "pop": 60,
+        "wood_factor": 2,
+        "stone_factor": 2,
+        "iron_factor": 2,
+        "pop_factor": 1,
+        "hide_factor": null,
+        "points": 500,
+        "points_factor": 1,
+        "build_time": 21600,
+        "build_time_factor": 2.17,
+        "build_time_reduction": 0,
+        "bolt_protected": true,
+        "image_levels": [
+            1
+        ],
+        "dependencies": {
+            "main": 24,
+            "academy": 20,
+            "docks": 5
+        },
+        "fixed_building_times": [],
+        "level_build_time_factors": [],
+        "special": true,
+        "resourcesFor": null,
+        "resourcesForLevelFixed": [],
+        "resourcesForLevelFactor": [],
+        "resourcesForLevelReduceFactor": [],
+        "offset_value_map": []
+    },
+    "lighthouse": {
+        "id": "lighthouse",
+        "name": "Világítótorony",
+        "controller": "building_lighthouse",
+        "image": null,
+        "description": "Az alexandriai világítótorony a világ hét csodája közé tartozott. Ha a kikötő közelében megépíted egy kisebb változatát, 15%-kal növelheted flottád sebességét, mivel nagyban megkönnyíti a tájékozódást.",
+        "level": null,
+        "max_level": 1,
+        "min_level": 0,
+        "requiredBuildings": null,
+        "coordinates": "36,397,65,395,87,377,83,351,73,323,55,293,33,299,23,376",
+        "resources": {
+            "wood": 6000,
+            "stone": 10000,
+            "iron": 8000
+        },
+        "pop": 60,
+        "wood_factor": 2,
+        "stone_factor": 2,
+        "iron_factor": 2,
+        "pop_factor": 1,
+        "hide_factor": null,
+        "points": 500,
+        "points_factor": 1,
+        "build_time": 21600,
+        "build_time_factor": 2.17,
+        "build_time_reduction": 0,
+        "bolt_protected": true,
+        "image_levels": [
+            1
+        ],
+        "dependencies": {
+            "main": 24,
+            "docks": 20,
+            "academy": 5
+        },
+        "fixed_building_times": [],
+        "level_build_time_factors": [],
+        "special": true,
+        "resourcesFor": null,
+        "resourcesForLevelFixed": [],
+        "resourcesForLevelFactor": [],
+        "resourcesForLevelReduceFactor": [],
+        "offset_value_map": []
+    },
+    "tower": {
+        "id": "tower",
+        "name": "Torony",
+        "controller": "building_tower",
+        "image": null,
+        "description": "Egy erős őrtorony 10%-kal növeli csapatod harci erejét és poliszodat szinte legyőzhetetlen erődítménnyé változtatja a támadók számára. ",
+        "level": null,
+        "max_level": 1,
+        "min_level": 0,
+        "requiredBuildings": null,
+        "coordinates": "522,339,543,347,572,347,586,342,579,289,559,269,530,273,521,291,521,318",
+        "resources": {
+            "wood": 8000,
+            "stone": 10000,
+            "iron": 6000
+        },
+        "pop": 60,
+        "wood_factor": 2,
+        "stone_factor": 2,
+        "iron_factor": 2,
+        "pop_factor": 1,
+        "hide_factor": null,
+        "points": 500,
+        "points_factor": 1,
+        "build_time": 21600,
+        "build_time_factor": 2.17,
+        "build_time_reduction": 0,
+        "bolt_protected": true,
+        "image_levels": [
+            1
+        ],
+        "dependencies": {
+            "main": 21,
+            "wall": 20,
+            "temple": 5,
+            "market": 5
+        },
+        "fixed_building_times": [],
+        "level_build_time_factors": [],
+        "special": true,
+        "resourcesFor": null,
+        "resourcesForLevelFixed": [],
+        "resourcesForLevelFactor": [],
+        "resourcesForLevelReduceFactor": [],
+        "offset_value_map": []
+    },
+    "statue": {
+        "id": "statue",
+        "name": "Istenszobor",
+        "controller": "building_statue",
+        "image": null,
+        "description": "A görög isteneknek nehéz a kedvében járni, szívesen látják kultuszuk számos jelét. Ezzel az istenszoborral megmutathatod, milyen fontosak neked, és így növelheted a templomban előállított isteni áldás mennyiségét.",
+        "level": null,
+        "max_level": 1,
+        "min_level": 0,
+        "requiredBuildings": null,
+        "coordinates": "529,338,544,345,567,339,555,326,549,278,543,324",
+        "resources": {
+            "wood": 6000,
+            "stone": 10500,
+            "iron": 7500
+        },
+        "pop": 60,
+        "wood_factor": 2,
+        "stone_factor": 2,
+        "iron_factor": 2,
+        "pop_factor": 1,
+        "hide_factor": null,
+        "points": 500,
+        "points_factor": 1,
+        "build_time": 21600,
+        "build_time_factor": 2.17,
+        "build_time_reduction": 0,
+        "bolt_protected": true,
+        "image_levels": [
+            1
+        ],
+        "dependencies": {
+            "main": 21,
+            "temple": 12,
+            "market": 5
+        },
+        "fixed_building_times": [],
+        "level_build_time_factors": [],
+        "special": true,
+        "resourcesFor": null,
+        "resourcesForLevelFixed": [],
+        "resourcesForLevelFactor": [],
+        "resourcesForLevelReduceFactor": [],
+        "offset_value_map": []
+    },
+    "oracle": {
+        "id": "oracle",
+        "name": "Orákulum",
+        "controller": "building_oracle",
+        "image": null,
+        "description": "Az ellenséges kémeket az orákulum segítségével leplezheted le. Így megtudhatod, ki kémkedik utánad és jobban felkészülhetsz a fenyegető támadásokra.",
+        "level": null,
+        "max_level": 1,
+        "min_level": 0,
+        "requiredBuildings": null,
+        "coordinates": "521,337,546,350,581,343,583,309,567,298,543,295,523,304,521,322",
+        "resources": {
+            "wood": 6500,
+            "stone": 7000,
+            "iron": 9500
+        },
+        "pop": 60,
+        "wood_factor": 2,
+        "stone_factor": 2,
+        "iron_factor": 2,
+        "pop_factor": 1,
+        "hide_factor": null,
+        "points": 500,
+        "points_factor": 1,
+        "build_time": 21600,
+        "build_time_factor": 2.17,
+        "build_time_reduction": 0,
+        "bolt_protected": true,
+        "image_levels": [
+            1
+        ],
+        "dependencies": {
+            "main": 21,
+            "hide": 10,
+            "market": 5,
+            "temple": 5
+        },
+        "fixed_building_times": [],
+        "level_build_time_factors": [],
+        "special": true,
+        "resourcesFor": null,
+        "resourcesForLevelFixed": [],
+        "resourcesForLevelFactor": [],
+        "resourcesForLevelReduceFactor": [],
+        "offset_value_map": []
+    },
+    "trade_office": {
+        "id": "trade_office",
+        "name": "Kereskedőház",
+        "controller": "building_trade_office",
+        "image": null,
+        "description": "Növeli a föníciai kalmár és a falvak maximális kereskedési arányát, illetve a rendelkezésre álló kereskedelmi kapacitást piaci szintenként erről a szintről: 500 erre: 750.",
+        "level": null,
+        "max_level": 1,
+        "min_level": 0,
+        "requiredBuildings": null,
+        "coordinates": "510,335,533,346,569,352,595,343,607,332,604,301,551,274,508,294",
+        "resources": {
+            "wood": 10500,
+            "stone": 7000,
+            "iron": 6500
+        },
+        "pop": 60,
+        "wood_factor": 2,
+        "stone_factor": 2,
+        "iron_factor": 2,
+        "pop_factor": 1,
+        "hide_factor": null,
+        "points": 500,
+        "points_factor": 1,
+        "build_time": 21600,
+        "build_time_factor": 1,
+        "build_time_reduction": 0,
+        "bolt_protected": true,
+        "image_levels": [
+            1
+        ],
+        "dependencies": {
+            "main": 21,
+            "market": 15,
+            "temple": 5
+        },
+        "fixed_building_times": [],
+        "level_build_time_factors": [],
+        "special": true,
+        "resourcesFor": null,
+        "resourcesForLevelFixed": [],
+        "resourcesForLevelFactor": [],
+        "resourcesForLevelReduceFactor": [],
+        "offset_value_map": []
+    }
+}

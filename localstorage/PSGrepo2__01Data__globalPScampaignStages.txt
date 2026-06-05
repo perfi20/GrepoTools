@@ -1,0 +1,615 @@
+{
+    "1": {
+        "id": 1,
+        "name": "Spárta fiai",
+        "previous_stage_ids": {},
+        "unit_capacity": 150,
+        "units": {
+            "unit_1": 50
+        },
+        "reward": {
+            "type": "rare_building_order_boost",
+            "subtype": "default",
+            "level": 6
+        },
+        "story_id": 1
+    },
+    "2": {
+        "id": 2,
+        "name": "Vízbe fúlt testek Akhájföldön",
+        "previous_stage_ids": {
+            "0": 1
+        },
+        "unit_capacity": 500,
+        "units": {
+            "unit_2": 150,
+            "unit_4": 150
+        },
+        "reward": {
+            "type": "unit_training_boost",
+            "subtype": "archer",
+            "level": 4
+        },
+        "story_id": null
+    },
+    "3": {
+        "id": 3,
+        "name": "A sápadt parittyások alakulata",
+        "previous_stage_ids": {
+            "0": 2
+        },
+        "unit_capacity": 200,
+        "units": {
+            "unit_3": 150
+        },
+        "reward": {
+            "type": "unit_movement_boost",
+            "subtype": "default",
+            "level": 6
+        },
+        "story_id": 2
+    },
+    "4": {
+        "id": 4,
+        "name": "Phleius elesett harcosai",
+        "previous_stage_ids": {
+            "0": 3
+        },
+        "unit_capacity": 600,
+        "units": {
+            "unit_5": 250
+        },
+        "reward": {
+            "type": "wedding_of_the_aristocrats",
+            "subtype": "default",
+            "level": 4
+        },
+        "story_id": null
+    },
+    "5": {
+        "id": 5,
+        "name": "A folyóvidéki métely",
+        "previous_stage_ids": {
+            "0": 4
+        },
+        "unit_capacity": 1000,
+        "units": {
+            "unit_1": 300,
+            "unit_2": 100,
+            "unit_3": 400,
+            "unit_4": 80
+        },
+        "reward": {
+            "type": "rare_attack_boost",
+            "subtype": "default",
+            "level": 0
+        },
+        "story_id": null
+    },
+    "6": {
+        "id": 6,
+        "name": "Mükéné lerohanása",
+        "previous_stage_ids": {
+            "0": 5
+        },
+        "unit_capacity": 400,
+        "units": {
+            "unit_2": 500,
+            "unit_5": 50
+        },
+        "reward": {
+            "type": "rare_favor_boost",
+            "subtype": "default",
+            "level": 6
+        },
+        "story_id": 3
+    },
+    "7": {
+        "id": 7,
+        "name": "A hárpiák áldozatainak visszatérése",
+        "previous_stage_ids": {
+            "0": 6
+        },
+        "unit_capacity": 10000,
+        "units": {
+            "unit_3": 10000,
+            "unit_5": 8000
+        },
+        "reward": {
+            "type": "unit_training_boost",
+            "subtype": "griffin",
+            "level": 2
+        },
+        "story_id": 4
+    },
+    "8": {
+        "id": 8,
+        "name": "Oricos csatatere",
+        "previous_stage_ids": {
+            "0": 6
+        },
+        "unit_capacity": 2000,
+        "units": {
+            "unit_3": 200,
+            "unit_4": 10,
+            "unit_5": 1000
+        },
+        "reward": {
+            "type": "longterm_resource_boost",
+            "subtype": "iron",
+            "level": 1
+        },
+        "story_id": null
+    },
+    "9": {
+        "id": 9,
+        "name": "Élőhalottak karavánja",
+        "previous_stage_ids": {
+            "0": 8
+        },
+        "unit_capacity": 1200,
+        "units": {
+            "unit_1": 500,
+            "unit_2": 500,
+            "unit_4": 200
+        },
+        "reward": {
+            "type": "unit_training_boost",
+            "subtype": "slinger",
+            "level": 4
+        },
+        "story_id": null
+    },
+    "10": {
+        "id": 10,
+        "name": "Az elátkozott lovassági hadtest",
+        "previous_stage_ids": {
+            "0": 9
+        },
+        "unit_capacity": 750,
+        "units": {
+            "unit_4": 600
+        },
+        "reward": {
+            "type": "help_of_the_nereids",
+            "subtype": "default",
+            "level": 0
+        },
+        "story_id": null
+    },
+    "11": {
+        "id": 11,
+        "name": "Árkádia régen feledésbe merült csapatai",
+        "previous_stage_ids": {
+            "0": 10
+        },
+        "unit_capacity": 3000,
+        "units": {
+            "unit_3": 1000,
+            "unit_5": 500
+        },
+        "reward": {
+            "type": "unit_training_boost",
+            "subtype": "rider",
+            "level": 2
+        },
+        "story_id": null
+    },
+    "12": {
+        "id": 12,
+        "name": "Megalopolis nekropolisza",
+        "previous_stage_ids": {
+            "0": 11
+        },
+        "unit_capacity": 3500,
+        "units": {
+            "unit_1": 1500,
+            "unit_2": 1000,
+            "unit_3": 400
+        },
+        "reward": {
+            "type": "unit_training_boost",
+            "subtype": "harpy",
+            "level": 2
+        },
+        "story_id": 5
+    },
+    "13": {
+        "id": 13,
+        "name": "A lélek nélküliek erődje",
+        "previous_stage_ids": {
+            "0": 12
+        },
+        "unit_capacity": 8000,
+        "units": {
+            "unit_3": 2000,
+            "unit_5": 4000
+        },
+        "reward": {
+            "type": "instant_currency",
+            "subtype": "coins_of_both",
+            "level": 5
+        },
+        "story_id": null
+    },
+    "14": {
+        "id": 14,
+        "name": "A rajtaütés Legopris falujánál",
+        "previous_stage_ids": {
+            "0": 13
+        },
+        "unit_capacity": 7500,
+        "units": {
+            "unit_3": 6000
+        },
+        "reward": {
+            "type": "unit_training_boost",
+            "subtype": "trireme",
+            "level": 2
+        },
+        "story_id": null
+    },
+    "15": {
+        "id": 15,
+        "name": "Hádész legkegyetlenebb légiói",
+        "previous_stage_ids": {
+            "0": 14
+        },
+        "unit_capacity": 21000,
+        "units": {
+            "unit_2": 17500,
+            "unit_5": 7650
+        },
+        "reward": {
+            "type": "unit_training_boost",
+            "subtype": "attack_ship",
+            "level": 3
+        },
+        "story_id": null
+    },
+    "16": {
+        "id": 16,
+        "name": "Az elesett város",
+        "previous_stage_ids": {
+            "0": 15,
+            "1": 20
+        },
+        "unit_capacity": 4500,
+        "units": {
+            "unit_2": 5100,
+            "unit_4": 2600,
+            "unit_5": 3750
+        },
+        "reward": {
+            "type": "unit_training_boost",
+            "subtype": "small_transporter",
+            "level": 5
+        },
+        "story_id": 6
+    },
+    "17": {
+        "id": 17,
+        "name": "Rémületes fosztogatók",
+        "previous_stage_ids": {
+            "0": 12
+        },
+        "unit_capacity": 1000,
+        "units": {
+            "unit_2": 800,
+            "unit_4": 400,
+            "unit_5": 100
+        },
+        "reward": {
+            "type": "longterm_resource_boost",
+            "subtype": "iron",
+            "level": 2
+        },
+        "story_id": null
+    },
+    "18": {
+        "id": 18,
+        "name": "Cythea elveszett helyőrsége",
+        "previous_stage_ids": {
+            "0": 17
+        },
+        "unit_capacity": 2000,
+        "units": {
+            "unit_1": 2150,
+            "unit_5": 500
+        },
+        "reward": {
+            "type": "longterm_resource_boost",
+            "subtype": "wood",
+            "level": 2
+        },
+        "story_id": null
+    },
+    "19": {
+        "id": 19,
+        "name": "Naxos sápadt őrzői",
+        "previous_stage_ids": {
+            "0": 18
+        },
+        "unit_capacity": 6000,
+        "units": {
+            "unit_1": 4600,
+            "unit_2": 900
+        },
+        "reward": {
+            "type": "longterm_resource_boost",
+            "subtype": "stone",
+            "level": 2
+        },
+        "story_id": null
+    },
+    "20": {
+        "id": 20,
+        "name": "Megara égő városa",
+        "previous_stage_ids": {
+            "0": 19
+        },
+        "unit_capacity": 10000,
+        "units": {
+            "unit_1": 2000,
+            "unit_2": 1900,
+            "unit_4": 900
+        },
+        "reward": {
+            "type": "unit_training_boost",
+            "subtype": "bireme",
+            "level": 4
+        },
+        "story_id": null
+    },
+    "21": {
+        "id": 21,
+        "name": "Pireusz kikötője",
+        "previous_stage_ids": {
+            "0": 12,
+            "1": 16
+        },
+        "unit_capacity": 20000,
+        "units": {
+            "unit_1": 3050,
+            "unit_2": 3500,
+            "unit_3": 1550,
+            "unit_4": 1100,
+            "unit_5": 2450
+        },
+        "reward": {
+            "type": "unit_training_boost",
+            "subtype": "attack_ship",
+            "level": 4
+        },
+        "story_id": 7
+    },
+    "22": {
+        "id": 22,
+        "name": "Az élőhalott falanx",
+        "previous_stage_ids": {
+            "0": 21
+        },
+        "unit_capacity": 10000,
+        "units": {
+            "unit_5": 7000
+        },
+        "reward": {
+            "type": "summoning_of_the_nereids",
+            "subtype": "default",
+            "level": 5
+        },
+        "story_id": null
+    },
+    "23": {
+        "id": 23,
+        "name": "Hádész szurdoka",
+        "previous_stage_ids": {
+            "0": 22
+        },
+        "unit_capacity": 9000,
+        "units": {
+            "unit_3": 750,
+            "unit_4": 6700
+        },
+        "reward": {
+            "type": "longterm_resource_boost",
+            "subtype": "all",
+            "level": 3
+        },
+        "story_id": null
+    },
+    "24": {
+        "id": 24,
+        "name": "Szalamisz vízbe fúlt katonái",
+        "previous_stage_ids": {
+            "0": 23
+        },
+        "unit_capacity": 13000,
+        "units": {
+            "unit_1": 6200,
+            "unit_2": 3450
+        },
+        "reward": {
+            "type": "unit_training_boost",
+            "subtype": "fury",
+            "level": 5
+        },
+        "story_id": null
+    },
+    "25": {
+        "id": 25,
+        "name": "A borzalmak zátonya",
+        "previous_stage_ids": {
+            "0": 21,
+            "1": 24
+        },
+        "unit_capacity": 9500,
+        "units": {
+            "unit_1": 12000
+        },
+        "reward": {
+            "type": "unit_training_boost",
+            "subtype": "archer",
+            "level": 7
+        },
+        "story_id": 8
+    },
+    "26": {
+        "id": 26,
+        "name": "Az elveszett völgy",
+        "previous_stage_ids": {
+            "0": 25
+        },
+        "unit_capacity": 16000,
+        "units": {
+            "unit_4": 23500
+        },
+        "reward": {
+            "type": "demoralizing_plague",
+            "subtype": "default",
+            "level": 4
+        },
+        "story_id": null
+    },
+    "27": {
+        "id": 27,
+        "name": "Mészárlás a komor erdőben",
+        "previous_stage_ids": {
+            "0": 26
+        },
+        "unit_capacity": 30000,
+        "units": {
+            "unit_2": 8000,
+            "unit_3": 6000,
+            "unit_4": 10000,
+            "unit_5": 15000
+        },
+        "reward": {
+            "type": "unit_training_boost",
+            "subtype": "manticore",
+            "level": 4
+        },
+        "story_id": null
+    },
+    "28": {
+        "id": 28,
+        "name": "A kísérteties fekete part",
+        "previous_stage_ids": {
+            "0": 26
+        },
+        "unit_capacity": 15000,
+        "units": {
+            "unit_1": 6500,
+            "unit_2": 3600,
+            "unit_3": 4200,
+            "unit_4": 6200,
+            "unit_5": 2500
+        },
+        "reward": {
+            "type": "longterm_attack_boost",
+            "subtype": "default",
+            "level": 2
+        },
+        "story_id": 9
+    },
+    "29": {
+        "id": 29,
+        "name": "Koroneia ősi temploma",
+        "previous_stage_ids": {
+            "0": 28
+        },
+        "unit_capacity": 13000,
+        "units": {
+            "unit_1": 6200,
+            "unit_2": 3450
+        },
+        "reward": {
+            "type": "unit_training_boost",
+            "subtype": "hoplite",
+            "level": 8
+        },
+        "story_id": 10
+    },
+    "30": {
+        "id": 30,
+        "name": "A rettegés hegyi erődje",
+        "previous_stage_ids": {
+            "0": 29
+        },
+        "unit_capacity": 15000,
+        "units": {
+            "unit_3": 5250,
+            "unit_4": 9400
+        },
+        "reward": {
+            "type": "unit_training_boost",
+            "subtype": "slinger",
+            "level": 8
+        },
+        "story_id": null
+    },
+    "31": {
+        "id": 31,
+        "name": "A kárhozat útján",
+        "previous_stage_ids": {
+            "0": 30
+        },
+        "unit_capacity": 12000,
+        "units": {
+            "unit_2": 6500,
+            "unit_3": 3950,
+            "unit_5": 1950
+        },
+        "reward": {
+            "type": "chain_lightning",
+            "subtype": "default",
+            "level": 4
+        },
+        "story_id": null
+    },
+    "32": {
+        "id": 32,
+        "name": "A holtak gázlója",
+        "previous_stage_ids": {
+            "0": 31
+        },
+        "unit_capacity": 23000,
+        "units": {
+            "unit_2": 8300,
+            "unit_3": 10600,
+            "unit_4": 8500
+        },
+        "reward": {
+            "type": "unit_training_boost",
+            "subtype": "manticore",
+            "level": 2
+        },
+        "story_id": 11
+    },
+    "33": {
+        "id": 33,
+        "name": "Hádész rémületes portálja",
+        "previous_stage_ids": {
+            "0": 32
+        },
+        "unit_capacity": 10000,
+        "units": {
+            "unit_1": 7750,
+            "unit_3": 8300,
+            "unit_5": 6950
+        },
+        "reward": {
+            "type": "population_boost",
+            "subtype": "small",
+            "level": 0
+        },
+        "onetime_rewards": {
+            "0": {
+                "type": "culture_level",
+                "subtype": "default",
+                "level": 0
+            }
+        },
+        "story_id": 12
+    }
+}

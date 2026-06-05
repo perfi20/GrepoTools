@@ -1,0 +1,52 @@
+{
+    "0": {
+        "type": "unit_1",
+        "name": "Spártai Kardforgatók",
+        "fight_value": 14,
+        "bonus1": "unit_4",
+        "bonus2": "unit_3",
+        "base_costs": 50,
+        "default_amount": 250,
+        "drop_chance": 25
+    },
+    "1": {
+        "type": "unit_2",
+        "name": "Spártai íjászok",
+        "fight_value": 13,
+        "bonus1": "unit_5",
+        "bonus2": null,
+        "base_costs": 50,
+        "default_amount": 250,
+        "drop_chance": 25
+    },
+    "2": {
+        "type": "unit_3",
+        "name": "Spártai parittyások",
+        "fight_value": 12,
+        "bonus1": "unit_1",
+        "bonus2": "unit_2",
+        "base_costs": 50,
+        "default_amount": 250,
+        "drop_chance": 25
+    },
+    "3": {
+        "type": "unit_4",
+        "name": "Spártai lovasok",
+        "fight_value": 16,
+        "bonus1": "unit_2",
+        "bonus2": null,
+        "base_costs": 75,
+        "default_amount": 0,
+        "drop_chance": 15
+    },
+    "4": {
+        "type": "unit_5",
+        "name": "Spártai hopliták",
+        "fight_value": 20,
+        "bonus1": "unit_1",
+        "bonus2": "unit_3",
+        "base_costs": 115,
+        "default_amount": 0,
+        "drop_chance": 10
+    }
+}

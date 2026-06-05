@@ -1,0 +1,2317 @@
+{
+    "mtime": 1779784355,
+    "data": {
+        "grepolympia": {
+            "matches": {
+                "templates": {
+                    "page_matches": "events/grepolympia/page_matches",
+                    "table_header": "events/grepolympia/matches/header",
+                    "table_row": "events/grepolympia/matches/rows",
+                    "ranking_tooltip": "events/grepolympia/matches/ranking_tooltip"
+                },
+                "models": {
+                    "Grepolympia": {},
+                    "GrepolympiaDiscipline": {},
+                    "GrepolympiaMatch": {},
+                    "PlayerLedger": {
+                        "nofetch": true
+                    }
+                },
+                "collections": {}
+            },
+            "info": {
+                "templates": {
+                    "page_info": "events/grepolympia/page_info",
+                    "tooltip_award": "events/grepolympia/info/tooltip_award",
+                    "attend_info_popup": "events/grepolympia/athlete/attend_info_popup",
+                    "current_ranking": "events/grepolympia/athlete/current_ranking",
+                    "awards": "events/grepolympia/athlete/awards",
+                    "rewards": "events/grepolympia/athlete/rewards",
+                    "alliance_score": "events/grepolympia/athlete/alliance_score",
+                    "tutorial": "events/grepolympia/tutorial",
+                    "tooltip_power": "shared/tooltip_power",
+                    "reward_tooltip": "events/grepolympia/athlete/reward_tooltip"
+                },
+                "models": {
+                    "GrepolympiaAthlete": {},
+                    "GrepolympiaDiscipline": {},
+                    "GrepolympiaDisciplineRanking": {},
+                    "Grepolympia": {},
+                    "PlayerLedger": {
+                        "nofetch": true
+                    }
+                },
+                "collections": {
+                    "PlayerAwards": {
+                        "nofetch": true
+                    },
+                    "PlayerHints": {
+                        "nofetch": true
+                    },
+                    "GrepolympiaRankings": {}
+                }
+            },
+            "training": {
+                "templates": {
+                    "training": "events/grepolympia/training",
+                    "discipline": "events/grepolympia/athlete/discipline",
+                    "skills": "events/grepolympia/athlete/skills",
+                    "top_ranking": "events/grepolympia/athlete/top_ranking",
+                    "training_ground": "events/grepolympia/athlete/training_ground"
+                },
+                "models": {
+                    "GrepolympiaAthlete": {},
+                    "PlayerLedger": {
+                        "nofetch": true
+                    },
+                    "GrepolympiaDiscipline": {},
+                    "Grepolympia": {}
+                },
+                "collections": {
+                    "GrepolympiaRankings": {},
+                    "TrainingOrders": {}
+                }
+            },
+            "ranking": {
+                "templates": {
+                    "page_ranking": "events/grepolympia/page_ranking",
+                    "ranking_list": "events/grepolympia/ranking/ranking_list"
+                },
+                "models": {
+                    "GrepolympiaDisciplineRanking": {},
+                    "GrepolympiaDiscipline": {},
+                    "Grepolympia": {}
+                },
+                "collections": {
+                    "GrepolympiaRankings": {}
+                }
+            },
+            "shop": {
+                "templates": {
+                    "shop": "events/grepolympia/shop",
+                    "shop_item": "events/grepolympia/shop_item"
+                },
+                "models": {
+                    "PlayerLedger": {
+                        "nofetch": true
+                    },
+                    "GrepolympiaDiscipline": {}
+                },
+                "collections": {
+                    "GrepolympiaShopItems": {}
+                }
+            }
+        },
+        "grepolympiashop": {
+            "ranking": {
+                "templates": {
+                    "page_ranking": "events/grepolympia/page_ranking",
+                    "ranking_list": "events/grepolympia/ranking/ranking_list"
+                },
+                "models": {
+                    "GrepolympiaDisciplineRanking": {},
+                    "Grepolympia": {}
+                },
+                "collections": {
+                    "GrepolympiaRankings": {}
+                }
+            },
+            "shop": {
+                "templates": {
+                    "shop": "events/grepolympia/shop",
+                    "shop_item": "events/grepolympia/shop_item"
+                },
+                "models": {
+                    "PlayerLedger": {
+                        "nofetch": true
+                    },
+                    "GrepolympiaDiscipline": {}
+                },
+                "collections": {
+                    "GrepolympiaShopItems": {}
+                }
+            }
+        },
+        "advent": {
+            "index": {
+                "templates": {
+                    "main": "windows/advent/main",
+                    "advisors": "windows/advent/advisors",
+                    "wheel": "windows/advent/wheel"
+                },
+                "models": {
+                    "Advent": {},
+                    "AdventTree": {}
+                },
+                "collections": {
+                    "AdventSpots": {},
+                    "AdventCostModifiers": {}
+                }
+            }
+        },
+        "barracks": {
+            "index": {
+                "templates": {
+                    "index": "windows/barracks/index",
+                    "unit_order_box": "windows/barracks/unit_order_box",
+                    "unit_details": "windows/barracks/unit_details",
+                    "orders": "windows/barracks/orders",
+                    "banners": "windows/barracks/banners",
+                    "no_barracks": "windows/barracks/no_barracks",
+                    "units_tabs": "windows/barracks/units_tabs"
+                },
+                "models": {
+                    "PlayerLedger": {
+                        "nofetch": true
+                    },
+                    "PremiumFeatures": {
+                        "nofetch": true
+                    },
+                    "PhoenicianSalesman": {}
+                },
+                "collections": {
+                    "Benefits": {},
+                    "WorldBoosts": {
+                        "nofetch": true
+                    },
+                    "Towns": {
+                        "nofetch": true
+                    },
+                    "TownResearches": {
+                        "nofetch": true
+                    },
+                    "RemainingUnitOrders": {
+                        "nofetch": true
+                    },
+                    "FeatureBlocks": {
+                        "nofetch": true
+                    }
+                }
+            }
+        },
+        "docks": {
+            "index": {
+                "templates": {
+                    "index": "windows/barracks/index",
+                    "unit_order_box": "windows/barracks/unit_order_box",
+                    "unit_details": "windows/barracks/unit_details",
+                    "orders": "windows/barracks/orders",
+                    "banners": "windows/barracks/banners",
+                    "no_barracks": "windows/barracks/no_barracks",
+                    "units_tabs": "windows/barracks/units_tabs"
+                },
+                "models": {
+                    "PlayerLedger": {
+                        "nofetch": true
+                    },
+                    "PremiumFeatures": {
+                        "nofetch": true
+                    },
+                    "PhoenicianSalesman": {}
+                },
+                "collections": {
+                    "Benefits": {},
+                    "WorldBoosts": {
+                        "nofetch": true
+                    },
+                    "Towns": {
+                        "nofetch": true
+                    },
+                    "TownResearches": {
+                        "nofetch": true
+                    },
+                    "RemainingUnitOrders": {
+                        "nofetch": true
+                    },
+                    "FeatureBlocks": {
+                        "nofetch": true
+                    }
+                }
+            }
+        },
+        "dialog": {
+            "info_all_towns_in_one_group": {
+                "templates": {
+                    "default_tmpl": "windows/dialog/info/default_tmpl"
+                }
+            },
+            "info_attack_planner_help": {
+                "templates": {
+                    "info_attack_planner": "windows/dialog/info/attack_planer"
+                }
+            },
+            "info_create_first_town_group": {
+                "templates": {
+                    "default_tmpl": "windows/dialog/info/default_tmpl"
+                }
+            },
+            "info_mass_recruit_help": {
+                "templates": {
+                    "default_tmpl": "windows/dialog/info/default_tmpl"
+                }
+            },
+            "info_phoenician_salesman_help": {
+                "templates": {
+                    "default_tmpl": "windows/dialog/info/default_tmpl"
+                }
+            },
+            "info_cap_of_invisibility_not_possible_help": {
+                "templates": {
+                    "default_tmpl": "windows/dialog/info/default_tmpl"
+                }
+            },
+            "go_to_page_default": {
+                "templates": {
+                    "go_to_page_window": "windows/dialog/go_to_page"
+                }
+            },
+            "save_coordinates_default": {
+                "templates": {
+                    "save_coordinates": "windows/dialog/save_coordinates"
+                }
+            },
+            "interstitial_default": {
+                "templates": {
+                    "welcome_screen": "windows/dialog/welcome",
+                    "animated_welcome": "windows/dialog/animated_welcome"
+                }
+            },
+            "confirmation_window_default": {
+                "templates": {
+                    "confirmation_window": "windows/dialog/confirmation",
+                    "fatal_attack_warning": "features/fatal_attack_warning/dialog/confirmation",
+                    "god_selection_confirmation": "features/god_selection/dialog/confirmation",
+                    "cast_spell_confirmation": "features/spells_dialog/cast_spell_confirmation"
+                }
+            },
+            "not_enough_gold_window_default": {
+                "templates": {
+                    "not_enough_gold_window_default": "shared/not_enough_gold/default"
+                }
+            },
+            "not_enough_gold_window_building_build_cost_reduction": {
+                "templates": {
+                    "not_enough_gold_window_building_build_cost_reduction": "shared/not_enough_gold/building_build_cost_reduction"
+                }
+            },
+            "not_enough_gold_window_buy_advisor": {
+                "templates": {
+                    "not_enough_gold_window_buy_advisor": "shared/not_enough_gold/buy_advisor"
+                }
+            },
+            "not_enough_gold_window_building_build_time": {
+                "templates": {
+                    "not_enough_gold_window_building_build_time": "shared/not_enough_gold/building_build_time"
+                }
+            },
+            "not_enough_gold_window_research_build_time": {
+                "templates": {
+                    "not_enough_gold_window_research_build_time": "shared/not_enough_gold/research_build_time"
+                }
+            },
+            "not_enough_gold_window_unit_orders": {
+                "templates": {
+                    "not_enough_gold_window_unit_orders": "shared/not_enough_gold/unit_orders"
+                }
+            },
+            "not_enough_gold_window_celebrate_olympic_games": {
+                "templates": {
+                    "not_enough_gold_window_celebrate_olympic_games": "shared/not_enough_gold/celebrate_olympic_games"
+                }
+            }
+        },
+        "easter": {
+            "alchemy": {
+                "templates": {
+                    "tab_alchemy": "events/easter/tab_alchemy",
+                    "progressbar": "widgets/two_parts_progressbar",
+                    "progressbar_tooltip": "events/easter/progressbar_tooltip",
+                    "ingredients_box": "events/easter/ingredients_box",
+                    "tutorial": "events/easter/tutorial",
+                    "reward_overlay": "events/easter/reward_overlay",
+                    "ranking": "events/easter/ranking",
+                    "tooltip_daily_progress": "events/easter/daily_progress_tooltip",
+                    "sub_window_daily_ranking": "events/easter/sub_window_daily_ranking",
+                    "sub_window_overall_ranking": "events/easter/sub_window_overall_ranking",
+                    "ranking_tooltip": "events/easter/ranking_tooltip"
+                },
+                "models": {
+                    "Easter": {},
+                    "EasterRanking": {},
+                    "EasterStats": {}
+                },
+                "collections": {
+                    "EasterCostModifiers": {},
+                    "EasterIngredients": {},
+                    "EasterRecipes": {},
+                    "PlayerHints": {}
+                }
+            },
+            "recipes": {
+                "templates": {
+                    "tab_recipes": "events/easter/tab_recipes",
+                    "recipes_list": "events/easter/recipes_list"
+                },
+                "models": {
+                    "Easter": {}
+                },
+                "collections": {
+                    "EasterCostModifiers": {},
+                    "EasterIngredients": {},
+                    "EasterRecipes": {},
+                    "PlayerHints": {}
+                }
+            }
+        },
+        "easter_collect": {
+            "index": {
+                "templates": {
+                    "main": "events/easter/collect_window"
+                },
+                "models": {
+                    "Easter": {}
+                },
+                "collections": {
+                    "EasterDroppedIngredients": {
+                        "nofetch": true
+                    },
+                    "PlayerHints": {}
+                }
+            }
+        },
+        "crm_interstitial": {
+            "index": {
+                "templates": {
+                    "crm_index": "windows/crm/index"
+                },
+                "models": {},
+                "collections": {}
+            }
+        },
+        "crm_screen": {
+            "index": {
+                "templates": {
+                    "screen_content": "features/crm_campaign/screen_content"
+                },
+                "models": {},
+                "collections": {}
+            }
+        },
+        "heroes": {
+            "overview": {
+                "templates": {
+                    "main": "windows/heroes/overview/main",
+                    "buy_hero_slot_buttons": "windows/heroes/buy_hero_slot",
+                    "exchange_currency": "windows/heroes/council/exchange_currency",
+                    "tooltip_with_arrow": "shared/tooltip_with_arrow",
+                    "instant_buy_tooltip": "windows/heroes/overview/instant_buy_tooltip"
+                },
+                "models": {
+                    "PlayerLedger": {
+                        "nofetch": true
+                    },
+                    "Heroes": {},
+                    "HeroesRecruitment": {}
+                },
+                "collections": {
+                    "PlayerHeroes": {},
+                    "FeatureBlocks": {
+                        "nofetch": true
+                    }
+                }
+            },
+            "council": {
+                "templates": {
+                    "council_main": "windows/heroes/council/heroes_council_main",
+                    "exchange_currency": "windows/heroes/council/exchange_currency"
+                },
+                "models": {
+                    "PlayerLedger": {
+                        "nofetch": true
+                    },
+                    "Heroes": {},
+                    "HeroesRecruitment": {}
+                },
+                "collections": {
+                    "PlayerHeroes": {}
+                }
+            },
+            "collection": {
+                "templates": {
+                    "collection_main": "windows/heroes/collection/main",
+                    "heroes_list": "windows/heroes/collection/heroes_list"
+                },
+                "models": {},
+                "collections": {
+                    "PlayerHeroes": {}
+                }
+            }
+        },
+        "heroes_train": {
+            "index": {
+                "templates": {
+                    "heroes_train": "windows/heroes/train"
+                },
+                "models": {
+                    "PlayerLedger": {
+                        "nofetch": true
+                    },
+                    "Heroes": {},
+                    "PlayerHero": {
+                        "nofetch": true
+                    }
+                },
+                "collections": {}
+            }
+        },
+        "heroes_welcome": {
+            "welcome": {
+                "templates": {
+                    "welcome_window": "windows/heroes_welcome/heroes_welcome"
+                },
+                "models": {},
+                "collections": {
+                    "PlayerHeroes": {}
+                }
+            }
+        },
+        "hide": {
+            "index": {
+                "templates": {
+                    "building_hide": "windows/buildings/hide/index",
+                    "no_building": "windows/buildings/no_building"
+                },
+                "models": {},
+                "collections": {
+                    "LastSpyReports": {},
+                    "Towns": {
+                        "nofetch": true
+                    },
+                    "MovementsSpys": {
+                        "nofetch": true
+                    }
+                }
+            }
+        },
+        "inventory": {
+            "index": {
+                "templates": {
+                    "index": "windows/inventory/index",
+                    "slot": "windows/inventory/slot"
+                },
+                "models": {
+                    "Inventory": {
+                        "nofetch": true
+                    },
+                    "PlayerLedger": {
+                        "nofetch": true
+                    }
+                },
+                "collections": {
+                    "InventoryItems": {
+                        "nofetch": true
+                    },
+                    "PremiumInventoryItems": {}
+                }
+            }
+        },
+        "island": {
+            "index": {
+                "templates": {
+                    "index": "windows/island/index"
+                },
+                "models": {},
+                "collections": {}
+            }
+        },
+        "place": {
+            "support_overview_support_for_active_town": {
+                "templates": {
+                    "main": "windows/place/support_overview_main",
+                    "list_support": "windows/place/support_overview_list_support",
+                    "list_total_units": "windows/place/support_overview_list_total_units",
+                    "list_units_in_town": "windows/place/support_overview_list_units_in_town",
+                    "list_no_results": "windows/place/support_overview_list_no_results"
+                },
+                "models": {
+                    "ConstrainedTown": {}
+                },
+                "collections": {
+                    "SupportForActiveTown": {}
+                }
+            },
+            "support_overview_active_town_supports_towns": {
+                "templates": {
+                    "main": "windows/place/support_overview_main",
+                    "list_support": "windows/place/support_overview_list_support",
+                    "list_total_units": "windows/place/support_overview_list_total_units",
+                    "list_units_in_town": "windows/place/support_overview_list_units_in_town",
+                    "list_no_results": "windows/place/support_overview_list_no_results"
+                },
+                "models": {
+                    "ConstrainedTown": {}
+                },
+                "collections": {
+                    "ActiveTownSupportsTowns": {}
+                }
+            },
+            "support_overview_active_player_supports_towns": {
+                "templates": {
+                    "main": "windows/place/support_overview_main",
+                    "list_support": "windows/place/support_overview_list_support",
+                    "list_total_units": "windows/place/support_overview_list_total_units",
+                    "list_units_in_town": "windows/place/support_overview_list_units_in_town",
+                    "list_no_results": "windows/place/support_overview_list_no_results"
+                },
+                "models": {
+                    "ConstrainedTown": {}
+                },
+                "collections": {
+                    "ActivePlayerSupportsTowns": {}
+                }
+            },
+            "support_overview_active_player_supports_town": {
+                "templates": {
+                    "main": "windows/place/support_overview_main",
+                    "list_support": "windows/place/support_overview_list_support",
+                    "list_total_units": "windows/place/support_overview_list_total_units",
+                    "list_units_in_town": "windows/place/support_overview_list_units_in_town",
+                    "list_no_results": "windows/place/support_overview_list_no_results"
+                },
+                "models": {
+                    "ConstrainedTown": {}
+                },
+                "collections": {
+                    "ActivePlayerSupportsTown": {
+                        "arguments": {
+                            "town_id": "requested_town_id"
+                        }
+                    }
+                }
+            }
+        },
+        "quest": {
+            "info": {
+                "templates": {},
+                "models": {
+                    "Progressable": {
+                        "nofetch": true
+                    }
+                },
+                "collections": {}
+            }
+        },
+        "quest_progress": {
+            "progress": {
+                "templates": {},
+                "models": {
+                    "Progressable": {
+                        "nofetch": true
+                    }
+                },
+                "collections": {
+                    "PlayerHeroes": {
+                        "nofetch": true
+                    }
+                }
+            }
+        },
+        "quest_welcome": {
+            "welcome": {
+                "templates": {},
+                "models": {
+                    "Progressable": {
+                        "nofetch": true
+                    },
+                    "Player": {
+                        "nofetch": true
+                    },
+                    "PlayerSettings": {
+                        "nofetch": true
+                    }
+                },
+                "collections": {}
+            }
+        },
+        "senate": {
+            "index": {
+                "templates": {
+                    "index": "windows/senate/index",
+                    "building": "windows/senate/building"
+                },
+                "models": {},
+                "collections": {}
+            }
+        },
+        "hercules2014": {
+            "index": {
+                "templates": {
+                    "main": "windows/campaign/index",
+                    "mercenary": "windows/campaign/mercenary",
+                    "mercenary_tooltip": "windows/campaign/mercenary_tooltip",
+                    "healer": "windows/campaign/healer",
+                    "stage": "windows/campaign/stage",
+                    "sub_window_attack": "windows/campaign/sub_windows/attack",
+                    "sub_window_fight_result": "windows/campaign/sub_windows/fight_result",
+                    "sub_window_last_stage_info": "windows/campaign/sub_windows/last_stage_info",
+                    "reward_container": "windows/campaign/reward_container",
+                    "stage_tooltip": "windows/campaign/stage_tooltip",
+                    "banner": "windows/campaign/banner",
+                    "fight_animation": "windows/campaign/fight_animation",
+                    "event_info": "windows/campaign/event_info",
+                    "tutorial": "windows/campaign/tutorial",
+                    "collecting_tooltip": "windows/campaign/collecting_tooltip",
+                    "healer_tooltip": "windows/campaign/healer_tooltip",
+                    "hercules_tooltip": "windows/campaign/hercules_tooltip",
+                    "ranking": "windows/campaign/ranking",
+                    "sub_window_daily_ranking": "windows/campaign/sub_windows/daily_ranking",
+                    "sub_window_overall_ranking": "windows/campaign/sub_windows/overall_ranking",
+                    "hero_box": "windows/heroes/hero_box"
+                },
+                "models": {
+                    "CampaignRanking": {},
+                    "CampaignPlayerArmy": {},
+                    "Campaign": {}
+                },
+                "collections": {
+                    "CampaignPlayerStages": {},
+                    "PlayerHints": {},
+                    "CampaignDroppedUnits": {
+                        "nofetch": true
+                    }
+                }
+            }
+        },
+        "hercules2014_collect": {
+            "index": {
+                "templates": {
+                    "hercules2014_index": "windows/campaign_collect/hercules2014_index"
+                },
+                "models": {},
+                "collections": {
+                    "CampaignDroppedUnits": {
+                        "nofetch": true
+                    },
+                    "PlayerHints": {}
+                }
+            }
+        },
+        "storage": {
+            "index": {
+                "templates": {
+                    "index": "windows/storage/index",
+                    "gameborder": "windows/storage/gameborder"
+                },
+                "models": {
+                    "PremiumFeatures": {
+                        "nofetch": true
+                    }
+                },
+                "collections": {
+                    "Towns": {
+                        "nofetch": true
+                    }
+                }
+            }
+        },
+        "daily_login": {
+            "index": {
+                "templates": {
+                    "index": "features/daily_login/index",
+                    "reward_favor": "features/daily_login/favor",
+                    "reward_resources": "features/daily_login/resources",
+                    "mystery_box": "features/daily_login/mystery_box",
+                    "daily_login_days_tooltip": "features/daily_login/daily_login_days_tooltip",
+                    "daily_login_goblet_tooltip": "features/daily_login/daily_login_goblet_tooltip"
+                },
+                "models": {
+                    "DailyLoginBonus": {}
+                },
+                "collections": {}
+            }
+        },
+        "world_wonders_welcome": {
+            "index": {
+                "templates": {
+                    "main": "windows/world_wonders_welcome/index"
+                },
+                "models": {},
+                "collections": {}
+            }
+        },
+        "phoenician_salesman_welcome": {
+            "index": {
+                "templates": {
+                    "main": "windows/phoenician_salesman_welcome/index"
+                },
+                "models": {},
+                "collections": {}
+            }
+        },
+        "militia_welcome": {
+            "index": {
+                "templates": {
+                    "main": "windows/militia_welcome/index"
+                },
+                "models": {},
+                "collections": {}
+            }
+        },
+        "gifts_welcome": {
+            "index": {
+                "templates": {
+                    "main": "windows/gifts_welcome/new_layout",
+                    "gift": "windows/gifts_welcome/index"
+                },
+                "models": {},
+                "collections": {}
+            }
+        },
+        "mobile_tutorial": {
+            "index": {
+                "templates": {
+                    "main": "windows/mobile_tutorial/index"
+                },
+                "models": {},
+                "collections": {
+                    "PlayerHints": {
+                        "notfetch": true
+                    }
+                }
+            }
+        },
+        "world_end_welcome": {
+            "index": {
+                "templates": {
+                    "main": "windows/world_end_welcome/index"
+                },
+                "models": {},
+                "collections": {
+                    "PlayerHints": {
+                        "nofetch": true
+                    }
+                }
+            }
+        },
+        "special_offer": {
+            "index": {
+                "templates": {
+                    "index": "windows/special_offer/index"
+                },
+                "models": {},
+                "collections": {}
+            }
+        },
+        "academy": {
+            "research": {
+                "templates": {
+                    "index": "windows/academy/index",
+                    "techtree": "windows/academy/techtree",
+                    "queue": "construction_queue/buildings/academy/queue",
+                    "queue_instant_buy": "construction_queue/queue_instant_buy",
+                    "advisor_container": "construction_queue/advisor_container",
+                    "no_building": "windows/buildings/no_building"
+                },
+                "models": {
+                    "Player": {
+                        "nofetch": true
+                    },
+                    "PlayerLedger": {
+                        "nofetch": true
+                    },
+                    "PremiumFeatures": {
+                        "nofetch": true
+                    }
+                },
+                "collections": {
+                    "TownBuildings": {
+                        "nofetch": true
+                    },
+                    "TownResearches": {
+                        "nofetch": true
+                    },
+                    "ResearchOrders": {
+                        "nofetch": true
+                    },
+                    "BuildingOrders": {
+                        "nofetch": true
+                    },
+                    "Towns": {
+                        "nofetch": true
+                    },
+                    "PlayerHeroes": {
+                        "nofetch": true
+                    }
+                }
+            },
+            "reset": {
+                "templates": {
+                    "index": "windows/academy/index",
+                    "techtree": "windows/academy/techtree",
+                    "queue": "construction_queue/buildings/academy/queue",
+                    "queue_instant_buy": "construction_queue/queue_instant_buy",
+                    "advisor_container": "construction_queue/advisor_container",
+                    "no_building": "windows/buildings/no_building"
+                },
+                "models": {
+                    "Player": {
+                        "nofetch": true
+                    },
+                    "PlayerLedger": {
+                        "nofetch": true
+                    },
+                    "PremiumFeatures": {
+                        "nofetch": true
+                    }
+                },
+                "collections": {
+                    "TownBuildings": {
+                        "nofetch": true
+                    },
+                    "TownResearches": {
+                        "nofetch": true
+                    },
+                    "ResearchOrders": {
+                        "nofetch": true
+                    },
+                    "BuildingOrders": {
+                        "nofetch": true
+                    },
+                    "Towns": {
+                        "nofetch": true
+                    }
+                }
+            }
+        },
+        "gold_trade_interstitial": {
+            "index": {
+                "templates": {
+                    "index": "windows/gold_trade_interstitial/index"
+                },
+                "models": {},
+                "collections": {}
+            }
+        },
+        "notes": {
+            "note1": {
+                "templates": {
+                    "edit": "windows/memo/edit",
+                    "preview": "windows/memo/preview",
+                    "sub_window_new_note": "windows/memo/sub_windows/new_note",
+                    "sub_window_rename_note": "windows/memo/sub_windows/rename_note",
+                    "sub_window_delete_note": "windows/memo/sub_windows/delete_note"
+                },
+                "models": {},
+                "collections": {
+                    "PlayerNotes": {}
+                }
+            },
+            "note2": {
+                "templates": {
+                    "edit": "windows/memo/edit",
+                    "preview": "windows/memo/preview",
+                    "sub_window_new_note": "windows/memo/sub_windows/new_note",
+                    "sub_window_rename_note": "windows/memo/sub_windows/rename_note",
+                    "sub_window_delete_note": "windows/memo/sub_windows/delete_note"
+                },
+                "models": {},
+                "collections": {
+                    "PlayerNotes": {}
+                }
+            },
+            "note3": {
+                "templates": {
+                    "edit": "windows/memo/edit",
+                    "preview": "windows/memo/preview",
+                    "sub_window_new_note": "windows/memo/sub_windows/new_note",
+                    "sub_window_rename_note": "windows/memo/sub_windows/rename_note",
+                    "sub_window_delete_note": "windows/memo/sub_windows/delete_note"
+                },
+                "models": {},
+                "collections": {
+                    "PlayerNotes": {}
+                }
+            },
+            "note4": {
+                "templates": {
+                    "edit": "windows/memo/edit",
+                    "preview": "windows/memo/preview",
+                    "sub_window_new_note": "windows/memo/sub_windows/new_note",
+                    "sub_window_rename_note": "windows/memo/sub_windows/rename_note",
+                    "sub_window_delete_note": "windows/memo/sub_windows/delete_note"
+                },
+                "models": {},
+                "collections": {
+                    "PlayerNotes": {}
+                }
+            },
+            "note5": {
+                "templates": {
+                    "edit": "windows/memo/edit",
+                    "preview": "windows/memo/preview",
+                    "sub_window_new_note": "windows/memo/sub_windows/new_note",
+                    "sub_window_rename_note": "windows/memo/sub_windows/rename_note",
+                    "sub_window_delete_note": "windows/memo/sub_windows/delete_note"
+                },
+                "models": {},
+                "collections": {
+                    "PlayerNotes": {}
+                }
+            }
+        },
+        "valentinesday_collect": {
+            "index": {
+                "templates": {
+                    "welcome_screen": "events/valentinesday/collect"
+                },
+                "models": {},
+                "collections": {}
+            }
+        },
+        "update_notification": {
+            "index": {
+                "templates": {},
+                "models": {},
+                "collections": {}
+            }
+        },
+        "farm_town": {
+            "index": {
+                "templates": {
+                    "index": "features/farmtowns/farm_town/index",
+                    "card": "features/farmtowns/farm_town/card",
+                    "locked_card": "features/farmtowns/farm_town/locked_card",
+                    "trading": "features/farmtowns/farm_town/trading",
+                    "locked": "features/farmtowns/farm_town/locked",
+                    "upgrade_button_tooltip": "features/farmtowns/farm_town/upgrade_button_tooltip",
+                    "advisor_container": "features/farmtowns/farm_town/advisor_container",
+                    "claim_tooltip": "features/farmtowns/farm_town/claim_tooltip"
+                },
+                "models": {
+                    "PlayerKillpoints": {
+                        "nofetch": true
+                    },
+                    "PremiumFeatures": {
+                        "nofetch": true
+                    }
+                },
+                "collections": {
+                    "FarmTownPlayerRelations": {
+                        "nofetch": true
+                    },
+                    "FarmTowns": {
+                        "nofetch": true
+                    },
+                    "Towns": {
+                        "nofetch": true
+                    },
+                    "CastedPowers": {
+                        "nofetch": true
+                    }
+                }
+            }
+        },
+        "attack_spot": {
+            "index": {
+                "templates": {
+                    "index": "features/attack_spots/attack_spot",
+                    "unit_picker": "features/unit_picker/unit_picker"
+                },
+                "models": {
+                    "PlayerAttackSpot": {
+                        "nofetch": true
+                    },
+                    "PlayerGods": {
+                        "nofetch": true
+                    }
+                },
+                "collections": {
+                    "Units": {
+                        "nofetch": true
+                    },
+                    "Towns": {
+                        "nofetch": true
+                    },
+                    "PlayerHeroes": {
+                        "nofetch": true
+                    }
+                }
+            }
+        },
+        "attack_spot_victory": {
+            "index": {
+                "templates": {
+                    "index": "features/attack_spots/victory"
+                },
+                "models": {
+                    "PlayerAttackSpot": {
+                        "nofetch": true
+                    }
+                },
+                "collections": {}
+            }
+        },
+        "grepolis_score": {
+            "index": {
+                "templates": {
+                    "index": "features/grepolis_score/index",
+                    "world_points_sizer": "features/grepolis_score/world_points_sizer",
+                    "world_points": "features/grepolis_score/world_points",
+                    "category_page": "features/grepolis_score/category_page",
+                    "summary": "features/grepolis_score/summary",
+                    "award_tooltip": "features/grepolis_score/award_tooltip"
+                },
+                "models": {
+                    "GrepoScore": {
+                        "nofetch": true
+                    }
+                },
+                "collections": {
+                    "PlayerAwards": {
+                        "nofetch": true
+                    },
+                    "GrepoScoreCategoryHashs": {
+                        "nofetch": true
+                    },
+                    "Benefits": {
+                        "nofetch": true
+                    }
+                }
+            }
+        },
+        "runtime_info": {
+            "index": {
+                "templates": {
+                    "index": "features/runtime_info/index"
+                },
+                "models": {
+                    "RuntimeSimulator": {}
+                },
+                "collections": {
+                    "Units": {
+                        "nofetch": true
+                    },
+                    "Towns": {
+                        "nofetch": true
+                    }
+                }
+            }
+        },
+        "market": {
+            "own_offers": {
+                "templates": {
+                    "own_offers": "features/market/own_offers",
+                    "own_offer_row": "features/market/own_offer_row",
+                    "own_offer_row_tooltip": "features/market/own_offer_row_tooltip",
+                    "offer_details": "features/market/offer_details",
+                    "no_building": "windows/buildings/no_building",
+                    "no_own_offers_message": "features/market/no_own_offers_message"
+                },
+                "models": {},
+                "collections": {
+                    "Towns": {
+                        "nofetch": true
+                    }
+                }
+            },
+            "all_offers": {
+                "templates": {
+                    "all_offers": "features/market/all_offers",
+                    "other_offer_row": "features/market/other_offer_row",
+                    "offer_details": "features/market/offer_details",
+                    "no_foreign_offers_message": "features/market/no_foreign_offers_message",
+                    "confirm_order": "features/market/premium_exchange/confirm_order",
+                    "no_building": "windows/buildings/no_building"
+                },
+                "models": {},
+                "collections": {
+                    "Towns": {
+                        "nofetch": true
+                    }
+                }
+            },
+            "create": {
+                "templates": {
+                    "create_offer": "features/market/create_offer",
+                    "no_building": "windows/buildings/no_building"
+                },
+                "models": {
+                    "CreateOffers": {},
+                    "PlayerLedger": {
+                        "nofetch": true
+                    }
+                },
+                "collections": {
+                    "Towns": {
+                        "nofetch": true
+                    }
+                }
+            },
+            "premium_exchange": {
+                "templates": {
+                    "premium_exchange": "features/market/premium_exchange/premium_exchange",
+                    "tab_buy_sell": "features/market/premium_exchange/tab_buy_sell",
+                    "rules": "features/market/premium_exchange/exchange_rules",
+                    "resource": "features/market/premium_exchange/resource",
+                    "confirm_order": "features/market/premium_exchange/confirm_order",
+                    "no_building": "windows/buildings/no_building"
+                },
+                "models": {},
+                "collections": {
+                    "Towns": {
+                        "nofetch": true
+                    }
+                }
+            }
+        },
+        "no_gold_dialog": {
+            "index": {
+                "templates": {
+                    "index": "features/no_gold_dialog/index"
+                },
+                "models": {},
+                "collections": {}
+            }
+        },
+        "community_goal_reached": {
+            "index": {
+                "templates": {
+                    "index": "features/community_goals/goal_reached"
+                },
+                "models": {},
+                "collections": {}
+            }
+        },
+        "turnovertokens": {
+            "index": {
+                "templates": {
+                    "fight": "events/assassins/fight",
+                    "fight_spots": "events/assassins/fight_spots",
+                    "arrow": "events/assassins/arrow",
+                    "sub_window_quiver_empty": "events/assassins/sub_window_quiver_empty",
+                    "sub_window_tutorial": "events/assassins/sub_window_tutorial",
+                    "sub_window_reward_presentation": "events/assassins/sub_window_reward_presentation",
+                    "sub_window_assassin_animation": "events/assassins/sub_window_assassin_animation",
+                    "sub_window_assassin_animation_arrow": "events/assassins/sub_window_assassin_animation_arrow",
+                    "sub_window_assassin_animation_points": "events/assassins/sub_window_assassin_animation_points",
+                    "sub_window_all_units_dead_animation": "events/assassins/sub_window_all_units_dead_animation",
+                    "sub_window_daily_ranking": "events/assassins/daily_ranking",
+                    "goals": "features/community_goals/goals",
+                    "ranking": "events/assassins/ranking",
+                    "collection_complete": "events/assassins/collection_complete"
+                },
+                "models": {
+                    "AssassinsPlayerMetaData": {},
+                    "PlayerLedger": {
+                        "nofetch": true
+                    },
+                    "AssassinsCommunityGoals": {},
+                    "AssassinsRanking": {},
+                    "TurnOverTokenPlayerRanking": {}
+                },
+                "collections": {
+                    "Benefits": {
+                        "nofetch": true
+                    },
+                    "AssassinsPlayerSpots": {},
+                    "PlayerHints": {
+                        "nofetch": true
+                    }
+                }
+            },
+            "shop": {
+                "templates": {
+                    "shop": "events/assassins/shop",
+                    "shop_item": "events/assassins/shop_item"
+                },
+                "models": {
+                    "PlayerLedger": {
+                        "nofetch": true
+                    }
+                },
+                "collections": {
+                    "AssassinsShopItems": {}
+                }
+            },
+            "sanctuary": {
+                "templates": {
+                    "sanctuary": "events/assassins/sanctuary",
+                    "sub_window_tutorial": "events/assassins/sub_window_tutorial"
+                },
+                "models": {
+                    "AssassinsPlayerMetaData": {}
+                },
+                "collections": {
+                    "PlayerHints": {
+                        "nofetch": true
+                    }
+                }
+            }
+        },
+        "spawn": {
+            "index": {
+                "templates": {
+                    "spawn_window": "events/spawn/spawn_window",
+                    "sub_window_reward": "events/spawn/sub_window_reward",
+                    "tutorial": "events/spawn/tutorial",
+                    "_missions": "events/spawn/_missions"
+                },
+                "models": {
+                    "Spawn": {
+                        "nofetch": true
+                    }
+                },
+                "collections": {
+                    "SpawnMissions": {},
+                    "Units": {
+                        "nofetch": true
+                    },
+                    "PlayerHints": {
+                        "nofetch": true
+                    }
+                }
+            }
+        },
+        "questlog": {
+            "index": {
+                "templates": {
+                    "index": "features/questlog/index",
+                    "quest_index": "features/questlog/quest_index",
+                    "quest_detail": "features/questlog/quest_detail",
+                    "category": "features/questlog/category",
+                    "quest": "features/questlog/quest",
+                    "iq_quest": "features/island_quests/iq_quest",
+                    "iq_empty_quest": "features/island_quests/iq_empty_quest",
+                    "iq_empty_detail": "features/island_quests/iq_empty_detail",
+                    "iq_quest_detail": "features/island_quests/iq_quest_detail",
+                    "iq_quest_decision": "features/island_quests/iq_quest_decision",
+                    "iq_quest_challenge": "features/island_quests/iq_quest_challenge",
+                    "iq_tooltips": "features/island_quests/tooltips",
+                    "wnd_attack_npc": "windows/island_quests/details_windows/attack_npc",
+                    "wnd_collect_units": "windows/island_quests/details_windows/collect_units",
+                    "wnd_spend_resources": "windows/island_quests/details_windows/spend_resources",
+                    "wnd_provoke_attack": "windows/island_quests/details_windows/provoke_attack",
+                    "wnd_bear_effect": "windows/island_quests/details_windows/bear_effect",
+                    "wnd_wait_time": "windows/island_quests/details_windows/wait_time",
+                    "town_groups_list": "layout/town_groups_list"
+                },
+                "models": {
+                    "PlayerSettings": {
+                        "nofetch": true
+                    },
+                    "PlayerLedger": {
+                        "nofetch": true
+                    }
+                },
+                "collections": {
+                    "IslandQuestPlayerRelations": {
+                        "nofetch": true
+                    },
+                    "IslandQuests": {
+                        "nofetch": true
+                    },
+                    "Units": {
+                        "nofetch": true
+                    },
+                    "Towns": {
+                        "nofetch": true
+                    },
+                    "PlayerHeroes": {
+                        "nofetch": true
+                    }
+                }
+            }
+        },
+        "strategic_map_filter": {
+            "index": {
+                "templates": {
+                    "index": "features/strategic_map_filter/index",
+                    "highlight": "features/strategic_map_filter/highlight"
+                },
+                "models": {
+                    "PremiumFeatures": {
+                        "nofetch": true
+                    },
+                    "Player": {
+                        "nofetch": true
+                    }
+                },
+                "collections": {
+                    "CustomColors": {
+                        "nofetch": true
+                    },
+                    "AlliancePacts": {
+                        "nofetch": true
+                    },
+                    "PlayerHints": {
+                        "notfetch": true
+                    }
+                }
+            }
+        },
+        "color_picker": {
+            "index": {
+                "templates": {
+                    "index": "features/color_picker/index"
+                },
+                "models": {},
+                "collections": {
+                    "CustomColors": {
+                        "nofetch": true
+                    }
+                }
+            }
+        },
+        "custom_colors": {
+            "index": {
+                "templates": {
+                    "index": "features/custom_colors/index",
+                    "item": "features/custom_colors/item"
+                },
+                "models": {
+                    "Player": {
+                        "nofetch": true
+                    }
+                },
+                "collections": {
+                    "CustomColors": {
+                        "nofetch": true
+                    }
+                }
+            }
+        },
+        "iframe_cash_shop": {
+            "index": {
+                "templates": {
+                    "index": "windows/cash_shop/index"
+                },
+                "models": {},
+                "collections": {}
+            }
+        },
+        "cash_shop": {
+            "index": {
+                "templates": {
+                    "product": "windows/cash_shop/cash_shop_product",
+                    "tab": "windows/cash_shop/cash_shop_tab"
+                },
+                "models": {},
+                "collections": {
+                    "CashShopProducts": {}
+                }
+            }
+        },
+        "world_wonder_donations": {
+            "index": {
+                "templates": {
+                    "resources": "features/world_wonder_donations/resources",
+                    "favor": "features/world_wonder_donations/favor"
+                },
+                "models": {},
+                "collections": {
+                    "WonderParticipations": {}
+                }
+            }
+        },
+        "flippingimages": {
+            "index": {
+                "templates": {
+                    "index": "events/flipping_images/index"
+                },
+                "models": {},
+                "collections": {}
+            }
+        },
+        "colonization": {
+            "index": {
+                "templates": {
+                    "index": "features/colonization/index",
+                    "unit_picker": "features/unit_picker/unit_picker",
+                    "tooltip_colonizing_info": "features/colonization/tooltip_colonizing_info",
+                    "tooltip_island_info": "features/colonization/tooltip_island_info",
+                    "requirements": "features/colonization/requirements"
+                },
+                "models": {
+                    "Colonization": {},
+                    "PlayerGods": {
+                        "nofetch": true
+                    }
+                },
+                "collections": {
+                    "Units": {
+                        "nofetch": true
+                    },
+                    "PlayerHeroes": {
+                        "nofetch": true
+                    },
+                    "Towns": {
+                        "nofetch": true
+                    }
+                }
+            }
+        },
+        "missions": {
+            "index": {
+                "templates": {
+                    "index": "events/missions/missions_list",
+                    "mission": "events/missions/missions_list_mission",
+                    "mission_running": "events/missions/mission_running",
+                    "details": "events/missions/missions_list_details",
+                    "info": "events/missions/missions_info",
+                    "send_units": "events/missions/send_units",
+                    "unit_picker": "features/unit_picker/unit_picker",
+                    "progress": "events/missions/missions_progress",
+                    "mission_result": "events/missions/mission_result",
+                    "buy_unit": "events/missions/buy_unit",
+                    "indicator_tooltip": "features/collected_items/indicator_tooltip",
+                    "unit_card": "events/missions/unit_card"
+                },
+                "models": {
+                    "MissionStatus": {},
+                    "PlayerLedger": {
+                        "nofetch": true
+                    },
+                    "MissionReport": {},
+                    "MissionsUnitData": {},
+                    "MissionsPlayerArmy": {
+                        "nofetch": true
+                    }
+                },
+                "collections": {
+                    "Benefits": {},
+                    "Towns": {
+                        "nofetch": true
+                    },
+                    "Missions": {}
+                }
+            },
+            "collection": {
+                "templates": {
+                    "collection": "events/missions/collection",
+                    "collect_reward": "events/missions/collect_reward",
+                    "rewards_list": "events/missions/rewards_list",
+                    "rewards_list_reward": "events/missions/rewards_list_reward",
+                    "tutorial": "events/missions/tutorial",
+                    "ranking": "events/missions/ranking",
+                    "ranking_rewards": "events/missions/ranking_rewards",
+                    "overall_ranking": "events/missions/overall_ranking"
+                },
+                "models": {
+                    "MissionStatus": {},
+                    "MissionsRanking": {},
+                    "MissionsPlayerRanking": {},
+                    "MissionReport": {},
+                    "MissionRewards": {},
+                    "PlayerLedger": {
+                        "nofetch": true
+                    }
+                },
+                "collections": {
+                    "Benefits": {},
+                    "PlayerHints": {
+                        "nofetch": true
+                    },
+                    "MissionsExtraRewards": {}
+                }
+            }
+        },
+        "god_selection": {
+            "index": {
+                "templates": {
+                    "index": "features/god_selection/god_selection",
+                    "description": "features/god_selection/god_description",
+                    "no_building": "windows/buildings/no_building"
+                },
+                "models": {
+                    "PlayerGods": {
+                        "nofetch": true
+                    },
+                    "PremiumFeatures": {
+                        "nofetch": true
+                    }
+                },
+                "collections": {
+                    "Towns": {
+                        "nofetch": true
+                    }
+                }
+            },
+            "artifacts": {
+                "templates": {
+                    "artifacts": "features/god_selection/artifacts",
+                    "artifact_card": "tooltips/artifact_card"
+                },
+                "models": {
+                    "Player": {
+                        "nofetch": true
+                    },
+                    "PlayerGods": {
+                        "nofetch": true
+                    }
+                },
+                "collections": {}
+            },
+            "artifacts_with_levels": {
+                "templates": {
+                    "artifacts": "features/god_selection/artifacts",
+                    "artifact_card": "tooltips/artifact_card"
+                },
+                "models": {
+                    "Player": {
+                        "nofetch": true
+                    },
+                    "PlayerGods": {
+                        "nofetch": true
+                    }
+                },
+                "collections": {
+                    "PlayerArtifacts": {}
+                }
+            }
+        },
+        "domination": {
+            "info": {
+                "templates": {
+                    "domination_info": "features/domination/domination_info",
+                    "pre_domination_progress": "features/domination/info/pre_domination_progress",
+                    "domination_progress": "features/domination/info/domination_progress",
+                    "domination_rules": "features/domination/info/domination_rules",
+                    "post_domination_progress": "features/domination/info/post_domination_progress",
+                    "post_domination_footer": "features/domination/info/post_domination_footer",
+                    "player_ranks_tooltip": "features/domination/info/player_ranks_tooltip"
+                },
+                "models": {
+                    "DominationStatus": {},
+                    "Player": {
+                        "nofetch": true
+                    }
+                },
+                "collections": {}
+            },
+            "status": {
+                "templates": {
+                    "domination_status": "features/domination/domination_status",
+                    "alliance_status": "features/domination/status/alliance_status",
+                    "alliance_status_empty": "features/domination/status/alliance_status_empty",
+                    "world_status": "features/domination/status/world_status",
+                    "last_stand": "features/domination/status/last_stand"
+                },
+                "models": {},
+                "collections": {
+                    "AllianceStatusDominations": {},
+                    "CustomColors": {
+                        "nofetch": true
+                    },
+                    "Benefits": {
+                        "nofetch": true
+                    }
+                }
+            },
+            "ranking": {
+                "templates": {
+                    "domination_ranking": "features/domination/domination_ranking",
+                    "winner_pedestal": "features/domination/ranking/winner_pedestal"
+                },
+                "models": {},
+                "collections": {
+                    "CustomColors": {
+                        "nofetch": true
+                    }
+                }
+            }
+        },
+        "notification_popup": {
+            "index": {
+                "templates": {
+                    "notification_popup": "features/notification_popup/notification_popup"
+                },
+                "models": {
+                    "Player": {
+                        "nofetch": true
+                    }
+                },
+                "collections": {}
+            }
+        },
+        "domination_era_started": {
+            "index": {
+                "templates": {
+                    "notification_popup": "features/notification_popup/notification_popup"
+                },
+                "models": {
+                    "Player": {
+                        "nofetch": true
+                    }
+                },
+                "collections": {}
+            }
+        },
+        "collected_items": {
+            "index": {
+                "templates": {
+                    "collected_items": "features/collected_items/collected_items"
+                },
+                "models": {},
+                "collections": {
+                    "CollectedItems": {
+                        "nofetch": true
+                    }
+                }
+            }
+        },
+        "town_overlay": {
+            "index": {
+                "templates": {
+                    "index": "events/town_overlay/index"
+                },
+                "collections": {
+                    "Benefits": {
+                        "nofetch": true
+                    }
+                }
+            }
+        },
+        "gridevent": {
+            "index": {
+                "templates": {
+                    "main": "events/grid_event/main",
+                    "figure_reward": "events/grid_event/figure_reward",
+                    "player_grid": "events/grid_event/player_grid",
+                    "player_grid_cell_content": "events/grid_event/player_grid_cell_content",
+                    "shop": "events/grid_event/sub-windows/shop",
+                    "shop_item": "events/grid_event/sub-windows/shop_item",
+                    "info_icon_tooltip": "events/grid_event/info_icon_tooltip",
+                    "rewards_list": "features/rewards_list/rewards_list",
+                    "rewards_list_reward": "events/grid_event/sub-windows/rewards_list_reward",
+                    "reward": "events/grid_event/sub-windows/reward",
+                    "indicator_tooltip": "features/collected_items/indicator_tooltip",
+                    "grand_prize_reward_display": "events/grid_event/grand_prize_reward_display",
+                    "grand_prize_journey": "events/grid_event/sub-windows/grand_prize_journey",
+                    "tutorial": "events/grid_event/sub-windows/tutorial",
+                    "progression_movement": "events/grid_event/progression_movement"
+                },
+                "models": {
+                    "PlayerLedger": {
+                        "nofetch": true
+                    },
+                    "PlayerGrid": {},
+                    "GridEventCollectedItemCount": {},
+                    "PlayerHappeningMainRewardProgress": {},
+                    "PlayerEventPass": {}
+                },
+                "collections": {
+                    "PlayerGridFigureRewards": {},
+                    "PlayerGridTurns": {},
+                    "GridEventShopItems": {},
+                    "GridEventInventoryItems": {},
+                    "PlayerEventPassRewards": {}
+                }
+            },
+            "event_pass": {
+                "templates": {
+                    "event_pass_main": "events/event_pass/main",
+                    "event_pass_tutorial": "events/event_pass/tutorial",
+                    "event_pass_activation_popup": "events/event_pass/activation_popup"
+                },
+                "models": {
+                    "PlayerGrid": {},
+                    "PlayerHappeningMainRewardProgress": {},
+                    "PlayerEventPass": {}
+                },
+                "collections": {
+                    "PlayerEventPassRewards": {}
+                }
+            }
+        },
+        "blackfridaysale": {
+            "index": {
+                "templates": {
+                    "black_friday": "events/black_friday/black_friday"
+                },
+                "models": {},
+                "collections": {}
+            }
+        },
+        "olympus_overview": {
+            "info": {
+                "templates": {
+                    "overview_info": "features/olympus/overview/overview_info",
+                    "overview_info_header": "features/olympus/overview/overview_info_header",
+                    "rules": "features/olympus/overview/rules",
+                    "player_ranks_tooltip": "features/olympus/overview/player_ranks_tooltip",
+                    "overview_post_temple_header": "features/olympus/overview/overview_post_temple_header"
+                },
+                "models": {
+                    "Olympus": {
+                        "nofetch": true
+                    }
+                },
+                "collections": {}
+            },
+            "small_temples": {
+                "templates": {
+                    "overview_small_temples": "features/olympus/overview/overview_small_temples",
+                    "overview_small_temples_header": "features/olympus/overview/overview_small_temples_header",
+                    "small_temple_row": "features/olympus/overview/overview_small_temple_row",
+                    "filters": "features/olympus/overview/filters",
+                    "overview_post_temple_header": "features/olympus/overview/overview_post_temple_header"
+                },
+                "models": {
+                    "Olympus": {
+                        "nofetch": true
+                    }
+                },
+                "collections": {
+                    "Temples": {
+                        "nofetch": true
+                    }
+                }
+            },
+            "large_temples": {
+                "templates": {
+                    "overview_large_temples": "features/olympus/overview/overview_large_temples",
+                    "overview_large_temples_header": "features/olympus/overview/overview_large_temples_header",
+                    "large_temple_list_item": "features/olympus/overview/large_temple_list_item",
+                    "large_temple_list_slider": "features/olympus/overview/overview_large_temple_slider",
+                    "large_temple_silhouette": "features/olympus/overview/overview_large_temple_silhouette",
+                    "alliance_flag": "features/olympus/overview/alliance_flag",
+                    "overview_post_temple_header": "features/olympus/overview/overview_post_temple_header"
+                },
+                "models": {
+                    "Olympus": {
+                        "nofetch": true
+                    }
+                },
+                "collections": {
+                    "Temples": {
+                        "nofetch": true
+                    },
+                    "CustomColors": {
+                        "nofetch": true
+                    }
+                }
+            },
+            "olympus": {
+                "templates": {
+                    "overview_olympus": "features/olympus/overview/overview_olympus",
+                    "overview_olympus_header": "features/olympus/overview/overview_olympus_header",
+                    "overview_post_temple_header": "features/olympus/overview/overview_post_temple_header",
+                    "alliance_flag": "features/olympus/overview/alliance_flag"
+                },
+                "models": {
+                    "Olympus": {
+                        "nofetch": true
+                    }
+                },
+                "collections": {
+                    "Temples": {
+                        "nofetch": true
+                    },
+                    "CustomColors": {
+                        "nofetch": true
+                    }
+                }
+            }
+        },
+        "olympus_temple_info": {
+            "index": {
+                "templates": {
+                    "temple_info": "features/olympus/temple_info",
+                    "command": "features/olympus/command",
+                    "revolt": "features/olympus/revolt",
+                    "temple_info_image": "features/olympus/temple_info_image",
+                    "temple_info_image_olympus": "features/olympus/temple_info_image_olympus",
+                    "olympus_curse": "features/olympus/olympus_curse",
+                    "temple_powers_overlay": "features/olympus/temple_info_powers_overlay"
+                },
+                "models": {
+                    "TempleInfo": {},
+                    "Olympus": {
+                        "nofetch": true
+                    }
+                },
+                "collections": {
+                    "Temples": {
+                        "nofetch": true
+                    },
+                    "CustomColors": {
+                        "nofetch": true
+                    }
+                }
+            },
+            "temple_defense": {
+                "templates": {
+                    "temple_defense": "features/olympus/temple_defense",
+                    "defense_list_item": "features/olympus/defense_list_item",
+                    "temple_defense_slot_wrapper": "features/olympus/temple_defense_slot_wrapper"
+                },
+                "models": {
+                    "TempleInfo": {}
+                },
+                "collections": {
+                    "Temples": {
+                        "nofetch": true
+                    }
+                }
+            },
+            "ranking": {
+                "templates": {
+                    "ranking": "features/olympus/ranking",
+                    "flags_in_background": "features/olympus/flags_in_background"
+                },
+                "models": {
+                    "OlympusRanking": {},
+                    "Player": {
+                        "nofetch": true
+                    }
+                },
+                "collections": {
+                    "CustomColors": {
+                        "nofetch": true
+                    }
+                }
+            }
+        },
+        "olympus_ranking": {
+            "index": {
+                "templates": {
+                    "ranking": "features/olympus/ranking",
+                    "flags_in_background": "features/olympus/flags_in_background"
+                },
+                "models": {
+                    "OlympusRanking": {},
+                    "Player": {
+                        "nofetch": true
+                    }
+                },
+                "collections": {
+                    "CustomColors": {
+                        "nofetch": true
+                    }
+                }
+            }
+        },
+        "rota": {
+            "index": {
+                "templates": {
+                    "index": "events/rota/rota_main",
+                    "rewards_list": "features/rewards_list/rewards_list",
+                    "rewards_list_reward": "events/rota/rewards_list_reward",
+                    "indicator_tooltip": "features/collected_items/indicator_tooltip",
+                    "tutorial": "events/rota/tutorial",
+                    "shop": "events/rota/shop",
+                    "shop_item": "events/rota/shop_item"
+                },
+                "models": {
+                    "PlayerRota": {},
+                    "RotaEventData": {},
+                    "RotaEventCollectedItemCount": {},
+                    "PlayerLedger": {
+                        "nofetch": true
+                    },
+                    "PlayerHappeningMainRewardProgress": {},
+                    "PlayerEventPass": {}
+                },
+                "collections": {
+                    "RotaEventInventoryItems": {},
+                    "RotaEventShopItems": {},
+                    "RotaUnfinishedPaintingElements": {},
+                    "PlayerEventPassRewards": {}
+                }
+            },
+            "event_pass": {
+                "templates": {
+                    "event_pass_main": "events/event_pass/main",
+                    "event_pass_tutorial": "events/event_pass/tutorial",
+                    "event_pass_activation_popup": "events/event_pass/activation_popup"
+                },
+                "models": {
+                    "RotaEventData": {},
+                    "PlayerHappeningMainRewardProgress": {},
+                    "PlayerEventPass": {}
+                },
+                "collections": {
+                    "PlayerEventPassRewards": {}
+                }
+            }
+        },
+        "world_wonders_info": {
+            "ranking": {
+                "templates": {
+                    "ranking": "features/world_wonders/ranking",
+                    "flags_in_background": "features/world_wonders/flags_in_background",
+                    "main_ranking_header_row": "features/world_wonders/ranking_header_row",
+                    "main_ranking_column": "features/world_wonders/ranking_column",
+                    "wonder_tooltip": "features/world_wonders/wonder_tooltip"
+                },
+                "models": {
+                    "WondersRanking": {},
+                    "Player": {
+                        "nofetch": true
+                    }
+                },
+                "collections": {
+                    "CustomColors": {
+                        "nofetch": true
+                    }
+                }
+            },
+            "info": {
+                "templates": {},
+                "models": {},
+                "collections": {}
+            }
+        },
+        "tasksevent": {
+            "index": {
+                "templates": {
+                    "grand_prize_slot": "events/tasks_event/grand_prize_slot",
+                    "index": "events/tasks_event/index",
+                    "task": "events/tasks_event/task",
+                    "tooltip": "events/tasks_event/tooltip",
+                    "tutorial": "events/tasks_event/tutorial"
+                },
+                "models": {
+                    "PlayerTasksEvent": {},
+                    "TasksEventGrandPrize": {}
+                },
+                "collections": {
+                    "PlayerTasks": {}
+                }
+            }
+        },
+        "fakeevent": {
+            "index": {
+                "templates": {
+                    "main": "events/fake_event/main"
+                }
+            }
+        },
+        "affront": {
+            "index": {
+                "templates": {
+                    "affront": "features/affront/affront"
+                }
+            }
+        },
+        "city_list": {
+            "index": {
+                "templates": {
+                    "city_list": "features/city_list/city_list",
+                    "town_group": "features/city_list/town_group",
+                    "city": "features/city_list/city"
+                },
+                "models": {},
+                "collections": {
+                    "TownGroups": {
+                        "nofetch": true
+                    },
+                    "TownGroupTowns": {
+                        "nofetch": true
+                    },
+                    "Attacks": {
+                        "nofetch": true
+                    },
+                    "Supports": {
+                        "nofetch": true
+                    },
+                    "IslandQuests": {
+                        "nofetch": true
+                    }
+                }
+            }
+        },
+        "recruiting_list": {
+            "index": {
+                "templates": {
+                    "recruiting_list": "features/recruiting_list/recruiting_list",
+                    "unit_order_entry": "features/recruiting_list/unit_order_entry"
+                },
+                "models": {},
+                "collections": {
+                    "RemainingUnitOrders": {
+                        "nofetch": true
+                    },
+                    "FeatureBlocks": {
+                        "nofetch": true
+                    }
+                }
+            }
+        },
+        "construction_list": {
+            "index": {
+                "templates": {
+                    "construction_list": "features/construction_list/construction_list",
+                    "construction_order_entry": "features/construction_list/construction_order_entry",
+                    "construction_order_empty": "features/construction_list/construction_order_empty"
+                },
+                "models": {
+                    "PremiumFeatures": {
+                        "nofetch": true
+                    }
+                },
+                "collections": {
+                    "BuildingOrders": {
+                        "nofetch": true
+                    },
+                    "FeatureBlocks": {
+                        "nofetch": true
+                    },
+                    "Towns": {
+                        "nofetch": true
+                    }
+                }
+            }
+        },
+        "activities": {
+            "running_powers": {
+                "templates": {
+                    "activities_list": "features/activities/activities_list",
+                    "running_power": "features/activities/running_power",
+                    "no_result": "features/activities/no_result"
+                },
+                "models": {},
+                "collections": {
+                    "CappedPowersProgresses": {
+                        "nofetch": true
+                    },
+                    "CastedPowers": {
+                        "nofetch": true
+                    },
+                    "CastedAlliancePowers": {
+                        "nofetch": true
+                    },
+                    "MovementsSpys": {
+                        "nofetch": true
+                    },
+                    "MovementsUnits": {
+                        "nofetch": true
+                    },
+                    "MovementsRevoltsAttacker": {
+                        "nofetch": true
+                    },
+                    "MovementsRevoltsDefender": {
+                        "nofetch": true
+                    },
+                    "MovementsColonizations": {
+                        "nofetch": true
+                    },
+                    "MovementsConquerors": {
+                        "nofetch": true
+                    },
+                    "TempleCommands": {
+                        "nofetch": true
+                    },
+                    "Trades": {
+                        "nofetch": true
+                    }
+                }
+            },
+            "running_temple_powers": {
+                "templates": {
+                    "activities_list": "features/activities/activities_list",
+                    "running_temple_power": "features/activities/running_temple_power",
+                    "no_result": "features/activities/no_result"
+                },
+                "models": {},
+                "collections": {
+                    "CastedPowers": {
+                        "nofetch": true
+                    },
+                    "CastedAlliancePowers": {
+                        "nofetch": true
+                    },
+                    "MovementsSpys": {
+                        "nofetch": true
+                    },
+                    "MovementsUnits": {
+                        "nofetch": true
+                    },
+                    "MovementsRevoltsAttacker": {
+                        "nofetch": true
+                    },
+                    "MovementsRevoltsDefender": {
+                        "nofetch": true
+                    },
+                    "MovementsColonizations": {
+                        "nofetch": true
+                    },
+                    "MovementsConquerors": {
+                        "nofetch": true
+                    },
+                    "TempleCommands": {
+                        "nofetch": true
+                    },
+                    "Trades": {
+                        "nofetch": true
+                    }
+                }
+            },
+            "movements": {
+                "templates": {
+                    "activities_list": "features/activities/activities_list",
+                    "movement": "features/activities/movement",
+                    "no_result": "features/activities/no_result"
+                },
+                "models": {},
+                "collections": {
+                    "CastedPowers": {
+                        "nofetch": true
+                    },
+                    "CastedAlliancePowers": {
+                        "nofetch": true
+                    },
+                    "MovementsSpys": {
+                        "nofetch": true
+                    },
+                    "MovementsUnits": {
+                        "nofetch": true
+                    },
+                    "MovementsRevoltsAttacker": {
+                        "nofetch": true
+                    },
+                    "MovementsRevoltsDefender": {
+                        "nofetch": true
+                    },
+                    "MovementsColonizations": {
+                        "nofetch": true
+                    },
+                    "MovementsConquerors": {
+                        "nofetch": true
+                    },
+                    "TempleCommands": {
+                        "nofetch": true
+                    },
+                    "Trades": {
+                        "nofetch": true
+                    }
+                }
+            },
+            "temple_commands": {
+                "templates": {
+                    "activities_list": "features/activities/activities_list",
+                    "temple_command": "features/activities/temple_command",
+                    "no_result": "features/activities/no_result"
+                },
+                "models": {},
+                "collections": {
+                    "CastedPowers": {
+                        "nofetch": true
+                    },
+                    "CastedAlliancePowers": {
+                        "nofetch": true
+                    },
+                    "MovementsSpys": {
+                        "nofetch": true
+                    },
+                    "MovementsUnits": {
+                        "nofetch": true
+                    },
+                    "MovementsRevoltsAttacker": {
+                        "nofetch": true
+                    },
+                    "MovementsRevoltsDefender": {
+                        "nofetch": true
+                    },
+                    "MovementsColonizations": {
+                        "nofetch": true
+                    },
+                    "MovementsConquerors": {
+                        "nofetch": true
+                    },
+                    "TempleCommands": {
+                        "nofetch": true
+                    },
+                    "Trades": {
+                        "nofetch": true
+                    }
+                }
+            },
+            "trades": {
+                "templates": {
+                    "activities_list": "features/activities/activities_list",
+                    "trade": "features/activities/trade",
+                    "no_result": "features/activities/no_result"
+                },
+                "models": {},
+                "collections": {
+                    "CastedPowers": {
+                        "nofetch": true
+                    },
+                    "CastedAlliancePowers": {
+                        "nofetch": true
+                    },
+                    "MovementsSpys": {
+                        "nofetch": true
+                    },
+                    "MovementsUnits": {
+                        "nofetch": true
+                    },
+                    "MovementsRevoltsAttacker": {
+                        "nofetch": true
+                    },
+                    "MovementsRevoltsDefender": {
+                        "nofetch": true
+                    },
+                    "MovementsColonizations": {
+                        "nofetch": true
+                    },
+                    "MovementsConquerors": {
+                        "nofetch": true
+                    },
+                    "TempleCommands": {
+                        "nofetch": true
+                    },
+                    "Trades": {
+                        "nofetch": true
+                    }
+                }
+            }
+        },
+        "eventpass": {
+            "event_pass": {
+                "templates": {
+                    "event_pass_main": "events/event_pass/main",
+                    "event_pass_tutorial": "events/event_pass/tutorial",
+                    "event_pass_activation_popup": "events/event_pass/activation_popup"
+                },
+                "models": {
+                    "PlayerEventPass": {},
+                    "PlayerHappeningMainRewardProgress": {}
+                },
+                "collections": {
+                    "PlayerEventPassRewards": {}
+                }
+            }
+        },
+        "quizevent": {
+            "index": {
+                "templates": {
+                    "main": "events/quiz_event/main",
+                    "info_overlay": "events/quiz_event/info_overlay",
+                    "rewards_list": "features/rewards_list/rewards_list",
+                    "rewards_list_reward": "events/quiz_event/rewards_list_reward"
+                },
+                "models": {
+                    "PlayerQuizEvent": {},
+                    "PlayerHappeningMainRewardProgress": {}
+                },
+                "collections": {
+                    "Benefits": {
+                        "nofetch": true
+                    }
+                }
+            }
+        },
+        "farm_town_takeover": {
+            "index": {
+                "templates": {
+                    "index": "events/farm_town_takeover/index"
+                },
+                "models": {},
+                "collections": {}
+            }
+        }
+    },
+    "locale_lang": "hu_HU"
+}

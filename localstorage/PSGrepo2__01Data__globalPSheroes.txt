@@ -1,0 +1,1187 @@
+{
+    "mtime": 1749830858,
+    "data": {
+        "agamemnon": {
+            "id": "agamemnon",
+            "category": "war",
+            "name": "Agamemnon",
+            "description": "A hopliták és az íjászok támadó- és védőértékei %1%-kal nőnek, amíg Agamemnon oldalán harcolnak.",
+            "description_args": {
+                "1": {
+                    "value": 0.1,
+                    "level_mod": 0.01,
+                    "unit": "%"
+                }
+            },
+            "short_description": "erősebb Hopliták és Íjászok",
+            "default_level": 1,
+            "cost": 55,
+            "award_requirements": [],
+            "exclusive": false,
+            "hidden": false,
+            "preconditions": [],
+            "attack": 80,
+            "speed": 105,
+            "booty": 50,
+            "is_naval": false,
+            "is_ground": true,
+            "max_per_attack": 1,
+            "max_per_support": 0,
+            "attack_type": "pierce",
+            "def_hack": 120,
+            "def_pierce": 80,
+            "def_distance": 120
+        },
+        "ajax": {
+            "id": "ajax",
+            "category": "war",
+            "name": "Aiasz",
+            "description": "A hopliták támadó- és védőértékei %1%-kal nőnek, amíg Aiasz oldalán harcolnak.",
+            "description_args": {
+                "1": {
+                    "value": 0.17,
+                    "level_mod": 0.017,
+                    "unit": "%"
+                }
+            },
+            "short_description": "erősebb Hopliták",
+            "default_level": 1,
+            "cost": 35,
+            "award_requirements": [],
+            "exclusive": false,
+            "hidden": false,
+            "preconditions": [],
+            "attack": 230,
+            "speed": 105,
+            "booty": 20,
+            "is_naval": false,
+            "is_ground": true,
+            "max_per_attack": 1,
+            "max_per_support": 0,
+            "attack_type": "pierce",
+            "def_hack": 70,
+            "def_pierce": 70,
+            "def_distance": 70
+        },
+        "alexandrios": {
+            "id": "alexandrios",
+            "category": "war",
+            "name": "Alexandriosz",
+            "description": "Az íjászok támadó- és védőértékei %1%-kal nőnek, amíg Alexandriosz oldalán harcolnak.",
+            "description_args": {
+                "1": {
+                    "value": 0.17,
+                    "level_mod": 0.017,
+                    "unit": "%"
+                }
+            },
+            "short_description": "erősebb Íjászok",
+            "default_level": 1,
+            "cost": 40,
+            "award_requirements": [],
+            "exclusive": false,
+            "hidden": false,
+            "preconditions": [],
+            "attack": 60,
+            "speed": 105,
+            "booty": 40,
+            "is_naval": false,
+            "is_ground": true,
+            "max_per_attack": 1,
+            "max_per_support": 0,
+            "attack_type": "distance",
+            "def_hack": 110,
+            "def_pierce": 260,
+            "def_distance": 200
+        },
+        "apheledes": {
+            "id": "apheledes",
+            "category": "wisdom",
+            "name": "Ampelosz",
+            "description": "Amikor Ampeloszt, a szatírt hozzárendeled egy városodhoz, a városban %1%-kal kevesebb nyersanyagba kerül és %1%-kal gyorsabb az akadémiai fejlesztés.",
+            "description_args": {
+                "1": {
+                    "value": 0.3,
+                    "level_mod": 0.03,
+                    "unit": "%"
+                }
+            },
+            "short_description": "-kal gyorsabb és olcsóbb fejlesztés",
+            "default_level": 1,
+            "cost": 45,
+            "award_requirements": [],
+            "exclusive": false,
+            "hidden": false,
+            "preconditions": [],
+            "attack": 80,
+            "speed": 105,
+            "booty": 15,
+            "is_naval": false,
+            "is_ground": true,
+            "max_per_attack": 1,
+            "max_per_support": 0,
+            "attack_type": "distance",
+            "def_hack": 60,
+            "def_pierce": 80,
+            "def_distance": 180
+        },
+        "andromeda": {
+            "id": "andromeda",
+            "category": "wisdom",
+            "name": "Androméda",
+            "description": "Amíg Androméda hozzá van rendelve egy városhoz, %1%-kal nő az alap fa-, kő- és ezüstpénztermelés.",
+            "description_args": {
+                "1": {
+                    "value": 0.5,
+                    "level_mod": 0.05,
+                    "unit": "%"
+                }
+            },
+            "short_description": "megnövekedett fa-, kő- és ezüstpénztermelés",
+            "default_level": 1,
+            "cost": 0,
+            "award_requirements": [],
+            "exclusive": true,
+            "hidden": false,
+            "preconditions": [],
+            "attack": 30,
+            "speed": 105,
+            "booty": 10,
+            "is_naval": false,
+            "is_ground": true,
+            "max_per_attack": 1,
+            "max_per_support": 0,
+            "attack_type": "pierce",
+            "def_hack": 80,
+            "def_pierce": 100,
+            "def_distance": 90
+        },
+        "anysia": {
+            "id": "anysia",
+            "category": "wisdom",
+            "name": "Anysia",
+            "description": "Az összes mitikus egység áldásköltsége abban a városban, amelyhez Anysia van rendelve, %1%-kal csökken.",
+            "description_args": {
+                "1": {
+                    "value": 0.1,
+                    "level_mod": 0.01,
+                    "unit": "%"
+                }
+            },
+            "short_description": "mitológiai egységek áldás költsége csökkent",
+            "default_level": 1,
+            "cost": 120,
+            "award_requirements": [],
+            "exclusive": false,
+            "hidden": false,
+            "preconditions": [],
+            "attack": 40,
+            "speed": 105,
+            "booty": 5,
+            "is_naval": false,
+            "is_ground": true,
+            "max_per_attack": 1,
+            "max_per_support": 0,
+            "attack_type": "hack",
+            "def_hack": 140,
+            "def_pierce": 80,
+            "def_distance": 105
+        },
+        "argus": {
+            "id": "argus",
+            "category": "wisdom",
+            "name": "Argosz",
+            "description": "Amíg Argosz hozzá van rendelve egy városhoz, %1%-kal csökken az összes tengeri egység építési költsége.",
+            "description_args": {
+                "1": {
+                    "value": 0.2,
+                    "level_mod": 0.02,
+                    "unit": "%"
+                }
+            },
+            "short_description": "olcsóbb építkezési költség valamennyi tengeri egység részére",
+            "default_level": 1,
+            "cost": 105,
+            "award_requirements": [],
+            "exclusive": false,
+            "hidden": false,
+            "preconditions": [],
+            "attack": 10,
+            "speed": 105,
+            "booty": 10,
+            "is_naval": false,
+            "is_ground": true,
+            "max_per_attack": 1,
+            "max_per_support": 0,
+            "attack_type": "hack",
+            "def_hack": 80,
+            "def_pierce": 70,
+            "def_distance": 80
+        },
+        "aristotle": {
+            "id": "aristotle",
+            "category": "wisdom",
+            "name": "Arisztotelész",
+            "description": "Amíg Arisztotelész hozzá van rendelve egy városhoz, %1%-kal csökken a Jelzőhajók építési ideje és költsége.",
+            "description_args": {
+                "1": {
+                    "value": 0.2,
+                    "level_mod": 0.02,
+                    "unit": "%"
+                }
+            },
+            "short_description": ": ennyivel olcsóbb és gyorsabb a Jelzőhajók építése",
+            "default_level": 1,
+            "cost": 105,
+            "award_requirements": [],
+            "exclusive": false,
+            "hidden": false,
+            "preconditions": [],
+            "attack": 10,
+            "speed": 105,
+            "booty": 10,
+            "is_naval": false,
+            "is_ground": true,
+            "max_per_attack": 1,
+            "max_per_support": 0,
+            "attack_type": "hack",
+            "def_hack": 25,
+            "def_pierce": 165,
+            "def_distance": 125
+        },
+        "atalanta": {
+            "id": "atalanta",
+            "category": "war",
+            "name": "Atalanta",
+            "description": "Az Atalantával utazó hadseregek %1%-kal gyorsabban mozognak. Ez minden egységtípusra vonatkozik.",
+            "description_args": {
+                "1": {
+                    "value": 0.12,
+                    "level_mod": 0.012,
+                    "unit": "%"
+                }
+            },
+            "short_description": ": ennyivel gyorsabban mozognak a hadseregek",
+            "default_level": 1,
+            "cost": 105,
+            "award_requirements": [],
+            "exclusive": false,
+            "hidden": false,
+            "preconditions": [],
+            "attack": 200,
+            "speed": 120,
+            "booty": 15,
+            "is_naval": false,
+            "is_ground": true,
+            "max_per_attack": 1,
+            "max_per_support": 0,
+            "attack_type": "distance",
+            "def_hack": 60,
+            "def_pierce": 50,
+            "def_distance": 90
+        },
+        "christopholus": {
+            "id": "christopholus",
+            "category": "wisdom",
+            "name": "Christopholus",
+            "description": "Amíg Christopholus hozzá van rendelve egy városhoz, ennyivel kevesebb lesz az épületek építési ideje: %1%.",
+            "description_args": {
+                "1": {
+                    "value": 0.1,
+                    "level_mod": 0.01,
+                    "unit": "%"
+                }
+            },
+            "short_description": "rövidül az épületek építési ideje",
+            "default_level": 1,
+            "cost": 70,
+            "award_requirements": [],
+            "exclusive": false,
+            "hidden": false,
+            "preconditions": [],
+            "attack": 40,
+            "speed": 105,
+            "booty": 15,
+            "is_naval": false,
+            "is_ground": true,
+            "max_per_attack": 1,
+            "max_per_support": 0,
+            "attack_type": "pierce",
+            "def_hack": 80,
+            "def_pierce": 90,
+            "def_distance": 90
+        },
+        "daidalos": {
+            "id": "daidalos",
+            "category": "wisdom",
+            "name": "Daidalosz",
+            "description": "Amíg Daidalosz hozzá van rendelve egy városhoz, %1%-kal csökken a biremák építési ideje és költsége.",
+            "description_args": {
+                "1": {
+                    "value": 0.1,
+                    "level_mod": 0.01,
+                    "unit": "%"
+                }
+            },
+            "short_description": ": ennyivel olcsóbb és gyorsabb a biremák építése",
+            "default_level": 1,
+            "cost": 70,
+            "award_requirements": [],
+            "exclusive": false,
+            "hidden": false,
+            "preconditions": [],
+            "attack": 10,
+            "speed": 105,
+            "booty": 15,
+            "is_naval": false,
+            "is_ground": true,
+            "max_per_attack": 1,
+            "max_per_support": 0,
+            "attack_type": "pierce",
+            "def_hack": 120,
+            "def_pierce": 150,
+            "def_distance": 160
+        },
+        "deimos": {
+            "id": "deimos",
+            "category": "war",
+            "name": "Deimosz",
+            "description": "Az összes egység támadó értékei %1%-kal nőnek, amíg Deimosszal támadnak.",
+            "description_args": {
+                "1": {
+                    "value": 0.05,
+                    "level_mod": 0.005,
+                    "unit": "%"
+                }
+            },
+            "short_description": ": ennyivel erősebb támadó egységek",
+            "default_level": 1,
+            "cost": 120,
+            "award_requirements": [],
+            "exclusive": false,
+            "hidden": false,
+            "preconditions": [],
+            "attack": 350,
+            "speed": 105,
+            "booty": 40,
+            "is_naval": false,
+            "is_ground": true,
+            "max_per_attack": 1,
+            "max_per_support": 0,
+            "attack_type": "distance",
+            "def_hack": 40,
+            "def_pierce": 40,
+            "def_distance": 50
+        },
+        "democritus": {
+            "id": "democritus",
+            "category": "wisdom",
+            "name": "Démokritosz",
+            "description": "Amíg Démokritosz hozzá van rendelve egy városhoz, %1% az esélye annak, hogy az alkalmazott pozitív hatás kétszer annyi ideig tartson.",
+            "description_args": {
+                "1": {
+                    "value": 0.2,
+                    "level_mod": 0.02,
+                    "unit": "%"
+                }
+            },
+            "short_description": "Esély arra, hogy kétszer annyi ideig tartson a hatás",
+            "default_level": 1,
+            "cost": 70,
+            "award_requirements": [],
+            "exclusive": false,
+            "hidden": false,
+            "preconditions": [],
+            "attack": 60,
+            "speed": 105,
+            "booty": 15,
+            "is_naval": false,
+            "is_ground": true,
+            "max_per_attack": 1,
+            "max_per_support": 0,
+            "attack_type": "pierce",
+            "def_hack": 80,
+            "def_pierce": 90,
+            "def_distance": 70
+        },
+        "eurybia": {
+            "id": "eurybia",
+            "category": "wisdom",
+            "name": "Eurybia",
+            "description": "Amíg Eurybia hozzá van rendelve egy városhoz, %1%-kal csökken a trirémák építési ideje és költsége.",
+            "description_args": {
+                "1": {
+                    "value": 0.2,
+                    "level_mod": 0.02,
+                    "unit": "%"
+                }
+            },
+            "short_description": ": ennyivel olcsóbb és gyorsabb a Trirémák építése",
+            "default_level": 1,
+            "cost": 105,
+            "award_requirements": [],
+            "exclusive": false,
+            "hidden": false,
+            "preconditions": [],
+            "attack": 55,
+            "speed": 105,
+            "booty": 15,
+            "is_naval": false,
+            "is_ground": true,
+            "max_per_attack": 1,
+            "max_per_support": 0,
+            "attack_type": "pierce",
+            "def_hack": 90,
+            "def_pierce": 110,
+            "def_distance": 100
+        },
+        "ferkyon": {
+            "id": "ferkyon",
+            "category": "wisdom",
+            "name": "Ferkyon",
+            "description": "Amíg Ferkyon hozzá van rendelve egy városhoz, adott városban %1%-kal gyorsabb minden szárazföldi egység toborzása.",
+            "description_args": {
+                "1": {
+                    "value": 0.15,
+                    "level_mod": 0.015,
+                    "unit": "%"
+                }
+            },
+            "short_description": ": ennyivel gyorsabb a szárazföldi egységek toborzása",
+            "default_level": 1,
+            "cost": 70,
+            "award_requirements": [],
+            "exclusive": false,
+            "hidden": false,
+            "preconditions": [],
+            "attack": 50,
+            "speed": 105,
+            "booty": 20,
+            "is_naval": false,
+            "is_ground": true,
+            "max_per_attack": 1,
+            "max_per_support": 0,
+            "attack_type": "hack",
+            "def_hack": 120,
+            "def_pierce": 120,
+            "def_distance": 110
+        },
+        "philoctetes": {
+            "id": "philoctetes",
+            "category": "wisdom",
+            "name": "Filoktetész",
+            "description": "Amíg Filoktetész hozzá van rendelve egy városhoz, %1%-kal csökken az íjászok toborzási ideje és költsége.",
+            "description_args": {
+                "1": {
+                    "value": 0.2,
+                    "level_mod": 0.02,
+                    "unit": "%"
+                }
+            },
+            "short_description": "Olcsóbb és gyorsabb az Íjászok toborzása",
+            "default_level": 1,
+            "cost": 60,
+            "award_requirements": [],
+            "exclusive": false,
+            "hidden": false,
+            "preconditions": [],
+            "attack": 50,
+            "speed": 105,
+            "booty": 40,
+            "is_naval": false,
+            "is_ground": true,
+            "max_per_attack": 1,
+            "max_per_support": 0,
+            "attack_type": "distance",
+            "def_hack": 120,
+            "def_pierce": 220,
+            "def_distance": 290
+        },
+        "hector": {
+            "id": "hector",
+            "category": "war",
+            "name": "Hektór",
+            "description": "A kardforgatók és a parittyások támadó- és védőértékei %1%-kal nőnek, amíg Hektór oldalán harcolnak.",
+            "description_args": {
+                "1": {
+                    "value": 0.1,
+                    "level_mod": 0.01,
+                    "unit": "%"
+                }
+            },
+            "short_description": "erősebb Kardforgatók és Parittyások",
+            "default_level": 1,
+            "cost": 65,
+            "award_requirements": [],
+            "exclusive": false,
+            "hidden": false,
+            "preconditions": [],
+            "attack": 90,
+            "speed": 105,
+            "booty": 20,
+            "is_naval": false,
+            "is_ground": true,
+            "max_per_attack": 1,
+            "max_per_support": 0,
+            "attack_type": "hack",
+            "def_hack": 150,
+            "def_pierce": 150,
+            "def_distance": 110
+        },
+        "helen": {
+            "id": "helen",
+            "category": "war",
+            "name": "Heléna",
+            "description": "Amikor Heléna kíséri a felkelés kirobbantásával megbízott hadsereget, ennyivel kevesebb idő kell, hogy kirobbanjon a városi felkelés: %1%.",
+            "description_args": {
+                "1": {
+                    "value": 0.05,
+                    "level_mod": 0.005,
+                    "unit": "%"
+                }
+            },
+            "short_description": "kevesebb idő a felkelésig",
+            "default_level": 1,
+            "cost": 105,
+            "award_requirements": [],
+            "exclusive": false,
+            "hidden": false,
+            "preconditions": [],
+            "attack": 40,
+            "speed": 105,
+            "booty": 15,
+            "is_naval": false,
+            "is_ground": true,
+            "max_per_attack": 1,
+            "max_per_support": 0,
+            "attack_type": "hack",
+            "def_hack": 80,
+            "def_pierce": 90,
+            "def_distance": 90
+        },
+        "hercules": {
+            "id": "hercules",
+            "category": "war",
+            "name": "Héraklész",
+            "description": "Amikor Héraklész csatát nyer, annak a városnak az istene, amelyhez hozzá van rendelve, azonnal <b>%1 áldást kap</b>. Áldást csak akkor kapsz, ha legalább %2 harci pontot szereztél. Az Áldás minden egyes csata után csökken. Ez %3 óra elteltével törlődik.",
+            "description_args": {
+                "1": {
+                    "value": 0.4,
+                    "level_mod": 0.04
+                },
+                "2": {
+                    "value": 50
+                },
+                "3": {
+                    "value": 24
+                }
+            },
+            "short_description": "áldást kapott egy csata után",
+            "default_level": 1,
+            "cost": 85,
+            "award_requirements": [],
+            "exclusive": false,
+            "hidden": false,
+            "preconditions": [],
+            "attack": 190,
+            "speed": 105,
+            "booty": 200,
+            "is_naval": false,
+            "is_ground": true,
+            "max_per_attack": 1,
+            "max_per_support": 0,
+            "attack_type": "distance",
+            "def_hack": 90,
+            "def_pierce": 90,
+            "def_distance": 130
+        },
+        "iason": {
+            "id": "iason",
+            "category": "war",
+            "name": "Iaszón",
+            "description": "A támadó egységek %1%-kal több nyersanyagot és áldást bírnak el, ha Iaszón kíséri őket.",
+            "description_args": {
+                "1": {
+                    "value": 0.4,
+                    "level_mod": 0.04,
+                    "unit": "%"
+                }
+            },
+            "short_description": "további nyersanyag és áldás",
+            "default_level": 1,
+            "cost": 45,
+            "award_requirements": [],
+            "exclusive": false,
+            "hidden": false,
+            "preconditions": [],
+            "attack": 160,
+            "speed": 105,
+            "booty": 40,
+            "is_naval": false,
+            "is_ground": true,
+            "max_per_attack": 1,
+            "max_per_support": 0,
+            "attack_type": "pierce",
+            "def_hack": 80,
+            "def_pierce": 90,
+            "def_distance": 70
+        },
+        "cheiron": {
+            "id": "cheiron",
+            "category": "wisdom",
+            "name": "Kheirón",
+            "description": "Amíg Kheirón hozzá van rendelve egy városhoz, %1%-kal csökken a Hopliták toborzási ideje és költsége.",
+            "description_args": {
+                "1": {
+                    "value": 0.2,
+                    "level_mod": 0.02,
+                    "unit": "%"
+                }
+            },
+            "short_description": "olcsóbb és gyorsabb a Hopliták toborzása",
+            "default_level": 1,
+            "cost": 105,
+            "award_requirements": [],
+            "exclusive": false,
+            "hidden": false,
+            "preconditions": [],
+            "attack": 60,
+            "speed": 105,
+            "booty": 20,
+            "is_naval": false,
+            "is_ground": true,
+            "max_per_attack": 1,
+            "max_per_support": 0,
+            "attack_type": "distance",
+            "def_hack": 110,
+            "def_pierce": 120,
+            "def_distance": 110
+        },
+        "leonidas": {
+            "id": "leonidas",
+            "category": "war",
+            "name": "Leonidász",
+            "description": "Ha Leonidas védi a városodat, adott városban levő összes egység védekező értéke %1%-kal nő.",
+            "description_args": {
+                "1": {
+                    "value": 0.05,
+                    "level_mod": 0.005,
+                    "unit": "%"
+                }
+            },
+            "short_description": ": ennyivel erősebb a szárazföldi egységek védekezése",
+            "default_level": 1,
+            "cost": 110,
+            "award_requirements": [],
+            "exclusive": false,
+            "hidden": false,
+            "preconditions": [],
+            "attack": 40,
+            "speed": 105,
+            "booty": 30,
+            "is_naval": false,
+            "is_ground": true,
+            "max_per_attack": 1,
+            "max_per_support": 0,
+            "attack_type": "pierce",
+            "def_hack": 130,
+            "def_pierce": 130,
+            "def_distance": 100
+        },
+        "lysippe": {
+            "id": "lysippe",
+            "category": "war",
+            "name": "Lüszippé",
+            "description": "A lovasok támadó és védekező értékei %1%-kal nőnek, amíg Lüszippé mellett harcolnak.",
+            "description_args": {
+                "1": {
+                    "value": 0.15,
+                    "level_mod": 0.01,
+                    "unit": "%"
+                }
+            },
+            "short_description": "erősebb Lovasság",
+            "default_level": 1,
+            "cost": 45,
+            "award_requirements": [],
+            "exclusive": false,
+            "hidden": false,
+            "preconditions": [],
+            "attack": 250,
+            "speed": 105,
+            "booty": 40,
+            "is_naval": false,
+            "is_ground": true,
+            "max_per_attack": 1,
+            "max_per_support": 0,
+            "attack_type": "hack",
+            "def_hack": 30,
+            "def_pierce": 50,
+            "def_distance": 100
+        },
+        "melousa": {
+            "id": "melousa",
+            "category": "war",
+            "name": "Melousa",
+            "description": "A harci szekerek támadó és védekező értékei %1%-kal nőnek, amíg Melousa mellett harcolnak.",
+            "description_args": {
+                "1": {
+                    "value": 0.25,
+                    "level_mod": 0.025,
+                    "unit": "%"
+                }
+            },
+            "short_description": "erősebb Harci szekerek",
+            "default_level": 1,
+            "cost": 45,
+            "award_requirements": [],
+            "exclusive": false,
+            "hidden": false,
+            "preconditions": [],
+            "attack": 230,
+            "speed": 105,
+            "booty": 40,
+            "is_naval": false,
+            "is_ground": true,
+            "max_per_attack": 1,
+            "max_per_support": 0,
+            "attack_type": "pierce",
+            "def_hack": 110,
+            "def_pierce": 30,
+            "def_distance": 100
+        },
+        "mihalis": {
+            "id": "mihalis",
+            "category": "war",
+            "name": "Mihalisz",
+            "description": "Az összes szárazföldi egység ütő és szúró sebzéssel szembeni védekezési értékei %1%-kal megnövekednek, amikor Mihalisz oldalán harcolnak.",
+            "description_args": {
+                "1": {
+                    "value": 0.12,
+                    "level_mod": 0.012,
+                    "unit": "%"
+                }
+            },
+            "short_description": "erősebb szúrás és ütés elleni védelmi értékek",
+            "default_level": 1,
+            "cost": 85,
+            "award_requirements": [],
+            "exclusive": false,
+            "hidden": false,
+            "preconditions": [],
+            "attack": 40,
+            "speed": 105,
+            "booty": 50,
+            "is_naval": false,
+            "is_ground": true,
+            "max_per_attack": 1,
+            "max_per_support": 0,
+            "attack_type": "hack",
+            "def_hack": 250,
+            "def_pierce": 250,
+            "def_distance": 30
+        },
+        "medea": {
+            "id": "medea",
+            "category": "war",
+            "name": "Médea",
+            "description": "A parittyások támadó- és védőértékei %1%-kal nőnek, amíg Médea oldalán harcolnak.",
+            "description_args": {
+                "1": {
+                    "value": 0.15,
+                    "level_mod": 0.015,
+                    "unit": "%"
+                }
+            },
+            "short_description": "erősebb Parittyások",
+            "default_level": 1,
+            "cost": 40,
+            "award_requirements": [],
+            "exclusive": false,
+            "hidden": false,
+            "preconditions": [],
+            "attack": 270,
+            "speed": 105,
+            "booty": 10,
+            "is_naval": false,
+            "is_ground": true,
+            "max_per_attack": 1,
+            "max_per_support": 0,
+            "attack_type": "distance",
+            "def_hack": 40,
+            "def_pierce": 40,
+            "def_distance": 30
+        },
+        "odysseus": {
+            "id": "odysseus",
+            "category": "wisdom",
+            "name": "Odüsszeusz",
+            "description": "Amíg Odüsszeusz hozzá van rendelve egy városhoz, %1%-kal csökken a Kardforgatók toborzási ideje és költsége.",
+            "description_args": {
+                "1": {
+                    "value": 0.2,
+                    "level_mod": 0.02,
+                    "unit": "%"
+                }
+            },
+            "short_description": "olcsóbb és gyorsabb a Kardforgatók toborzása",
+            "default_level": 1,
+            "cost": 115,
+            "award_requirements": [],
+            "exclusive": false,
+            "hidden": false,
+            "preconditions": [],
+            "attack": 130,
+            "speed": 105,
+            "booty": 20,
+            "is_naval": false,
+            "is_ground": true,
+            "max_per_attack": 1,
+            "max_per_support": 0,
+            "attack_type": "hack",
+            "def_hack": 140,
+            "def_pierce": 100,
+            "def_distance": 130
+        },
+        "orpheus": {
+            "id": "orpheus",
+            "category": "wisdom",
+            "name": "Orpheusz",
+            "description": "Amíg Orpheusz hozzá van rendelve egy városhoz, adott városban termelődő összes kultúrapont %1% eséllyel duplázódik meg.",
+            "description_args": {
+                "1": {
+                    "value": 0.3,
+                    "level_mod": 0.03,
+                    "unit": "%"
+                }
+            },
+            "short_description": ": ennyi az esélye annak, hogy még egy kultúrapontot kapj",
+            "default_level": 1,
+            "cost": 75,
+            "award_requirements": [],
+            "exclusive": false,
+            "hidden": false,
+            "preconditions": [],
+            "attack": 40,
+            "speed": 105,
+            "booty": 5,
+            "is_naval": false,
+            "is_ground": true,
+            "max_per_attack": 1,
+            "max_per_support": 0,
+            "attack_type": "distance",
+            "def_hack": 90,
+            "def_pierce": 100,
+            "def_distance": 70
+        },
+        "pariphaistes": {
+            "id": "pariphaistes",
+            "category": "wisdom",
+            "name": "Pariphaisztész",
+            "description": "Amíg Pariphaisztész hozzá van rendelve egy városhoz, az adott városban %1%-kal gyorsabb minden tengeri egység építése.",
+            "description_args": {
+                "1": {
+                    "value": 0.2,
+                    "level_mod": 0.02,
+                    "unit": "%"
+                }
+            },
+            "short_description": "tengeri egységek gyorsabb építése",
+            "default_level": 1,
+            "cost": 70,
+            "award_requirements": [],
+            "exclusive": false,
+            "hidden": false,
+            "preconditions": [],
+            "attack": 20,
+            "speed": 105,
+            "booty": 10,
+            "is_naval": false,
+            "is_ground": true,
+            "max_per_attack": 1,
+            "max_per_support": 0,
+            "attack_type": "pierce",
+            "def_hack": 85,
+            "def_pierce": 115,
+            "def_distance": 90
+        },
+        "pelops": {
+            "id": "pelops",
+            "category": "war",
+            "name": "Pelopsz",
+            "description": "A hopliták és a harci szekerek támadó- és védőértékei %1%-kal nőnek, amíg Pelopsz oldalán harcolnak.",
+            "description_args": {
+                "1": {
+                    "value": 0.12,
+                    "level_mod": 0.012,
+                    "unit": "%"
+                }
+            },
+            "short_description": "erősebb Hopliták és Harci szekerek",
+            "default_level": 1,
+            "cost": 60,
+            "award_requirements": [],
+            "exclusive": false,
+            "hidden": false,
+            "preconditions": [],
+            "attack": 265,
+            "speed": 105,
+            "booty": 80,
+            "is_naval": false,
+            "is_ground": true,
+            "max_per_attack": 1,
+            "max_per_support": 0,
+            "attack_type": "pierce",
+            "def_hack": 165,
+            "def_pierce": 80,
+            "def_distance": 50
+        },
+        "perseus": {
+            "id": "perseus",
+            "category": "war",
+            "name": "Perszeusz",
+            "description": "A Trirémák támadó- és védőértékei %1%-kal nőnek, amíg Perszeusz oldalán harcolnak.",
+            "description_args": {
+                "1": {
+                    "value": 0.2,
+                    "level_mod": 0.02,
+                    "unit": "%"
+                }
+            },
+            "short_description": "erősebb Triremák",
+            "default_level": 1,
+            "cost": 105,
+            "award_requirements": [],
+            "exclusive": false,
+            "hidden": false,
+            "preconditions": [],
+            "attack": 170,
+            "speed": 105,
+            "booty": 0,
+            "is_naval": true,
+            "is_ground": false,
+            "max_per_attack": 1,
+            "max_per_support": 0,
+            "defense": 140,
+            "transport": 0,
+            "capacity": 0
+        },
+        "rekonos": {
+            "id": "rekonos",
+            "category": "wisdom",
+            "name": "Rekonosz",
+            "description": "Amíg Rekonosz hozzá van rendelve egy városhoz, %1%-kal nő az alap kőtermelés.",
+            "description_args": {
+                "1": {
+                    "value": 1.5,
+                    "level_mod": 0.15,
+                    "unit": "%"
+                }
+            },
+            "short_description": "megnövelt alap kőtermelés",
+            "default_level": 1,
+            "cost": 30,
+            "award_requirements": [],
+            "exclusive": false,
+            "hidden": false,
+            "preconditions": [],
+            "attack": 15,
+            "speed": 105,
+            "booty": 300,
+            "is_naval": false,
+            "is_ground": true,
+            "max_per_attack": 1,
+            "max_per_support": 0,
+            "attack_type": "hack",
+            "def_hack": 75,
+            "def_pierce": 75,
+            "def_distance": 165
+        },
+        "terylea": {
+            "id": "terylea",
+            "category": "wisdom",
+            "name": "Terylea",
+            "description": "Amíg Terylea hozzá van rendelve egy városhoz, %1%-kal nő az alap ezüsttermelés.",
+            "description_args": {
+                "1": {
+                    "value": 1.5,
+                    "level_mod": 0.15,
+                    "unit": "%"
+                }
+            },
+            "short_description": "megnövekedett alap ezüst termelés",
+            "default_level": 1,
+            "cost": 30,
+            "award_requirements": [],
+            "exclusive": false,
+            "hidden": false,
+            "preconditions": [],
+            "attack": 30,
+            "speed": 105,
+            "booty": 10,
+            "is_naval": false,
+            "is_ground": true,
+            "max_per_attack": 1,
+            "max_per_support": 0,
+            "attack_type": "pierce",
+            "def_hack": 80,
+            "def_pierce": 80,
+            "def_distance": 120
+        },
+        "themistokles": {
+            "id": "themistokles",
+            "category": "war",
+            "name": "Themisztoklész",
+            "description": "A Parittyások és a Lovasság támadó- és védőértékei %1%-kal nőnek, amíg Themisztoklész oldalán harcolnak.",
+            "description_args": {
+                "1": {
+                    "value": 0.1,
+                    "level_mod": 0.01,
+                    "unit": "%"
+                }
+            },
+            "short_description": "erősebb Parittyások és Lovasság",
+            "default_level": 1,
+            "cost": 60,
+            "award_requirements": [],
+            "exclusive": false,
+            "hidden": false,
+            "preconditions": [],
+            "attack": 90,
+            "speed": 105,
+            "booty": 30,
+            "is_naval": false,
+            "is_ground": true,
+            "max_per_attack": 1,
+            "max_per_support": 0,
+            "attack_type": "distance",
+            "def_hack": 155,
+            "def_pierce": 160,
+            "def_distance": 205
+        },
+        "telemachos": {
+            "id": "telemachos",
+            "category": "war",
+            "name": "Télemakhosz",
+            "description": "A kardforgatók támadó- és védőértékei %1%-kal nőnek, amíg Télemakhosz oldalán harcolnak.",
+            "description_args": {
+                "1": {
+                    "value": 0.15,
+                    "level_mod": 0.015,
+                    "unit": "%"
+                }
+            },
+            "short_description": "erősebb Kardforgatók",
+            "default_level": 1,
+            "cost": 40,
+            "award_requirements": [],
+            "exclusive": false,
+            "hidden": false,
+            "preconditions": [],
+            "attack": 40,
+            "speed": 105,
+            "booty": 40,
+            "is_naval": false,
+            "is_ground": true,
+            "max_per_attack": 1,
+            "max_per_support": 0,
+            "attack_type": "hack",
+            "def_hack": 170,
+            "def_pierce": 160,
+            "def_distance": 465
+        },
+        "urephon": {
+            "id": "urephon",
+            "category": "war",
+            "name": "Urephon",
+            "description": "A mitológiai egységek támadó és védekező értékei %1%-kal nőnek, amíg Urephon oldalán harcolnak.",
+            "description_args": {
+                "1": {
+                    "value": 0.05,
+                    "level_mod": 0.005,
+                    "unit": "%"
+                }
+            },
+            "short_description": "erősebb mitológiai egységek",
+            "default_level": 1,
+            "cost": 95,
+            "award_requirements": [],
+            "exclusive": false,
+            "hidden": false,
+            "preconditions": [],
+            "attack": 60,
+            "speed": 105,
+            "booty": 15,
+            "is_naval": false,
+            "is_ground": true,
+            "max_per_attack": 1,
+            "max_per_support": 0,
+            "attack_type": "pierce",
+            "def_hack": 70,
+            "def_pierce": 80,
+            "def_distance": 90
+        },
+        "ylestres": {
+            "id": "ylestres",
+            "category": "wisdom",
+            "name": "Ylesztrész",
+            "description": "Amíg Ylesztrész hozzá van rendelve egy városhoz, %1%-kal nő az alap fatermelés.",
+            "description_args": {
+                "1": {
+                    "value": 1.5,
+                    "level_mod": 0.15,
+                    "unit": "%"
+                }
+            },
+            "short_description": "megnövelt alap fatermelés",
+            "default_level": 1,
+            "cost": 30,
+            "award_requirements": [],
+            "exclusive": false,
+            "hidden": false,
+            "preconditions": [],
+            "attack": 5,
+            "speed": 105,
+            "booty": 15,
+            "is_naval": false,
+            "is_ground": true,
+            "max_per_attack": 1,
+            "max_per_support": 0,
+            "attack_type": "distance",
+            "def_hack": 110,
+            "def_pierce": 70,
+            "def_distance": 45
+        },
+        "zuretha": {
+            "id": "zuretha",
+            "category": "war",
+            "name": "Zuretha",
+            "description": "A tengeri egységek támadó és védekező értékei %1%-kal nőnek, amíg Zuretha mellett harcolnak.",
+            "description_args": {
+                "1": {
+                    "value": 0.05,
+                    "level_mod": 0.005,
+                    "unit": "%"
+                }
+            },
+            "short_description": "erősebb tengeri egységek",
+            "default_level": 1,
+            "cost": 95,
+            "award_requirements": [],
+            "exclusive": false,
+            "hidden": false,
+            "preconditions": [],
+            "attack": 100,
+            "speed": 105,
+            "booty": 0,
+            "is_naval": true,
+            "is_ground": false,
+            "max_per_attack": 1,
+            "max_per_support": 0,
+            "defense": 70,
+            "transport": 0,
+            "capacity": 0
+        }
+    },
+    "locale_lang": "hu_HU"
+}

@@ -8,66 +8,69 @@ datasource db {
 }
 
 model Unit {
-  id                  String  @id
-  name                String
-  name_plural         String
-  speed               Int
-  attack              Int
-  description         String
-  resources_wood      Int?
-  resources_stone     Int?
-  resources_iron      Int?
-  favor               Int
-  population          Int
-  build_time          Int
-  god_id              String?
-  is_naval            Boolean
-  unit_function       String
-  category            String
-  is_npc_unit_only    Boolean
-  def_hack            Int
-  def_pierce          Int
-  def_distance        Int
-  booty               Int?
-  infantry            Boolean?
-  flying              Boolean?
-  attack_type         String?
-  capacity            Int?
+  id               String   @id
+  name             String
+  name_plural      String
+  speed            Int
+  attack           Int
+  description      String
+  resources_wood   Int?
+  resources_stone  Int?
+  resources_iron   Int?
+  favor            Int
+  population       Int
+  build_time       Int
+  god_id           String?
+  is_naval         Boolean
+  unit_function    String
+  category         String
+  is_npc_unit_only Boolean
+  def_hack         Int
+  def_pierce       Int
+  def_distance     Int
+  booty            Int?
+  infantry         Boolean?
+  flying           Boolean?
+  attack_type      String?
+  capacity         Int?
 }
 
 model Report {
-  id             String   @id @default(uuid())
-  originalId     String?  // The GRCT report ID if applicable
-  attacker       String
-  attackerTown   String?
-  defender       String
-  defenderTown   String?
-  date           DateTime
-  morale         Int?
-  luck           Int?
-  lootedWood     Int      @default(0)
-  lootedStone    Int      @default(0)
-  lootedIron     Int      @default(0)
-  createdAt      DateTime @default(now())
+  id           String   @id @default(uuid())
+  originalId   String? // The GRCT report ID if applicable
+  attacker     String
+  attackerTown String?
+  defender     String
+  defenderTown String?
+  date         DateTime
+  morale       Int?
+  luck         Int?
+  lootedWood   Int      @default(0)
+  lootedStone  Int      @default(0)
+  lootedIron   Int      @default(0)
+  createdAt    DateTime @default(now())
 }
 
 model Island {
-  id            Int    @id
-  x             Int
-  y             Int
-  type          Int
+  id             Int    @id
+  x              Int
+  y              Int
+  type           Int
   availableTowns Int
-  resourcePlus  String
-  resourceMinus String
+  resourcePlus   String
+  resourceMinus  String
 }
 
 model Player {
-  id         Int    @id
+  id         Int       @id
   name       String
   allianceId Int?
   points     Int
   rank       Int
   towns      Int
+  abp        Int       @default(0)
+  dbp        Int       @default(0)
+  allBp      Int       @default(0)
   townsList  Town[]
   alliance   Alliance? @relation(fields: [allianceId], references: [id])
 }
@@ -77,16 +80,22 @@ model PlayerHistory {
   playerId  Int
   oldPoints Int
   newPoints Int
+  abpDelta  Int      @default(0)
+  dbpDelta  Int      @default(0)
+  allBpDelta Int     @default(0)
   timestamp DateTime @default(now())
 }
 
 model Alliance {
-  id      Int    @id
+  id      Int      @id
   name    String
   points  Int
   towns   Int
   members Int
   rank    Int
+  abp     Int      @default(0)
+  dbp     Int      @default(0)
+  allBp   Int      @default(0)
   players Player[]
 }
 
@@ -95,18 +104,21 @@ model AllianceHistory {
   allianceId Int
   oldPoints  Int
   newPoints  Int
+  abpDelta   Int      @default(0)
+  dbpDelta   Int      @default(0)
+  allBpDelta Int      @default(0)
   timestamp  DateTime @default(now())
 }
 
 model Town {
-  id       Int    @id
-  playerId Int?
-  name     String
-  islandX  Int
-  islandY  Int
+  id         Int     @id
+  playerId   Int?
+  name       String
+  islandX    Int
+  islandY    Int
   islandSlot Int
-  points   Int
-  player   Player? @relation(fields: [playerId], references: [id])
+  points     Int
+  player     Player? @relation(fields: [playerId], references: [id])
 }
 
 model TownHistory {
@@ -117,8 +129,78 @@ model TownHistory {
   timestamp DateTime @default(now())
 }
 
+model Conquest {
+  id            Int      @id @default(autoincrement())
+  townId        Int
+  townPoints    Int
+  oldPlayerId   Int?
+  newPlayerId   Int?
+  oldAllianceId Int?
+  newAllianceId Int?
+  timestamp     DateTime
+}
+
 model SyncMetadata {
-  id          Int      @id @default(1)
-  lastSync    DateTime @default(now())
-  geoJsonCache String? @db.Text
+  id           Int      @id @default(1)
+  lastSync     DateTime @default(now())
+  geoJsonCache String?  @db.Text
+}
+
+model Building {
+  id                String @id
+  name              String
+  description       String
+  max_level         Int
+  min_level         Int
+  base_wood         Float
+  base_stone        Float
+  base_iron         Float
+  base_pop          Float
+  base_build_time   Float
+  base_points       Float
+  wood_factor       Float
+  stone_factor      Float
+  iron_factor       Float
+  pop_factor        Float
+  build_time_factor Float
+  points_factor     Float
+
+  dependenciesAsRequirement BuildingDependency[] @relation("RequiredBuilding")
+  dependencies              BuildingDependency[] @relation("DependentBuilding")
+}
+
+model BuildingDependency {
+  buildingId         String
+  requiredBuildingId String
+  requiredLevel      Int
+
+  building         Building @relation("DependentBuilding", fields: [buildingId], references: [id])
+  requiredBuilding Building @relation("RequiredBuilding", fields: [requiredBuildingId], references: [id])
+
+  @@id([buildingId, requiredBuildingId])
+}
+
+model Hero {
+  id           String @id
+  name         String
+  category     String
+  cost         Int
+  attack       Int
+  def_hack     Int
+  def_pierce   Int
+  def_distance Int
+  speed        Int
+  booty        Int
+  attack_type  String
+  modifiers    Json
+}
+
+model GodPower {
+  id            String  @id
+  name          String
+  god_id        String?
+  favor         Int
+  lifetime      Int
+  targets       Json
+  meta_defaults Json?
 }

@@ -1,0 +1,32 @@
+{
+    "mtime": 1779784355,
+    "data": {
+        "ares": {
+            "0": "ares_army",
+            "1": "bloodlust"
+        },
+        "zeus": {
+            "0": "fair_wind",
+            "1": "transformation"
+        },
+        "hera": {
+            "0": "desire"
+        },
+        "poseidon": {
+            "0": "sea_storm"
+        },
+        "athena": {
+            "0": "wisdom",
+            "1": "strength_of_heroes"
+        },
+        "hades": {
+            "0": "resurrection",
+            "1": "cap_of_invisibility"
+        },
+        "artemis": {
+            "0": "effort_of_the_huntress",
+            "1": "cleanse"
+        }
+    },
+    "locale_lang": "hu_HU"
+}

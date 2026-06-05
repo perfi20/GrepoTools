@@ -1,0 +1,42 @@
+{
+    "mtime": 1779784355,
+    "data": {
+        "aphrodite": {
+            "0": "narcissism",
+            "1": "charitable_festival",
+            "2": "hymn_to_aphrodite"
+        },
+        "ares": {
+            "0": "ares_sacrifice",
+            "1": "spartan_training"
+        },
+        "zeus": {
+            "0": "divine_sign",
+            "1": "bolt"
+        },
+        "hera": {
+            "0": "wedding",
+            "1": "happiness",
+            "2": "fertility_improvement"
+        },
+        "poseidon": {
+            "0": "kingly_gift",
+            "1": "call_of_the_ocean",
+            "2": "earthquake"
+        },
+        "athena": {
+            "0": "patroness",
+            "1": "town_protection"
+        },
+        "hades": {
+            "0": "pest",
+            "1": "underworld_treasures"
+        },
+        "artemis": {
+            "0": "natures_gift",
+            "1": "illusion",
+            "2": "cleanse"
+        }
+    },
+    "locale_lang": "hu_HU"
+}

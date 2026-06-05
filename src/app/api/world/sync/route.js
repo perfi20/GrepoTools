@@ -56,18 +56,35 @@ export async function GET(request) {
         });
       }
     }
-    const [playersRaw, alliancesRaw, townsRaw, islandsRaw] = await Promise.all([
+    const [
+      playersRaw, alliancesRaw, townsRaw, islandsRaw,
+      pAttRaw, pDefRaw, pAllRaw,
+      aAttRaw, aDefRaw, aAllRaw, conquersRaw
+    ] = await Promise.all([
       fetchAndDecompress('players.txt.gz'),
       fetchAndDecompress('alliances.txt.gz'),
       fetchAndDecompress('towns.txt.gz'),
-      fetchAndDecompress('islands.txt.gz')
+      fetchAndDecompress('islands.txt.gz'),
+      fetchAndDecompress('player_kills_att.txt.gz'),
+      fetchAndDecompress('player_kills_def.txt.gz'),
+      fetchAndDecompress('player_kills_all.txt.gz'),
+      fetchAndDecompress('alliance_kills_att.txt.gz'),
+      fetchAndDecompress('alliance_kills_def.txt.gz'),
+      fetchAndDecompress('alliance_kills_all.txt.gz'),
+      fetchAndDecompress('conquers.txt.gz')
     ]);
+
+    // Map Kills
+    const pAttMap = new Map(pAttRaw.map(row => [parseInt(row[1]), parseInt(row[2])]));
+    const pDefMap = new Map(pDefRaw.map(row => [parseInt(row[1]), parseInt(row[2])]));
+    const pAllMap = new Map(pAllRaw.map(row => [parseInt(row[1]), parseInt(row[2])]));
+    const aAttMap = new Map(aAttRaw.map(row => [parseInt(row[1]), parseInt(row[2])]));
+    const aDefMap = new Map(aDefRaw.map(row => [parseInt(row[1]), parseInt(row[2])]));
+    const aAllMap = new Map(aAllRaw.map(row => [parseInt(row[1]), parseInt(row[2])]));
 
     // 1. Process Alliances
     const newAlliances = [];
     const allianceHistory = [];
-    
-    // Fetch current state to compare
     const currentAlliances = await prisma.alliance.findMany();
     const allianceMap = new Map(currentAlliances.map(a => [a.id, a]));
 
@@ -75,22 +92,27 @@ export async function GET(request) {
       const [idStr, name, pointsStr, townsStr, membersStr, rankStr] = row;
       const id = parseInt(idStr);
       const points = parseInt(pointsStr);
+      const abp = aAttMap.get(id) || 0;
+      const dbp = aDefMap.get(id) || 0;
+      const allBp = aAllMap.get(id) || 0;
       
       newAlliances.push({
-        id,
-        name,
-        points,
-        towns: parseInt(townsStr),
-        members: parseInt(membersStr),
-        rank: parseInt(rankStr)
+        id, name, points, 
+        towns: parseInt(townsStr), 
+        members: parseInt(membersStr), 
+        rank: parseInt(rankStr),
+        abp, dbp, allBp
       });
 
       const existing = allianceMap.get(id);
-      if (existing && existing.points !== points) {
+      if (existing && (existing.points !== points || existing.abp !== abp || existing.dbp !== dbp)) {
         allianceHistory.push({
           allianceId: id,
           oldPoints: existing.points,
           newPoints: points,
+          abpDelta: abp - existing.abp,
+          dbpDelta: dbp - existing.dbp,
+          allBpDelta: allBp - existing.allBp,
         });
       }
     }
@@ -109,26 +131,30 @@ export async function GET(request) {
       const points = parseInt(pointsStr);
       let allianceId = allianceIdStr ? parseInt(allianceIdStr) : null;
       
-      // Ensure referential integrity (Grepolis data dumps can sometimes have orphaned players)
       if (allianceId && !validAllianceIds.has(allianceId)) {
           allianceId = null;
       }
 
+      const abp = pAttMap.get(id) || 0;
+      const dbp = pDefMap.get(id) || 0;
+      const allBp = pAllMap.get(id) || 0;
+
       newPlayers.push({
-        id,
-        name,
-        allianceId,
-        points,
-        rank: parseInt(rankStr),
-        towns: parseInt(townsStr)
+        id, name, allianceId, points, 
+        rank: parseInt(rankStr), 
+        towns: parseInt(townsStr),
+        abp, dbp, allBp
       });
 
       const existing = playerMap.get(id);
-      if (existing && existing.points !== points) {
+      if (existing && (existing.points !== points || existing.abp !== abp || existing.dbp !== dbp)) {
         playerHistory.push({
           playerId: id,
           oldPoints: existing.points,
-          newPoints: points
+          newPoints: points,
+          abpDelta: abp - existing.abp,
+          dbpDelta: dbp - existing.dbp,
+          allBpDelta: allBp - existing.allBp,
         });
       }
     }
@@ -174,7 +200,6 @@ export async function GET(request) {
     }
     
     // 4. Process Islands
-    // Build a set of inhabited island coordinates to identify true rocks
     const populatedSet = new Set();
     for (const t of newTowns) {
       populatedSet.add(`${t.islandX},${t.islandY}`);
@@ -186,28 +211,40 @@ export async function GET(request) {
         const x = parseInt(xStr);
         const y = parseInt(yStr);
 
-        // Filter 1: Drop islands outside our 250-radius playable world border
         const distSq = Math.pow(x - 500, 2) + Math.pow(y - 500, 2);
         if (distSq > 250 * 250) continue;
 
-        // Filter 2: Drop uncolonizable "True Rocks" (0 capacity and 0 towns)
         const availableTowns = parseInt(towns);
         if (availableTowns === 0 && !populatedSet.has(`${x},${y}`)) continue;
 
         newIslands.push({
-            id: parseInt(idStr),
-            x,
-            y,
-            type: parseInt(type),
-            availableTowns,
-            resourcePlus: rPlus,
-            resourceMinus: rMinus
+            id: parseInt(idStr), x, y,
+            type: parseInt(type), availableTowns,
+            resourcePlus: rPlus, resourceMinus: rMinus
         });
     }
 
+    // 5. Process Conquers
+    const newConquers = [];
+    const lastSyncEpoch = meta ? Math.floor(meta.lastSync.getTime() / 1000) : 0;
+    
+    for (const row of conquersRaw) {
+      const [tsStr, townIdStr, oldPStr, newPStr, oldAStr, newAStr, pointsStr] = row;
+      const timestampSec = parseInt(tsStr);
+      if (timestampSec > lastSyncEpoch) {
+        newConquers.push({
+          townId: parseInt(townIdStr),
+          townPoints: parseInt(pointsStr),
+          oldPlayerId: oldPStr && oldPStr !== '' ? parseInt(oldPStr) : null,
+          newPlayerId: newPStr && newPStr !== '' ? parseInt(newPStr) : null,
+          oldAllianceId: oldAStr && oldAStr !== '' ? parseInt(oldAStr) : null,
+          newAllianceId: newAStr && newAStr !== '' ? parseInt(newAStr) : null,
+          timestamp: new Date(timestampSec * 1000)
+        });
+      }
+    }
+
     // Execute Database Transactions
-    // Delete existing base data (fastest way to "upsert" 50k rows in prisma without blowing up parameters)
-    // Then createMany new data.
     const tx = [
       prisma.town.deleteMany(),
       prisma.player.deleteMany(),
@@ -229,6 +266,7 @@ export async function GET(request) {
     if (allianceHistory.length > 0) chunkArray(allianceHistory, BATCH_SIZE).forEach(chunk => tx.push(prisma.allianceHistory.createMany({ data: chunk })));
     if (playerHistory.length > 0) chunkArray(playerHistory, BATCH_SIZE).forEach(chunk => tx.push(prisma.playerHistory.createMany({ data: chunk })));
     if (townHistory.length > 0) chunkArray(townHistory, BATCH_SIZE).forEach(chunk => tx.push(prisma.townHistory.createMany({ data: chunk })));
+    if (newConquers.length > 0) chunkArray(newConquers, BATCH_SIZE).forEach(chunk => tx.push(prisma.conquest.createMany({ data: chunk })));
 
     await prisma.$transaction(tx);
 
