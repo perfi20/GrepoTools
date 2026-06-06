@@ -584,6 +584,14 @@ export default function ScoreboardDashboard() {
   };
 
 
+  const chartAlliancesPts = useMemo(() => renderChartPanel("Alliance Points", <Activity size={16} color="#eab308" />, "alliances", "momentumPts", "a_pts", "momentumPts", "#eab308"), [data?.alliances?.momentumPts, chartSearches.a_pts, chartIsSearching.a_pts, chartSearchResults.a_pts]);
+  const chartAlliancesAbp = useMemo(() => renderChartPanel("Alliance Attackers", <Crosshair size={16} color="#ef4444" />, "alliances", "momentumAbp", "a_abp", "momentumAbp", "#ef4444"), [data?.alliances?.momentumAbp, chartSearches.a_abp, chartIsSearching.a_abp, chartSearchResults.a_abp]);
+  const chartAlliancesDbp = useMemo(() => renderChartPanel("Alliance Defenders", <Shield size={16} color="#3b82f6" />, "alliances", "momentumDbp", "a_dbp", "momentumDbp", "#3b82f6"), [data?.alliances?.momentumDbp, chartSearches.a_dbp, chartIsSearching.a_dbp, chartSearchResults.a_dbp]);
+  
+  const chartPlayersPts = useMemo(() => renderChartPanel("Player Points", <Activity size={16} color="#eab308" />, "players", "momentumPts", "p_pts", "momentumPts", "#eab308"), [data?.players?.momentumPts, chartSearches.p_pts, chartIsSearching.p_pts, chartSearchResults.p_pts]);
+  const chartPlayersAbp = useMemo(() => renderChartPanel("Player Attackers", <Crosshair size={16} color="#ef4444" />, "players", "momentumAbp", "p_abp", "momentumAbp", "#ef4444"), [data?.players?.momentumAbp, chartSearches.p_abp, chartIsSearching.p_abp, chartSearchResults.p_abp]);
+  const chartPlayersDbp = useMemo(() => renderChartPanel("Player Defenders", <Shield size={16} color="#3b82f6" />, "players", "momentumDbp", "p_dbp", "momentumDbp", "#3b82f6"), [data?.players?.momentumDbp, chartSearches.p_dbp, chartIsSearching.p_dbp, chartSearchResults.p_dbp]);
+
   return (
     <div style={{ position: 'fixed', top: '73px', left: 0, right: 0, bottom: 0, backgroundColor: '#0b101e', zIndex: 10, display: 'flex', overflow: 'hidden', fontFamily: 'sans-serif' }}>
       
