@@ -58,25 +58,26 @@ export default function ScoreboardDashboard() {
     return `${Math.floor(diff/60)}h ago`;
   };
 
-  const getMetricIcon = (metric, size=16) => {
+  const getMetricColorHex = (metric) => {
     switch (metric) {
-      case 'pts': return <Trophy size={size} className="text-yellow-500" />;
-      case 'abp': return <Swords size={size} className="text-red-500" />;
-      case 'dbp': return <Shield size={size} className="text-blue-500" />;
-      case 'allbp': return <Target size={size} className="text-purple-500" />;
-      case 'momentum': return <TrendingUp size={size} className="text-green-500" />;
-      default: return null;
+      case 'pts': return '#eab308'; // yellow-500
+      case 'abp': return '#ef4444'; // red-500
+      case 'dbp': return '#3b82f6'; // blue-500
+      case 'allbp': return '#a855f7'; // purple-500
+      case 'momentum': return '#22c55e'; // green-500
+      default: return '#94a3b8'; // slate-400
     }
   };
 
-  const getMetricColor = (metric) => {
+  const getMetricIcon = (metric, size=24, active=false) => {
+    const color = active ? getMetricColorHex(metric) : '#64748b'; // slate-500 when inactive
     switch (metric) {
-      case 'pts': return 'text-yellow-500';
-      case 'abp': return 'text-red-500';
-      case 'dbp': return 'text-blue-500';
-      case 'allbp': return 'text-purple-500';
-      case 'momentum': return 'text-green-500';
-      default: return 'text-slate-200';
+      case 'pts': return <Trophy size={size} color={color} />;
+      case 'abp': return <Swords size={size} color={color} />;
+      case 'dbp': return <Shield size={size} color={color} />;
+      case 'allbp': return <Target size={size} color={color} />;
+      case 'momentum': return <TrendingUp size={size} color={color} />;
+      default: return null;
     }
   };
 
@@ -107,15 +108,15 @@ export default function ScoreboardDashboard() {
   if (loading) {
     return (
       <div style={{ position: 'fixed', top: '73px', left: 0, right: 0, bottom: 0, backgroundColor: '#0b101e', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div className="animate-pulse flex flex-col items-center">
-          <Trophy size={48} className="text-yellow-500 mb-4" />
-          <h2 className="text-xl tracking-widest uppercase text-white">Loading Intelligence...</h2>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <Trophy size={48} color="#eab308" style={{ marginBottom: '1rem' }} />
+          <h2 style={{ fontSize: '1.25rem', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'white' }}>Loading Intelligence...</h2>
         </div>
       </div>
     );
   }
 
-  if (!data) return <div className="text-white p-8">Error loading data.</div>;
+  if (!data) return <div style={{ color: 'white', padding: '2rem' }}>Error loading data.</div>;
 
   // Render a list for sidebars
   const renderSidebarList = (entities, metric, search, isAlliance = false) => {
@@ -125,7 +126,7 @@ export default function ScoreboardDashboard() {
       list = list.filter(e => e.name.toLowerCase().includes(lower));
     }
 
-    if (list.length === 0) return <div className="text-slate-500 text-center py-4 text-sm">No results found.</div>;
+    if (list.length === 0) return <div style={{ color: '#64748b', textAlign: 'center', padding: '1rem 0', fontSize: '0.875rem' }}>No results found.</div>;
 
     return list.map((item, i) => {
       let mainValue = item[metric === 'allbp' ? 'allBp' : metric];
@@ -135,10 +136,17 @@ export default function ScoreboardDashboard() {
         <div 
           key={item.id} 
           onClick={() => setSelectedEntity({ type: isAlliance ? 'alliance' : 'player', data: item })}
-          className="flex items-center gap-3 p-3 mb-2 rounded-xl cursor-pointer transition-all duration-200"
           style={{ 
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            padding: '12px',
+            marginBottom: '8px',
+            borderRadius: '12px',
             background: 'rgba(30, 41, 59, 0.4)', 
             border: '1px solid rgba(255, 255, 255, 0.05)',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.transform = 'translateY(-2px)';
@@ -152,36 +160,39 @@ export default function ScoreboardDashboard() {
           }}
         >
           {/* Rank Number */}
-          <div className="w-6 text-center font-bold text-slate-500 text-sm">
+          <div style={{ width: '24px', textAlign: 'center', fontWeight: 'bold', color: '#64748b', fontSize: '14px' }}>
             {i+1}
           </div>
 
           {/* Name & Alliance */}
-          <div className="flex-1 min-w-0">
-            <div className="font-bold text-slate-100 text-[15px] truncate">{item.name}</div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontWeight: 'bold', color: '#f1f5f9', fontSize: '15px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {item.name}
+            </div>
             {!isAlliance && (
-              <div className="text-xs text-slate-400 truncate mt-0.5">
+              <div style={{ fontSize: '12px', color: '#94a3b8', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: '2px' }}>
                 {item.alliance?.name || 'No Alliance'}
               </div>
             )}
           </div>
 
           {/* Active Metric Highlight */}
-          <div className="flex flex-col items-end shrink-0">
-            <div className={`font-bold text-[15px] flex items-center gap-1.5 ${getMetricColor(metric)}`}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', flexShrink: 0 }}>
+            <div style={{ fontWeight: 'bold', fontSize: '15px', display: 'flex', alignItems: 'center', gap: '6px', color: getMetricColorHex(metric) }}>
+              {getMetricIcon(metric, 14, true)}
               {metric === 'momentum' ? '+' : ''}{formatNumber(mainValue)}
             </div>
             
-            {/* Contextual Sub-Metrics (Only show if not the primary active metric) */}
-            <div className="flex gap-2 mt-1">
+            {/* Contextual Sub-Metrics */}
+            <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
               {metric !== 'abp' && metric !== 'allbp' && metric !== 'momentum' && (
-                <div className="flex items-center gap-1 text-[10px] text-slate-400" title="Attack BP">
-                  <Swords size={10} className="text-red-500/70" /> {formatNumber(item.abp)}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '10px', color: '#94a3b8' }} title="Attack BP">
+                  <Swords size={10} color="#ef4444" /> {formatNumber(item.abp)}
                 </div>
               )}
               {metric !== 'dbp' && metric !== 'allbp' && metric !== 'momentum' && (
-                <div className="flex items-center gap-1 text-[10px] text-slate-400" title="Defense BP">
-                  <Shield size={10} className="text-blue-500/70" /> {formatNumber(item.dbp)}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '10px', color: '#94a3b8' }} title="Defense BP">
+                  <Shield size={10} color="#3b82f6" /> {formatNumber(item.dbp)}
                 </div>
               )}
             </div>
@@ -195,8 +206,8 @@ export default function ScoreboardDashboard() {
     if (active && payload && payload.length) {
       return (
         <div style={{ backgroundColor: 'rgba(15, 23, 42, 0.95)', border: '1px solid rgba(255,255,255,0.1)', padding: '10px', borderRadius: '8px', color: 'white', backdropFilter: 'blur(10px)' }}>
-          <p className="font-bold mb-1">{label}</p>
-          <p className="text-sm" style={{ color: payload[0].fill }}>
+          <p style={{ fontWeight: 'bold', margin: '0 0 4px 0' }}>{label}</p>
+          <p style={{ fontSize: '14px', margin: 0, color: payload[0].fill }}>
             Gain: +{formatNumber(payload[0].value)}
           </p>
         </div>
@@ -206,24 +217,43 @@ export default function ScoreboardDashboard() {
   };
 
   const renderRankingNav = (currentMetric, setMetric) => (
-    <div className="flex items-center justify-between bg-black/40 p-1.5 rounded-xl border border-white/5 mb-4">
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0', marginBottom: '16px' }}>
       {['pts', 'abp', 'dbp', 'allbp', 'momentum'].map(m => {
         const isActive = currentMetric === m;
         return (
           <button 
             key={m} 
             onClick={() => setMetric(m)}
-            className="flex flex-col items-center justify-center p-2 rounded-lg transition-all cursor-pointer border-none relative group w-full"
             style={{ 
-              background: isActive ? 'rgba(255,255,255,0.1)' : 'transparent',
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              padding: '8px', 
+              borderRadius: '8px', 
+              background: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              position: 'relative',
+              transition: 'all 0.3s ease',
+              transform: isActive ? 'scale(1.15)' : 'scale(1)',
+              filter: isActive ? `drop-shadow(0 0 8px ${getMetricColorHex(m)}80)` : 'none'
             }}
             title={getMetricLabel(m)}
           >
-            {getMetricIcon(m, 18)}
-            {/* Tooltip on hover for clarity */}
-            <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-black/90 text-white text-[10px] py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
-              {getMetricLabel(m)}
-            </div>
+            {getMetricIcon(m, 24, isActive)}
+            
+            {/* Active underline indicator */}
+            {isActive && (
+              <div style={{
+                position: 'absolute',
+                bottom: '-4px',
+                left: '20%',
+                right: '20%',
+                height: '2px',
+                borderRadius: '2px',
+                background: getMetricColorHex(m)
+              }} />
+            )}
           </button>
         )
       })}
@@ -234,19 +264,23 @@ export default function ScoreboardDashboard() {
     <div style={{ position: 'fixed', top: '73px', left: 0, right: 0, bottom: 0, backgroundColor: '#0b101e', zIndex: 10, display: 'flex', overflow: 'hidden', fontFamily: 'sans-serif' }}>
       
       {/* LEFT SIDEBAR: Alliances */}
-      <div style={{ width: '400px', display: 'flex', flexDirection: 'column', gap: '0.5rem', padding: '1.5rem', borderRight: '1px solid rgba(255,255,255,0.05)', backgroundColor: 'rgba(255,255,255,0.01)', zIndex: 2 }}>
+      <div style={{ width: '400px', display: 'flex', flexDirection: 'column', padding: '24px', borderRight: '1px solid rgba(255,255,255,0.05)', backgroundColor: 'rgba(255,255,255,0.01)', zIndex: 2 }}>
         
-        <div className="mb-2">
-          <h1 className="text-2xl font-bold text-white mb-3 flex items-center gap-2">
-            <Users className="text-purple-400" size={24} />
+        <div style={{ marginBottom: '16px' }}>
+          <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: 'white', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px', margin: '0 0 16px 0' }}>
+            <Users size={24} color="#a855f7" />
             Top Alliances
           </h1>
-          <div className="relative mb-4">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={16} />
+          
+          <div style={{ position: 'relative', marginBottom: '16px' }}>
+            <div style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }}>
+              <Search size={16} color="#94a3b8" />
+            </div>
             <input 
               type="text" 
               placeholder="Search alliances..." 
-              className="w-full pl-10 pr-4 py-2.5 bg-black/30 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-purple-500/50 transition shadow-inner"
+              className="input-field"
+              style={{ width: '100%', paddingLeft: '36px', paddingRight: '16px', paddingTop: '10px', paddingBottom: '10px', boxSizing: 'border-box' }}
               value={allianceSearch}
               onChange={e => setAllianceSearch(e.target.value)}
             />
@@ -255,25 +289,23 @@ export default function ScoreboardDashboard() {
           {renderRankingNav(allianceMetric, setAllianceMetric)}
         </div>
 
-        <div className="flex-1 overflow-y-auto scrollbar-none pb-20 pr-1">
+        <div style={{ flex: 1, overflowY: 'auto' }}>
           {renderSidebarList(data.alliances, allianceMetric, allianceSearch, true)}
         </div>
 
       </div>
 
       {/* MAIN CENTER PANE */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto', padding: '1.5rem', gap: '1.5rem', scrollbarWidth: 'none' }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto', padding: '24px', gap: '24px' }}>
         
         {/* Top Analytics: Gainers Charts */}
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '24px' }}>
           
-          <div className="glass-panel p-5 rounded-2xl flex flex-col h-64">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2 text-white font-bold">
-                <Activity className="text-green-400" size={18}/> Points Surge (Mocked)
-              </div>
+          <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', height: '280px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'white', fontWeight: 'bold', marginBottom: '16px' }}>
+              <Activity size={18} color="#22c55e" /> Points Surge (Mocked)
             </div>
-            <div className="flex-1 w-full relative" style={{ minHeight: 0 }}>
+            <div style={{ flex: 1, width: '100%', position: 'relative', minHeight: '200px' }}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={mockGainers.pts} layout="vertical" margin={{ top: 0, right: 10, left: 20, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" horizontal={false} />
@@ -290,11 +322,11 @@ export default function ScoreboardDashboard() {
             </div>
           </div>
 
-          <div className="glass-panel p-5 rounded-2xl flex flex-col h-64">
-            <div className="flex items-center gap-2 mb-4 text-white font-bold">
-              <Crosshair className="text-red-500" size={18}/> Top Attackers (Mocked)
+          <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', height: '280px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'white', fontWeight: 'bold', marginBottom: '16px' }}>
+              <Crosshair size={18} color="#ef4444" /> Top Attackers (Mocked)
             </div>
-            <div className="flex-1 w-full relative" style={{ minHeight: 0 }}>
+            <div style={{ flex: 1, width: '100%', position: 'relative', minHeight: '200px' }}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={mockGainers.abp} layout="vertical" margin={{ top: 0, right: 10, left: 20, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" horizontal={false} />
@@ -311,11 +343,11 @@ export default function ScoreboardDashboard() {
             </div>
           </div>
 
-          <div className="glass-panel p-5 rounded-2xl flex flex-col h-64">
-            <div className="flex items-center gap-2 mb-4 text-white font-bold">
-              <Shield className="text-blue-500" size={18}/> Top Defenders (Mocked)
+          <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', height: '280px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'white', fontWeight: 'bold', marginBottom: '16px' }}>
+              <Shield size={18} color="#3b82f6" /> Top Defenders (Mocked)
             </div>
-            <div className="flex-1 w-full relative" style={{ minHeight: 0 }}>
+            <div style={{ flex: 1, width: '100%', position: 'relative', minHeight: '200px' }}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={mockGainers.dbp} layout="vertical" margin={{ top: 0, right: 10, left: 20, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" horizontal={false} />
@@ -335,70 +367,73 @@ export default function ScoreboardDashboard() {
         </div>
 
         {/* Live Conquest Feed (Bottom Area) */}
-        <div className="glass-panel rounded-2xl bg-white/[0.02] flex flex-col flex-1 min-h-[400px] mt-2">
+        <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: '400px', padding: 0, overflow: 'hidden' }}>
           
-          <div className="pb-4 border-b border-white/10 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Zap className="text-orange-400" size={20}/>
-              <h2 className="text-lg font-bold text-white mb-0">Live Conquest Feed</h2>
-              <span className="px-2 py-1 rounded-full bg-orange-500/20 text-orange-400 text-xs font-bold ml-2">
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <Zap size={20} color="#f97316"/>
+              <h2 style={{ fontSize: '1.125rem', fontWeight: 'bold', color: 'white', margin: 0 }}>Live Conquest Feed</h2>
+              <span style={{ padding: '4px 8px', borderRadius: '9999px', background: 'rgba(249, 115, 22, 0.2)', color: '#f97316', fontSize: '12px', fontWeight: 'bold' }}>
                 {filteredConquests.length} events
               </span>
             </div>
             
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={14} />
+            <div style={{ position: 'relative' }}>
+              <div style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }}>
+                <Search size={14} color="#94a3b8" />
+              </div>
               <input 
                 type="text" 
                 placeholder="Filter feed..." 
-                className="pl-9 pr-4 py-1.5 bg-black/30 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:border-orange-500/50 transition w-64"
+                className="input-field"
+                style={{ width: '256px', paddingLeft: '36px', paddingRight: '16px', paddingTop: '6px', paddingBottom: '6px', boxSizing: 'border-box' }}
                 value={conquestFilter}
                 onChange={e => setConquestFilter(e.target.value)}
               />
             </div>
           </div>
 
-          <div className="overflow-y-auto flex-1 mt-4 scrollbar-none">
-            <table className="w-full text-sm text-left">
-              <thead className="text-xs text-slate-500 uppercase sticky top-0 bg-[#0f172a] z-10 shadow-md">
+          <div style={{ flex: 1, overflowY: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '14px' }}>
+              <thead style={{ position: 'sticky', top: 0, background: '#0f172a', zIndex: 10, borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
                 <tr>
-                  <th className="px-6 py-3 font-semibold rounded-tl-lg">Time</th>
-                  <th className="px-6 py-3 font-semibold">Town</th>
-                  <th className="px-6 py-3 font-semibold">Points</th>
-                  <th className="px-6 py-3 font-semibold text-right">Lost By</th>
-                  <th className="px-6 py-3 font-semibold text-center">Status</th>
-                  <th className="px-6 py-3 font-semibold rounded-tr-lg">Conquered By</th>
+                  <th style={{ padding: '12px 24px', color: '#64748b', fontWeight: '600', textTransform: 'uppercase', fontSize: '12px' }}>Time</th>
+                  <th style={{ padding: '12px 24px', color: '#64748b', fontWeight: '600', textTransform: 'uppercase', fontSize: '12px' }}>Town</th>
+                  <th style={{ padding: '12px 24px', color: '#64748b', fontWeight: '600', textTransform: 'uppercase', fontSize: '12px' }}>Points</th>
+                  <th style={{ padding: '12px 24px', color: '#64748b', fontWeight: '600', textTransform: 'uppercase', fontSize: '12px', textAlign: 'right' }}>Lost By</th>
+                  <th style={{ padding: '12px 24px', color: '#64748b', fontWeight: '600', textTransform: 'uppercase', fontSize: '12px', textAlign: 'center' }}>Status</th>
+                  <th style={{ padding: '12px 24px', color: '#64748b', fontWeight: '600', textTransform: 'uppercase', fontSize: '12px' }}>Conquered By</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredConquests.map((c, i) => (
-                  <tr key={i} className="border-b border-white/[0.02] hover:bg-white/[0.05] transition-colors group">
-                    <td className="px-6 py-4 text-slate-400 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        <Clock size={12} className="text-slate-500 group-hover:text-orange-400 transition-colors"/> 
+                  <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.02)' }} onMouseEnter={e => e.currentTarget.style.background='rgba(255,255,255,0.02)'} onMouseLeave={e => e.currentTarget.style.background='transparent'}>
+                    <td style={{ padding: '16px 24px', color: '#94a3b8', whiteSpace: 'nowrap' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <Clock size={12} color="#64748b"/> 
                         {timeSince(c.timestamp)}
                       </div>
                     </td>
-                    <td className="px-6 py-4 font-semibold text-white truncate max-w-[150px]">{c.townName}</td>
-                    <td className="px-6 py-4 text-slate-300 font-mono text-xs">{formatNumber(c.townPoints)}</td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="text-red-400/90 font-semibold truncate max-w-[120px] inline-block">{c.oldPlayer}</div>
-                      <div className="text-[10px] text-slate-500 truncate max-w-[120px]">{c.oldAlliance}</div>
+                    <td style={{ padding: '16px 24px', fontWeight: '600', color: 'white', maxWidth: '150px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.townName}</td>
+                    <td style={{ padding: '16px 24px', color: '#cbd5e1', fontFamily: 'monospace', fontSize: '12px' }}>{formatNumber(c.townPoints)}</td>
+                    <td style={{ padding: '16px 24px', textAlign: 'right' }}>
+                      <div style={{ color: '#f87171', fontWeight: '600', maxWidth: '120px', display: 'inline-block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.oldPlayer}</div>
+                      <div style={{ fontSize: '10px', color: '#64748b', maxWidth: '120px', display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.oldAlliance}</div>
                     </td>
-                    <td className="px-6 py-4 text-center">
-                      <div className="w-8 h-8 rounded-full bg-black/40 border border-white/5 flex items-center justify-center mx-auto group-hover:border-orange-500/30 transition-colors">
-                        <ArrowRight size={14} className="text-slate-500 group-hover:text-orange-400 transition-colors" />
+                    <td style={{ padding: '16px 24px', textAlign: 'center' }}>
+                      <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto' }}>
+                        <ArrowRight size={14} color="#64748b" />
                       </div>
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="text-green-400/90 font-semibold truncate max-w-[120px]">{c.newPlayer}</div>
-                      <div className="text-[10px] text-slate-500 truncate max-w-[120px]">{c.newAlliance}</div>
+                    <td style={{ padding: '16px 24px' }}>
+                      <div style={{ color: '#4ade80', fontWeight: '600', maxWidth: '120px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.newPlayer}</div>
+                      <div style={{ fontSize: '10px', color: '#64748b', maxWidth: '120px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.newAlliance}</div>
                     </td>
                   </tr>
                 ))}
                 {filteredConquests.length === 0 && (
                   <tr>
-                    <td colSpan="6" className="px-6 py-12 text-center text-slate-500">
+                    <td colSpan="6" style={{ padding: '48px 24px', textAlign: 'center', color: '#64748b' }}>
                       No conquests found matching your criteria.
                     </td>
                   </tr>
@@ -412,19 +447,23 @@ export default function ScoreboardDashboard() {
       </div>
 
       {/* RIGHT SIDEBAR: Players */}
-      <div style={{ width: '400px', display: 'flex', flexDirection: 'column', gap: '0.5rem', padding: '1.5rem', borderLeft: '1px solid rgba(255,255,255,0.05)', backgroundColor: 'rgba(255,255,255,0.01)', zIndex: 2 }}>
+      <div style={{ width: '400px', display: 'flex', flexDirection: 'column', padding: '24px', borderLeft: '1px solid rgba(255,255,255,0.05)', backgroundColor: 'rgba(255,255,255,0.01)', zIndex: 2 }}>
         
-        <div className="mb-2">
-          <h1 className="text-2xl font-bold text-white mb-3 flex items-center gap-2">
-            <Trophy className="text-blue-400" size={24} />
+        <div style={{ marginBottom: '16px' }}>
+          <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: 'white', display: 'flex', alignItems: 'center', gap: '8px', margin: '0 0 16px 0' }}>
+            <Trophy size={24} color="#3b82f6" />
             Top Players
           </h1>
-          <div className="relative mb-4">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={16} />
+          
+          <div style={{ position: 'relative', marginBottom: '16px' }}>
+            <div style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }}>
+              <Search size={16} color="#94a3b8" />
+            </div>
             <input 
               type="text" 
               placeholder="Search players..." 
-              className="w-full pl-10 pr-4 py-2.5 bg-black/30 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-blue-500/50 transition shadow-inner"
+              className="input-field"
+              style={{ width: '100%', paddingLeft: '36px', paddingRight: '16px', paddingTop: '10px', paddingBottom: '10px', boxSizing: 'border-box' }}
               value={playerSearch}
               onChange={e => setPlayerSearch(e.target.value)}
             />
@@ -433,7 +472,7 @@ export default function ScoreboardDashboard() {
           {renderRankingNav(playerMetric, setPlayerMetric)}
         </div>
 
-        <div className="flex-1 overflow-y-auto scrollbar-none pb-20 pl-1">
+        <div style={{ flex: 1, overflowY: 'auto' }}>
           {renderSidebarList(data.players, playerMetric, playerSearch, false)}
         </div>
 
@@ -448,48 +487,47 @@ export default function ScoreboardDashboard() {
           <div className="glass-panel" style={{ width: '600px', maxWidth: '90vw', position: 'relative' }}>
             <button 
               onClick={() => setSelectedEntity(null)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-white transition"
-              style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}
+              style={{ position: 'absolute', top: '16px', right: '16px', background: 'transparent', border: 'none', cursor: 'pointer', color: '#94a3b8' }}
             >
               <X size={24} />
             </button>
             
-            <div className="flex items-center gap-4 mb-6">
-              <div className="p-4 rounded-xl glass-panel border border-white/10" style={{ background: selectedEntity.type === 'alliance' ? 'rgba(139, 92, 246, 0.2)' : 'rgba(59, 130, 246, 0.2)' }}>
-                {selectedEntity.type === 'alliance' ? <Users size={32} className="text-purple-400" /> : <Trophy size={32} className="text-blue-400" />}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
+              <div className="glass-panel" style={{ padding: '16px', background: selectedEntity.type === 'alliance' ? 'rgba(139, 92, 246, 0.2)' : 'rgba(59, 130, 246, 0.2)' }}>
+                {selectedEntity.type === 'alliance' ? <Users size={32} color="#a855f7" /> : <Trophy size={32} color="#3b82f6" />}
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-white leading-tight mb-0">{selectedEntity.data.name}</h2>
+                <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: 'white', margin: '0 0 4px 0' }}>{selectedEntity.data.name}</h2>
                 {selectedEntity.type === 'player' && selectedEntity.data.alliance && (
-                  <div className="gradient-text text-sm font-semibold">{selectedEntity.data.alliance.name}</div>
+                  <div className="gradient-text" style={{ fontSize: '14px', fontWeight: '600' }}>{selectedEntity.data.alliance.name}</div>
                 )}
-                <div className="text-slate-400 text-sm capitalize mt-1">{selectedEntity.type} Intelligence</div>
+                <div style={{ color: '#94a3b8', fontSize: '14px', textTransform: 'capitalize', marginTop: '4px' }}>{selectedEntity.type} Intelligence</div>
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-4 mb-8">
-              <div className="glass-panel p-4 text-center" style={{ background: 'rgba(0,0,0,0.2)' }}>
-                <Trophy size={20} className="text-yellow-500 mx-auto mb-2" />
-                <div className="text-2xl font-bold text-white">{formatNumber(selectedEntity.data.points)}</div>
-                <div className="text-xs text-slate-400 mt-1">Total Points</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '32px' }}>
+              <div className="glass-panel" style={{ padding: '16px', textAlign: 'center', background: 'rgba(0,0,0,0.2)' }}>
+                <Trophy size={20} color="#eab308" style={{ margin: '0 auto 8px auto' }} />
+                <div style={{ fontSize: '24px', fontWeight: 'bold', color: 'white' }}>{formatNumber(selectedEntity.data.points)}</div>
+                <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '4px' }}>Total Points</div>
               </div>
-              <div className="glass-panel p-4 text-center" style={{ background: 'rgba(0,0,0,0.2)' }}>
-                <Swords size={20} className="text-red-500 mx-auto mb-2" />
-                <div className="text-2xl font-bold text-white">{formatNumber(selectedEntity.data.abp)}</div>
-                <div className="text-xs text-slate-400 mt-1">Attack BP</div>
+              <div className="glass-panel" style={{ padding: '16px', textAlign: 'center', background: 'rgba(0,0,0,0.2)' }}>
+                <Swords size={20} color="#ef4444" style={{ margin: '0 auto 8px auto' }} />
+                <div style={{ fontSize: '24px', fontWeight: 'bold', color: 'white' }}>{formatNumber(selectedEntity.data.abp)}</div>
+                <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '4px' }}>Attack BP</div>
               </div>
-              <div className="glass-panel p-4 text-center" style={{ background: 'rgba(0,0,0,0.2)' }}>
-                <Shield size={20} className="text-blue-500 mx-auto mb-2" />
-                <div className="text-2xl font-bold text-white">{formatNumber(selectedEntity.data.dbp)}</div>
-                <div className="text-xs text-slate-400 mt-1">Defense BP</div>
+              <div className="glass-panel" style={{ padding: '16px', textAlign: 'center', background: 'rgba(0,0,0,0.2)' }}>
+                <Shield size={20} color="#3b82f6" style={{ margin: '0 auto 8px auto' }} />
+                <div style={{ fontSize: '24px', fontWeight: 'bold', color: 'white' }}>{formatNumber(selectedEntity.data.dbp)}</div>
+                <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '4px' }}>Defense BP</div>
               </div>
             </div>
 
-            <div className="h-48 border border-white/10 rounded-xl flex items-center justify-center bg-black/30 text-slate-400 flex-col gap-2 relative overflow-hidden">
-              <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
-              <Activity size={32} className="opacity-50 text-blue-500" />
-              <span className="font-semibold" style={{ zIndex: 1 }}>Historical data assembling...</span>
-              <span className="text-xs" style={{ zIndex: 1 }}>(Check back after a few sync cycles)</span>
+            <div style={{ height: '192px', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.3)', flexDirection: 'column', gap: '8px', position: 'relative', overflow: 'hidden' }}>
+              <div style={{ position: 'absolute', inset: 0, opacity: 0.1, backgroundImage: "url('https://www.transparenttextures.com/patterns/cubes.png')" }}></div>
+              <Activity size={32} color="#3b82f6" style={{ opacity: 0.5, zIndex: 1 }} />
+              <span style={{ fontWeight: '600', color: '#94a3b8', zIndex: 1 }}>Historical data assembling...</span>
+              <span style={{ fontSize: '12px', color: '#94a3b8', zIndex: 1 }}>(Check back after a few sync cycles)</span>
             </div>
             
           </div>
