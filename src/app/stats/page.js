@@ -465,18 +465,17 @@ export default function ScoreboardDashboard() {
     const chartData = prepareChartData(entityGroup, metricKey, searchKey, dataKeyMapping);
     const hasData = chartData && chartData.length > 0;
     
-    // Calculate internal height so it fits ~5 items without scrolling, but scales up to 15 with scrolling.
     const internalHeight = Math.max(100, chartData.length * 36);
 
     return (
-      <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', height: '280px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: 'white', fontWeight: 'bold', marginBottom: '8px', padding: '0 12px', flexShrink: 0 }}>
+      <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', height: '280px', padding: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: 'white', fontWeight: 'bold', marginBottom: '12px', flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px' }}>
             {icon} {title}
           </div>
         </div>
         
-        <div style={{ flex: 1, paddingRight: '4px', position: 'relative', overflowY: 'auto', scrollbarWidth: 'thin' }}>
+        <div style={{ flex: 1, position: 'relative', overflowY: 'auto', scrollbarWidth: 'thin', marginBottom: '12px' }}>
           {isSearching ? (
              <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: colorHex }}>
                 <Loader2 size={24} className="animate-spin" />
@@ -488,15 +487,23 @@ export default function ScoreboardDashboard() {
           ) : (
             <div style={{ height: `${internalHeight}px`, minHeight: '100%' }}>
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData} layout="vertical" margin={{ top: 0, right: 40, left: 10, bottom: 0 }}>
+                <BarChart data={chartData} layout="vertical" margin={{ top: 0, right: 60, left: 0, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" horizontal={false} />
                   <XAxis type="number" hide />
-                  <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 11 }} width={90} />
+                  <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 11 }} width={100} />
                   <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
                   <Bar dataKey="momentum" radius={[0, 4, 4, 0]} maxBarSize={16}>
                     {chartData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={colorHex} fillOpacity={0.9 - (index * 0.05)} />
                     ))}
+                    <LabelList 
+                      dataKey="momentum" 
+                      position="insideRight" 
+                      fill="#ffffff" 
+                      fontSize={11} 
+                      fontWeight="bold" 
+                      formatter={(val) => `+${formatNumber(val)}`} 
+                    />
                     <LabelList 
                       dataKey="recentGain" 
                       position="right" 
@@ -513,8 +520,8 @@ export default function ScoreboardDashboard() {
         </div>
 
         {/* Chart Search Bar */}
-        <div style={{ position: 'relative', marginTop: 'auto', padding: '0 12px 12px 12px', flexShrink: 0, display: 'flex', justifyContent: 'center' }}>
-          <div style={{ width: '80%', position: 'relative' }}>
+        <div style={{ position: 'relative', marginTop: 'auto', flexShrink: 0, display: 'flex', justifyContent: 'center' }}>
+          <div style={{ width: '90%', position: 'relative' }}>
             <div style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)' }}><Search size={12} color="#64748b" /></div>
             <input 
               type="text" 
