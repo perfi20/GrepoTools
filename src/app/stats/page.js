@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Trophy, Swords, Shield, TrendingUp, Clock,
   Activity, ArrowRight, Search, Zap, Crosshair, Users, Target, X, Pin, Loader2,
-  ArrowUpRight, ArrowDownRight, Minus, Skull
+  ArrowUpRight, ArrowDownRight, Minus, Skull, HelpCircle
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, LabelList, AreaChart, Area } from 'recharts';
 
@@ -30,6 +30,7 @@ export default function ScoreboardDashboard() {
   const [hourlyData, setHourlyData] = useState([]);
   const [hourlyLoading, setHourlyLoading] = useState(false);
   const [hourlyViewType, setHourlyViewType] = useState('bar');
+  const [showFaq, setShowFaq] = useState(false);
 
   // Pinned Entities
   const [pinnedPlayers, setPinnedPlayers] = useState([]);
@@ -558,16 +559,24 @@ export default function ScoreboardDashboard() {
 
         {/* Chart Search Bar */}
         <div style={{ position: 'relative', marginTop: 'auto', flexShrink: 0, display: 'flex', justifyContent: 'center' }}>
-          <div style={{ width: '90%', position: 'relative' }}>
+          <div style={{ width: '60%', position: 'relative' }}>
             <div style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)' }}><Search size={12} color="#64748b" /></div>
             <input 
               type="text" 
               placeholder={`Search ${entityGroup}...`}
               className="input-field"
-              style={{ width: '100%', paddingLeft: '28px', paddingRight: '12px', paddingTop: '6px', paddingBottom: '6px', boxSizing: 'border-box', fontSize: '12px', background: 'rgba(0,0,0,0.3)', borderColor: 'transparent', textAlign: 'center' }}
+              style={{ width: '100%', paddingLeft: '28px', paddingRight: chartSearches[searchKey] ? '28px' : '12px', paddingTop: '6px', paddingBottom: '6px', boxSizing: 'border-box', fontSize: '12px', background: 'rgba(0,0,0,0.3)', borderColor: 'transparent', textAlign: 'center' }}
               value={chartSearches[searchKey]}
               onChange={e => handleChartSearch(searchKey, e.target.value, entityGroup === 'alliances' ? 'alliance' : 'player')}
             />
+            {chartSearches[searchKey] && (
+              <div 
+                style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', cursor: 'pointer', display: 'flex' }}
+                onClick={() => handleChartSearch(searchKey, '', entityGroup === 'alliances' ? 'alliance' : 'player')}
+              >
+                <X size={12} color="#64748b" />
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -625,7 +634,10 @@ export default function ScoreboardDashboard() {
       {/* MAIN CENTER PANE */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto', padding: '24px', gap: '24px', scrollbarWidth: 'thin' }}>
         
-        <h2 style={{ fontSize: '18px', fontWeight: 'bold', color: '#94a3b8', margin: 0 }}>Daily Momentum (Since 2:00 AM)</h2>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <h2 style={{ fontSize: '18px', fontWeight: 'bold', color: '#94a3b8', margin: 0 }}>Daily Momentum (Since 2:00 AM)</h2>
+          <HelpCircle size={16} color="#64748b" style={{ cursor: 'pointer' }} onClick={() => setShowFaq(true)} />
+        </div>
 
         {/* 6 Momentum Charts: Alliances Top, Players Bottom */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px' }}>
@@ -865,6 +877,51 @@ export default function ScoreboardDashboard() {
                   )}
                 </ResponsiveContainer>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* FAQ MODAL */}
+      {showFaq && (
+        <div 
+          style={{ position: 'fixed', inset: 0, zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(4px)' }}
+          onClick={() => setShowFaq(false)}
+        >
+          <div 
+            style={{ width: '90%', maxWidth: '500px', backgroundColor: '#0f172a', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)' }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px', borderBottom: '1px solid rgba(255,255,255,0.1)', backgroundColor: 'rgba(255,255,255,0.02)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <HelpCircle size={20} color="#a855f7" />
+                <h3 style={{ margin: 0, color: 'white', fontSize: '18px', fontWeight: 'bold' }}>Momentum FAQ</h3>
+              </div>
+              <X size={20} color="#94a3b8" style={{ cursor: 'pointer' }} onClick={() => setShowFaq(false)} />
+            </div>
+            
+            <div style={{ padding: '24px', color: '#cbd5e1', fontSize: '14px', lineHeight: '1.6' }}>
+              <p style={{ margin: '0 0 16px 0' }}>
+                <strong style={{ color: 'white' }}>How does Daily Momentum work?</strong><br />
+                The momentum charts display the total points or battle points gained by a player or alliance since the daily reset.
+              </p>
+              <p style={{ margin: '0 0 16px 0' }}>
+                <strong style={{ color: 'white' }}>When is the daily reset?</strong><br />
+                The baseline is reset every day at exactly <strong style={{ color: '#4ade80' }}>2:00 AM Server Time</strong>. All gains shown are relative to the stats recorded at this specific time.
+              </p>
+              <p style={{ margin: '0' }}>
+                <strong style={{ color: 'white' }}>What do the green arrows mean?</strong><br />
+                A green arrow (<span style={{ color: '#4ade80', fontWeight: 'bold' }}>↑</span>) next to a bar indicates that the player or alliance has gained points within the last synchronization cycle (usually the last hour).
+              </p>
+            </div>
+            
+            <div style={{ padding: '16px 24px', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'flex-end' }}>
+              <button 
+                onClick={() => setShowFaq(false)}
+                style={{ padding: '8px 24px', backgroundColor: '#3b82f6', color: 'white', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}
+              >
+                Got it
+              </button>
             </div>
           </div>
         </div>
