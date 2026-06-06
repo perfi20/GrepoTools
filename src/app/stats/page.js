@@ -142,20 +142,20 @@ export default function ScoreboardDashboard() {
             e.currentTarget.style.boxShadow = 'none';
           }}
         >
-          <div className="flex justify-between items-center mb-1">
+          <div className="flex justify-between items-center mb-2">
             <div className="flex items-center gap-3">
               <div className="w-5 text-center font-bold text-secondary text-sm group-hover:text-primary transition-colors">{i+1}</div>
-              <div className="font-bold text-white text-sm group-hover:text-primary transition-colors">{item.name}</div>
+              <div className="font-bold text-white text-base group-hover:text-primary transition-colors">{item.name}</div>
             </div>
-            <div className={`font-bold text-sm ${getMetricColor(metric)}`}>
+            <div className={`font-bold text-[15px] px-3 py-1 rounded-md bg-black/50 border border-white/5 ${getMetricColor(metric)}`}>
               {metric === 'momentum' ? '+' : ''}{formatNumber(mainValue)}
             </div>
           </div>
-          <div className="flex justify-between items-center pl-8 text-xs">
-            <span className="text-slate-500 truncate w-32">{!isAlliance ? (item.alliance?.name || 'No Alliance') : ''}</span>
-            <div className="flex gap-2">
-              {metric !== 'abp' && <span className="text-red-400/70 flex items-center gap-1" title="Attack BP"><Swords size={10}/> {formatNumber(item.abp)}</span>}
-              {metric !== 'dbp' && <span className="text-blue-400/70 flex items-center gap-1" title="Defense BP"><Shield size={10}/> {formatNumber(item.dbp)}</span>}
+          <div className="flex justify-between items-center pl-8 text-sm">
+            <span className="text-slate-500 truncate w-32 font-medium">{!isAlliance ? (item.alliance?.name || 'No Alliance') : ''}</span>
+            <div className="flex gap-3">
+              {metric !== 'abp' && <span className="text-red-400/80 flex items-center gap-1 font-mono text-xs bg-red-900/20 px-2 py-0.5 rounded" title="Attack BP"><Swords size={10}/> {formatNumber(item.abp)}</span>}
+              {metric !== 'dbp' && <span className="text-blue-400/80 flex items-center gap-1 font-mono text-xs bg-blue-900/20 px-2 py-0.5 rounded" title="Defense BP"><Shield size={10}/> {formatNumber(item.dbp)}</span>}
             </div>
           </div>
         </div>
@@ -202,20 +202,24 @@ export default function ScoreboardDashboard() {
         </div>
 
         {/* Toggles */}
-        <div className="flex bg-black/40 rounded-lg p-1 border border-white/5">
+        <div className="grid grid-cols-5 gap-1 bg-[#0f172a] p-1.5 rounded-xl border border-white/5 mb-2 shadow-inner">
           {['pts', 'abp', 'dbp', 'allbp', 'momentum'].map(m => (
             <button 
               key={m} 
               onClick={() => setAllianceMetric(m)}
-              className="flex-1 flex justify-center items-center py-1.5 rounded-md transition-all cursor-pointer border-none"
+              className="flex flex-col justify-center items-center py-2 rounded-lg transition-all cursor-pointer border-none"
               style={{ 
-                background: allianceMetric === m ? 'var(--primary)' : 'transparent',
-                opacity: allianceMetric === m ? 1 : 0.5,
-                boxShadow: allianceMetric === m ? '0 0 10px rgba(59, 130, 246, 0.5)' : 'none'
+                background: allianceMetric === m ? 'var(--bg-card)' : 'transparent',
+                border: allianceMetric === m ? '1px solid rgba(255,255,255,0.1)' : '1px solid transparent',
+                boxShadow: allianceMetric === m ? '0 4px 12px rgba(0,0,0,0.2)' : 'none',
+                opacity: allianceMetric === m ? 1 : 0.6,
               }}
               title={m.toUpperCase()}
             >
               {getMetricIcon(m)}
+              <span className={`text-[9px] mt-1.5 font-bold tracking-wider uppercase ${allianceMetric === m ? getMetricColor(m) : 'text-slate-500'}`}>
+                {m === 'allbp' ? 'All' : m}
+              </span>
             </button>
           ))}
         </div>
@@ -233,13 +237,13 @@ export default function ScoreboardDashboard() {
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
           
           {/* Points Gainers Chart */}
-          <div className="glass-panel p-5 rounded-2xl border border-white/10 bg-white/[0.02] backdrop-blur-md flex flex-col h-72">
+          <div className="glass-panel p-5 rounded-2xl flex flex-col h-72">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2 text-white font-bold">
                 <Activity className="text-green-400" size={18}/> Points Surge (Mocked)
               </div>
             </div>
-            <div className="flex-1 w-full relative">
+            <div className="flex-1 w-full relative" style={{ minHeight: '200px' }}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={mockGainers.pts} layout="vertical" margin={{ top: 0, right: 10, left: 20, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" horizontal={false} />
@@ -248,7 +252,7 @@ export default function ScoreboardDashboard() {
                   <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
                   <Bar dataKey="pts" radius={[0, 4, 4, 0]}>
                     {mockGainers.pts.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill="#10b981" fillOpacity={0.8 - (index * 0.05)} />
+                      <Cell key={`cell-${index}`} fill="#eab308" fillOpacity={0.8 - (index * 0.05)} />
                     ))}
                   </Bar>
                 </BarChart>
@@ -257,11 +261,11 @@ export default function ScoreboardDashboard() {
           </div>
 
           {/* ABP Gainers Chart */}
-          <div className="glass-panel p-5 rounded-2xl border border-white/10 bg-white/[0.02] backdrop-blur-md flex flex-col h-72">
+          <div className="glass-panel p-5 rounded-2xl flex flex-col h-72">
             <div className="flex items-center gap-2 mb-4 text-white font-bold">
               <Crosshair className="text-red-500" size={18}/> Top Attackers (Mocked)
             </div>
-            <div className="flex-1 w-full relative">
+            <div className="flex-1 w-full relative" style={{ minHeight: '200px' }}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={mockGainers.abp} layout="vertical" margin={{ top: 0, right: 10, left: 20, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" horizontal={false} />
@@ -279,11 +283,11 @@ export default function ScoreboardDashboard() {
           </div>
 
           {/* DBP Gainers Chart */}
-          <div className="glass-panel p-5 rounded-2xl border border-white/10 bg-white/[0.02] backdrop-blur-md flex flex-col h-72">
+          <div className="glass-panel p-5 rounded-2xl flex flex-col h-72">
             <div className="flex items-center gap-2 mb-4 text-white font-bold">
               <Shield className="text-blue-500" size={18}/> Top Defenders (Mocked)
             </div>
-            <div className="flex-1 w-full relative">
+            <div className="flex-1 w-full relative" style={{ minHeight: '200px' }}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={mockGainers.dbp} layout="vertical" margin={{ top: 0, right: 10, left: 20, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" horizontal={false} />
@@ -402,20 +406,24 @@ export default function ScoreboardDashboard() {
         </div>
 
         {/* Toggles */}
-        <div className="flex bg-black/40 rounded-lg p-1 border border-white/5">
+        <div className="grid grid-cols-5 gap-1 bg-[#0f172a] p-1.5 rounded-xl border border-white/5 mb-2 shadow-inner">
           {['pts', 'abp', 'dbp', 'allbp', 'momentum'].map(m => (
             <button 
               key={m} 
               onClick={() => setPlayerMetric(m)}
-              className="flex-1 flex justify-center items-center py-1.5 rounded-md transition-all cursor-pointer border-none"
+              className="flex flex-col justify-center items-center py-2 rounded-lg transition-all cursor-pointer border-none"
               style={{ 
-                background: playerMetric === m ? 'var(--primary)' : 'transparent',
-                opacity: playerMetric === m ? 1 : 0.5,
-                boxShadow: playerMetric === m ? '0 0 10px rgba(59, 130, 246, 0.5)' : 'none'
+                background: playerMetric === m ? 'var(--bg-card)' : 'transparent',
+                border: playerMetric === m ? '1px solid rgba(255,255,255,0.1)' : '1px solid transparent',
+                boxShadow: playerMetric === m ? '0 4px 12px rgba(0,0,0,0.2)' : 'none',
+                opacity: playerMetric === m ? 1 : 0.6,
               }}
               title={m.toUpperCase()}
             >
               {getMetricIcon(m)}
+              <span className={`text-[9px] mt-1.5 font-bold tracking-wider uppercase ${playerMetric === m ? getMetricColor(m) : 'text-slate-500'}`}>
+                {m === 'allbp' ? 'All' : m}
+              </span>
             </button>
           ))}
         </div>
