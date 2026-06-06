@@ -6,41 +6,40 @@ export const dynamic = 'force-static';
 export async function GET() {
   try {
     const [
-      topPlayersPts, topPlayersABP, topPlayersDBP,
-      topAlliancesPts, topAlliancesABP, topAlliancesDBP,
+      topPlayersPts, topPlayersABP, topPlayersDBP, topPlayersAllBP,
+      topAlliancesPts, topAlliancesABP, topAlliancesDBP, topAlliancesAllBP,
       recentConquests,
-      recentPlayerHistory,
-      recentAllianceHistory
+      historyPlayers24h,
+      historyAlliances24h
     ] = await Promise.all([
-      // Players
-      prisma.player.findMany({ cacheStrategy: { ttl: 600, swr: 60 }, orderBy: { points: 'desc' }, take: 10, select: { id: true, name: true, points: true, abp: true, dbp: true, alliance: { select: { name: true } } } }),
-      prisma.player.findMany({ cacheStrategy: { ttl: 600, swr: 60 }, orderBy: { abp: 'desc' }, take: 10, select: { id: true, name: true, points: true, abp: true, dbp: true, alliance: { select: { name: true } } } }),
-      prisma.player.findMany({ cacheStrategy: { ttl: 600, swr: 60 }, orderBy: { dbp: 'desc' }, take: 10, select: { id: true, name: true, points: true, abp: true, dbp: true, alliance: { select: { name: true } } } }),
+      // Players Top 10s
+      prisma.player.findMany({ orderBy: { points: 'desc' }, take: 10, select: { id: true, name: true, points: true, abp: true, dbp: true, allBp: true, alliance: { select: { name: true } } } }),
+      prisma.player.findMany({ orderBy: { abp: 'desc' }, take: 10, select: { id: true, name: true, points: true, abp: true, dbp: true, allBp: true, alliance: { select: { name: true } } } }),
+      prisma.player.findMany({ orderBy: { dbp: 'desc' }, take: 10, select: { id: true, name: true, points: true, abp: true, dbp: true, allBp: true, alliance: { select: { name: true } } } }),
+      prisma.player.findMany({ orderBy: { allBp: 'desc' }, take: 10, select: { id: true, name: true, points: true, abp: true, dbp: true, allBp: true, alliance: { select: { name: true } } } }),
       
-      // Alliances
-      prisma.alliance.findMany({ cacheStrategy: { ttl: 600, swr: 60 }, orderBy: { points: 'desc' }, take: 10, select: { id: true, name: true, points: true, abp: true, dbp: true } }),
-      prisma.alliance.findMany({ cacheStrategy: { ttl: 600, swr: 60 }, orderBy: { abp: 'desc' }, take: 10, select: { id: true, name: true, points: true, abp: true, dbp: true } }),
-      prisma.alliance.findMany({ cacheStrategy: { ttl: 600, swr: 60 }, orderBy: { dbp: 'desc' }, take: 10, select: { id: true, name: true, points: true, abp: true, dbp: true } }),
+      // Alliances Top 10s
+      prisma.alliance.findMany({ orderBy: { points: 'desc' }, take: 10, select: { id: true, name: true, points: true, abp: true, dbp: true, allBp: true } }),
+      prisma.alliance.findMany({ orderBy: { abp: 'desc' }, take: 10, select: { id: true, name: true, points: true, abp: true, dbp: true, allBp: true } }),
+      prisma.alliance.findMany({ orderBy: { dbp: 'desc' }, take: 10, select: { id: true, name: true, points: true, abp: true, dbp: true, allBp: true } }),
+      prisma.alliance.findMany({ orderBy: { allBp: 'desc' }, take: 10, select: { id: true, name: true, points: true, abp: true, dbp: true, allBp: true } }),
       
       // Conquests (last 50)
       prisma.conquest.findMany({
-        cacheStrategy: { ttl: 600, swr: 60 },
         orderBy: { timestamp: 'desc' },
         take: 50
       }),
 
-      // History for gainers (last 3 hours just to be safe)
+      // 24h Momentum History
       prisma.playerHistory.findMany({
-        cacheStrategy: { ttl: 600, swr: 60 },
-        where: { timestamp: { gte: new Date(Date.now() - 3 * 60 * 60 * 1000) } }
+        where: { timestamp: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) } }
       }),
       prisma.allianceHistory.findMany({
-        cacheStrategy: { ttl: 600, swr: 60 },
-        where: { timestamp: { gte: new Date(Date.now() - 3 * 60 * 60 * 1000) } }
+        where: { timestamp: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) } }
       })
     ]);
 
-    // To get names for conquests, we need to fetch the relevant entities
+    // Format Conquests
     const playerIds = new Set();
     const allianceIds = new Set();
     const townIds = new Set();
@@ -54,9 +53,9 @@ export async function GET() {
     });
 
     const [playersMapData, alliancesMapData, townsMapData] = await Promise.all([
-      prisma.player.findMany({ cacheStrategy: { ttl: 600, swr: 60 }, where: { id: { in: Array.from(playerIds) } }, select: { id: true, name: true } }),
-      prisma.alliance.findMany({ cacheStrategy: { ttl: 600, swr: 60 }, where: { id: { in: Array.from(allianceIds) } }, select: { id: true, name: true } }),
-      prisma.town.findMany({ cacheStrategy: { ttl: 600, swr: 60 }, where: { id: { in: Array.from(townIds) } }, select: { id: true, name: true } })
+      prisma.player.findMany({ where: { id: { in: Array.from(playerIds) } }, select: { id: true, name: true } }),
+      prisma.alliance.findMany({ where: { id: { in: Array.from(allianceIds) } }, select: { id: true, name: true } }),
+      prisma.town.findMany({ where: { id: { in: Array.from(townIds) } }, select: { id: true, name: true } })
     ]);
 
     const playerMap = new Map(playersMapData.map(p => [p.id, p.name]));
@@ -74,31 +73,31 @@ export async function GET() {
       newAlliance: c.newAllianceId ? allianceMap.get(c.newAllianceId) : 'None'
     }));
 
-    // Process Gainers
-    // Group by ID, sum deltas
+    // Process 24h Gainers (Momentum)
     const playerGains = {};
-    recentPlayerHistory.forEach(h => {
-      if (!playerGains[h.playerId]) playerGains[h.playerId] = { pts: 0, abp: 0, dbp: 0 };
+    historyPlayers24h.forEach(h => {
+      if (!playerGains[h.playerId]) playerGains[h.playerId] = { pts: 0, abp: 0, dbp: 0, allBp: 0 };
       playerGains[h.playerId].pts += (h.newPoints - h.oldPoints);
       playerGains[h.playerId].abp += h.abpDelta;
       playerGains[h.playerId].dbp += h.dbpDelta;
+      playerGains[h.playerId].allBp += h.allBpDelta;
     });
 
     const allianceGains = {};
-    recentAllianceHistory.forEach(h => {
-      if (!allianceGains[h.allianceId]) allianceGains[h.allianceId] = { pts: 0, abp: 0, dbp: 0 };
+    historyAlliances24h.forEach(h => {
+      if (!allianceGains[h.allianceId]) allianceGains[h.allianceId] = { pts: 0, abp: 0, dbp: 0, allBp: 0 };
       allianceGains[h.allianceId].pts += (h.newPoints - h.oldPoints);
       allianceGains[h.allianceId].abp += h.abpDelta;
       allianceGains[h.allianceId].dbp += h.dbpDelta;
+      allianceGains[h.allianceId].allBp += h.allBpDelta;
     });
 
-    // To get names for top gainers, fetch them
     const gainerPIds = Object.keys(playerGains).map(Number);
     const gainerAIds = Object.keys(allianceGains).map(Number);
 
     const [gainerPlayers, gainerAlliances] = await Promise.all([
-      prisma.player.findMany({ cacheStrategy: { ttl: 600, swr: 60 }, where: { id: { in: gainerPIds } }, select: { id: true, name: true, alliance: { select: { name: true } } } }),
-      prisma.alliance.findMany({ cacheStrategy: { ttl: 600, swr: 60 }, where: { id: { in: gainerAIds } }, select: { id: true, name: true } })
+      prisma.player.findMany({ where: { id: { in: gainerPIds } }, select: { id: true, name: true, points: true, abp: true, dbp: true, allBp: true, alliance: { select: { name: true } } } }),
+      prisma.alliance.findMany({ where: { id: { in: gainerAIds } }, select: { id: true, name: true, points: true, abp: true, dbp: true, allBp: true } })
     ]);
 
     const gpMap = new Map(gainerPlayers.map(p => [p.id, p]));
@@ -106,32 +105,39 @@ export async function GET() {
 
     const formatGainerList = (gainsDict, entityMap, sortKey) => {
       return Object.entries(gainsDict)
-        .map(([id, gains]) => ({
-          id: parseInt(id),
-          entity: entityMap.get(parseInt(id)),
-          ...gains
-        }))
-        .filter(item => item.entity) // Ensure entity exists
-        .sort((a, b) => b[sortKey] - a[sortKey])
+        .map(([id, gains]) => {
+          const entity = entityMap.get(parseInt(id));
+          if (!entity) return null;
+          // Return an object that looks like the top 10 models, but with a special `momentum` value
+          return {
+            ...entity, // include name, absolute points, etc.
+            momentum: gains[sortKey]
+          };
+        })
+        .filter(item => item !== null)
+        .sort((a, b) => b.momentum - a.momentum)
         .slice(0, 10);
     };
 
+    const topPlayersMomentum = formatGainerList(playerGains, gpMap, 'pts');
+    const topAlliancesMomentum = formatGainerList(allianceGains, gaMap, 'pts');
+
     return NextResponse.json({
-      topPlayers: { pts: topPlayersPts, abp: topPlayersABP, dbp: topPlayersDBP },
-      topAlliances: { pts: topAlliancesPts, abp: topAlliancesABP, dbp: topAlliancesDBP },
+      players: {
+        pts: topPlayersPts,
+        abp: topPlayersABP,
+        dbp: topPlayersDBP,
+        allbp: topPlayersAllBP,
+        momentum: topPlayersMomentum
+      },
+      alliances: {
+        pts: topAlliancesPts,
+        abp: topAlliancesABP,
+        dbp: topAlliancesDBP,
+        allbp: topAlliancesAllBP,
+        momentum: topAlliancesMomentum
+      },
       conquests: enrichedConquests,
-      gainers: {
-        players: {
-          pts: formatGainerList(playerGains, gpMap, 'pts'),
-          abp: formatGainerList(playerGains, gpMap, 'abp'),
-          dbp: formatGainerList(playerGains, gpMap, 'dbp')
-        },
-        alliances: {
-          pts: formatGainerList(allianceGains, gaMap, 'pts'),
-          abp: formatGainerList(allianceGains, gaMap, 'abp'),
-          dbp: formatGainerList(allianceGains, gaMap, 'dbp')
-        }
-      }
     });
 
   } catch (error) {
