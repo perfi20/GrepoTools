@@ -24,7 +24,27 @@ export async function GET(request) {
 
   try {
     const baseline = getBaselineTime();
+    const windowBStart = new Date(baseline.getTime() - 24 * 60 * 60 * 1000);
+    const windowBEnd = baseline;
     let results = [];
+
+    const calculateGains = (history, idKey) => {
+      const gains = {};
+      history.forEach(h => {
+        const id = h[idKey];
+        if (!gains[id]) gains[id] = { pts: 0, abp: 0, dbp: 0 };
+        gains[id].pts += (h.newPoints - h.oldPoints);
+        gains[id].abp += h.abpDelta;
+        gains[id].dbp += h.dbpDelta;
+      });
+      return gains;
+    };
+
+    const calcTrend = (valA, valB) => {
+      if (valB === 0) return valA > 0 ? 100 : 0;
+      let trend = ((valA - valB) / Math.abs(valB)) * 100;
+      return Math.round(Math.max(-100, Math.min(100, trend)));
+    };
 
     if (type === 'player') {
       const players = await prisma.player.findMany({
@@ -35,23 +55,28 @@ export async function GET(request) {
 
       if (players.length > 0) {
         const pIds = players.map(p => p.id);
-        const history = await prisma.playerHistory.findMany({
-          where: { playerId: { in: pIds }, timestamp: { gte: baseline } }
-        });
+        const [historyA, historyB] = await Promise.all([
+          prisma.playerHistory.findMany({ where: { playerId: { in: pIds }, timestamp: { gte: baseline } } }),
+          prisma.playerHistory.findMany({ where: { playerId: { in: pIds }, timestamp: { gte: windowBStart, lt: windowBEnd } } })
+        ]);
 
-        const gains = {};
-        history.forEach(h => {
-          if (!gains[h.playerId]) gains[h.playerId] = { pts: 0, abp: 0, dbp: 0 };
-          gains[h.playerId].pts += (h.newPoints - h.oldPoints);
-          gains[h.playerId].abp += h.abpDelta;
-          gains[h.playerId].dbp += h.dbpDelta;
-        });
+        const gainsA = calculateGains(historyA, 'playerId');
+        const gainsB = calculateGains(historyB, 'playerId');
 
         results = players.map(p => ({
           ...p,
-          momentumPts: gains[p.id]?.pts || 0,
-          momentumAbp: gains[p.id]?.abp || 0,
-          momentumDbp: gains[p.id]?.dbp || 0,
+          momentumPts: gainsA[p.id]?.pts || 0,
+          momentumAbp: gainsA[p.id]?.abp || 0,
+          momentumDbp: gainsA[p.id]?.dbp || 0,
+          trendPts: calcTrend(gainsA[p.id]?.pts || 0, gainsB[p.id]?.pts || 0),
+          trendAbp: calcTrend(gainsA[p.id]?.abp || 0, gainsB[p.id]?.abp || 0),
+          trendDbp: calcTrend(gainsA[p.id]?.dbp || 0, gainsB[p.id]?.dbp || 0),
+          gainsAPts: gainsA[p.id]?.pts || 0,
+          gainsAAbp: gainsA[p.id]?.abp || 0,
+          gainsADbp: gainsA[p.id]?.dbp || 0,
+          gainsBPts: gainsB[p.id]?.pts || 0,
+          gainsBAbp: gainsB[p.id]?.abp || 0,
+          gainsBDbp: gainsB[p.id]?.dbp || 0,
         }));
       }
     } else {
@@ -63,23 +88,28 @@ export async function GET(request) {
 
       if (alliances.length > 0) {
         const aIds = alliances.map(a => a.id);
-        const history = await prisma.allianceHistory.findMany({
-          where: { allianceId: { in: aIds }, timestamp: { gte: baseline } }
-        });
+        const [historyA, historyB] = await Promise.all([
+          prisma.allianceHistory.findMany({ where: { allianceId: { in: aIds }, timestamp: { gte: baseline } } }),
+          prisma.allianceHistory.findMany({ where: { allianceId: { in: aIds }, timestamp: { gte: windowBStart, lt: windowBEnd } } })
+        ]);
 
-        const gains = {};
-        history.forEach(h => {
-          if (!gains[h.allianceId]) gains[h.allianceId] = { pts: 0, abp: 0, dbp: 0 };
-          gains[h.allianceId].pts += (h.newPoints - h.oldPoints);
-          gains[h.allianceId].abp += h.abpDelta;
-          gains[h.allianceId].dbp += h.dbpDelta;
-        });
+        const gainsA = calculateGains(historyA, 'allianceId');
+        const gainsB = calculateGains(historyB, 'allianceId');
 
         results = alliances.map(a => ({
           ...a,
-          momentumPts: gains[a.id]?.pts || 0,
-          momentumAbp: gains[a.id]?.abp || 0,
-          momentumDbp: gains[a.id]?.dbp || 0,
+          momentumPts: gainsA[a.id]?.pts || 0,
+          momentumAbp: gainsA[a.id]?.abp || 0,
+          momentumDbp: gainsA[a.id]?.dbp || 0,
+          trendPts: calcTrend(gainsA[a.id]?.pts || 0, gainsB[a.id]?.pts || 0),
+          trendAbp: calcTrend(gainsA[a.id]?.abp || 0, gainsB[a.id]?.abp || 0),
+          trendDbp: calcTrend(gainsA[a.id]?.dbp || 0, gainsB[a.id]?.dbp || 0),
+          gainsAPts: gainsA[a.id]?.pts || 0,
+          gainsAAbp: gainsA[a.id]?.abp || 0,
+          gainsADbp: gainsA[a.id]?.dbp || 0,
+          gainsBPts: gainsB[a.id]?.pts || 0,
+          gainsBAbp: gainsB[a.id]?.abp || 0,
+          gainsBDbp: gainsB[a.id]?.dbp || 0,
         }));
       }
     }

@@ -101,6 +101,35 @@ export default function ScoreboardDashboard() {
     }
   }, [playerSearch]);
 
+  // Fetch missing trends for pinned items dynamically
+  useEffect(() => {
+    const fetchMissingTrends = async (items, type, setList) => {
+      const missing = items.filter(i => i.trendPts === undefined && !i._isFetchingTrend);
+      if (missing.length === 0) return;
+
+      // Mark as fetching to avoid infinite loops
+      setList(prev => prev.map(p => missing.find(m => m.id === p.id) ? { ...p, _isFetchingTrend: true } : p));
+
+      for (const item of missing) {
+        try {
+          const res = await fetch(`/api/world/momentum?q=${encodeURIComponent(item.name)}&type=${type}`);
+          const d = await res.json();
+          const match = (d.results || []).find(r => r.id === item.id);
+          if (match) {
+            setList(prev => prev.map(p => p.id === match.id ? { ...p, ...match, _isFetchingTrend: false } : p));
+          } else {
+             setList(prev => prev.map(p => p.id === item.id ? { ...p, _isFetchingTrend: false, trendPts: 0, gainsAPts: 0, gainsBPts: 0 } : p));
+          }
+        } catch(e) {
+          setList(prev => prev.map(p => p.id === item.id ? { ...p, _isFetchingTrend: false } : p));
+        }
+      }
+    };
+
+    fetchMissingTrends(pinnedPlayers, 'player', setPinnedPlayers);
+    fetchMissingTrends(pinnedAlliances, 'alliance', setPinnedAlliances);
+  }, [pinnedPlayers, pinnedAlliances]);
+
   // Helper to handle Chart specific searches
   const handleChartSearch = (chartKey, query, type) => {
     setChartSearches(prev => ({ ...prev, [chartKey]: query }));
@@ -205,23 +234,39 @@ export default function ScoreboardDashboard() {
     });
   };
 
-  const getTrendPill = (trendValue) => {
+  const getTrendPill = (item, metric) => {
+    if (item._isFetchingTrend) {
+      return (
+        <span style={{ display: 'flex', alignItems: 'center', padding: '2px 6px', color: '#a855f7' }}>
+          <Loader2 size={12} className="animate-spin" />
+        </span>
+      );
+    }
+
+    let trendValue, gainsA, gainsB;
+    if (metric === 'pts') { trendValue = item.trendPts; gainsA = item.gainsAPts; gainsB = item.gainsBPts; }
+    if (metric === 'abp') { trendValue = item.trendAbp; gainsA = item.gainsAAbp; gainsB = item.gainsBAbp; }
+    if (metric === 'dbp') { trendValue = item.trendDbp; gainsA = item.gainsADbp; gainsB = item.gainsBDbp; }
+
     if (trendValue === undefined || trendValue === null) return null;
+    
+    const tooltip = `Daily Gain vs Yesterday: +${formatNumber(gainsA)} (vs +${formatNumber(gainsB)} yesterday)`;
+
     if (trendValue > 0) {
       return (
-        <span style={{ display: 'flex', alignItems: 'center', fontSize: '11px', fontWeight: 'bold', color: '#4ade80', background: 'rgba(74, 222, 128, 0.1)', padding: '2px 6px', borderRadius: '4px' }}>
+        <span title={tooltip} style={{ display: 'flex', alignItems: 'center', fontSize: '11px', fontWeight: 'bold', color: '#4ade80', background: 'rgba(74, 222, 128, 0.1)', padding: '2px 6px', borderRadius: '4px', cursor: 'help' }}>
           <ArrowUpRight size={12} /> {trendValue}%
         </span>
       );
     } else if (trendValue < 0) {
       return (
-        <span style={{ display: 'flex', alignItems: 'center', fontSize: '11px', fontWeight: 'bold', color: '#f87171', background: 'rgba(248, 113, 113, 0.1)', padding: '2px 6px', borderRadius: '4px' }}>
+        <span title={tooltip} style={{ display: 'flex', alignItems: 'center', fontSize: '11px', fontWeight: 'bold', color: '#f87171', background: 'rgba(248, 113, 113, 0.1)', padding: '2px 6px', borderRadius: '4px', cursor: 'help' }}>
           <ArrowDownRight size={12} /> {Math.abs(trendValue)}%
         </span>
       );
     } else {
       return (
-        <span style={{ display: 'flex', alignItems: 'center', fontSize: '11px', fontWeight: 'bold', color: '#94a3b8', background: 'rgba(148, 163, 184, 0.1)', padding: '2px 6px', borderRadius: '4px' }}>
+        <span title={tooltip} style={{ display: 'flex', alignItems: 'center', fontSize: '11px', fontWeight: 'bold', color: '#94a3b8', background: 'rgba(148, 163, 184, 0.1)', padding: '2px 6px', borderRadius: '4px', cursor: 'help' }}>
           <Minus size={12} /> 0%
         </span>
       );
@@ -230,12 +275,9 @@ export default function ScoreboardDashboard() {
 
   const renderSidebarItem = (item, metric, isAlliance, index, isPinned = false) => {
     let mainValue = item[metric];
-    let trend = null;
 
-    if (metric === 'pts') { mainValue = item.points; trend = item.trendPts; }
-    if (metric === 'abp') { trend = item.trendAbp; }
-    if (metric === 'dbp') { trend = item.trendDbp; }
-    if (metric === 'allbp') { mainValue = item.allBp; } // no trend for allbp explicitly
+    if (metric === 'pts') { mainValue = item.points; }
+    if (metric === 'allbp') { mainValue = item.allBp; }
     if (metric === 'conquests' || metric === 'losses') { mainValue = item.count; }
 
     return (
@@ -282,7 +324,7 @@ export default function ScoreboardDashboard() {
 
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', flexShrink: 0 }}>
           <div style={{ fontWeight: 'bold', fontSize: '15px', display: 'flex', alignItems: 'center', gap: '6px', color: getMetricColorHex(metric) }}>
-            {getTrendPill(trend)}
+            {getTrendPill(item, metric)}
             {formatNumber(mainValue)}
             {getMetricIcon(metric, 14, true)}
           </div>
@@ -458,16 +500,18 @@ export default function ScoreboardDashboard() {
         </div>
 
         {/* Chart Search Bar */}
-        <div style={{ position: 'relative', marginTop: '8px', padding: '0 12px', flexShrink: 0 }}>
-          <div style={{ position: 'absolute', left: '20px', top: '50%', transform: 'translateY(-50%)' }}><Search size={12} color="#64748b" /></div>
-          <input 
-            type="text" 
-            placeholder={`Search ${entityGroup}...`}
-            className="input-field"
-            style={{ width: '100%', paddingLeft: '28px', paddingRight: '12px', paddingTop: '6px', paddingBottom: '6px', boxSizing: 'border-box', fontSize: '12px', background: 'rgba(0,0,0,0.3)', borderColor: 'transparent' }}
-            value={chartSearches[searchKey]}
-            onChange={e => handleChartSearch(searchKey, e.target.value, entityGroup === 'alliances' ? 'alliance' : 'player')}
-          />
+        <div style={{ position: 'relative', marginTop: '8px', padding: '0 12px', flexShrink: 0, display: 'flex', justifyContent: 'center' }}>
+          <div style={{ width: '80%', position: 'relative' }}>
+            <div style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)' }}><Search size={12} color="#64748b" /></div>
+            <input 
+              type="text" 
+              placeholder={`Search ${entityGroup}...`}
+              className="input-field"
+              style={{ width: '100%', paddingLeft: '28px', paddingRight: '12px', paddingTop: '6px', paddingBottom: '6px', boxSizing: 'border-box', fontSize: '12px', background: 'rgba(0,0,0,0.3)', borderColor: 'transparent', textAlign: 'center' }}
+              value={chartSearches[searchKey]}
+              onChange={e => handleChartSearch(searchKey, e.target.value, entityGroup === 'alliances' ? 'alliance' : 'player')}
+            />
+          </div>
         </div>
       </div>
     );

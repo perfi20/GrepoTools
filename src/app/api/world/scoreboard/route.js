@@ -111,7 +111,13 @@ export async function GET() {
           ...e,
           trendPts: calcTrend(gainsA[e.id]?.pts || 0, gainsB[e.id]?.pts || 0),
           trendAbp: calcTrend(gainsA[e.id]?.abp || 0, gainsB[e.id]?.abp || 0),
-          trendDbp: calcTrend(gainsA[e.id]?.dbp || 0, gainsB[e.id]?.dbp || 0)
+          trendDbp: calcTrend(gainsA[e.id]?.dbp || 0, gainsB[e.id]?.dbp || 0),
+          gainsAPts: gainsA[e.id]?.pts || 0,
+          gainsAAbp: gainsA[e.id]?.abp || 0,
+          gainsADbp: gainsA[e.id]?.dbp || 0,
+          gainsBPts: gainsB[e.id]?.pts || 0,
+          gainsBAbp: gainsB[e.id]?.abp || 0,
+          gainsBDbp: gainsB[e.id]?.dbp || 0,
         }));
     };
 
