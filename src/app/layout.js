@@ -1,5 +1,6 @@
 import './globals.css';
 import Link from 'next/link';
+import SyncStatus from './components/SyncStatus';
 
 export const metadata = {
   title: 'Grepolis Toolkit',
@@ -12,7 +13,10 @@ export default function RootLayout({ children }) {
       <body>
         <nav className="navbar">
           <div className="container flex justify-between items-center" style={{ padding: 0 }}>
-            <h1 className="gradient-text" style={{ margin: 0, fontSize: '1.5rem' }}>GrepoTools</h1>
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <h1 className="gradient-text" style={{ margin: 0, fontSize: '1.5rem' }}>GrepoTools</h1>
+              <SyncStatus />
+            </div>
             <div className="nav-links">
               <Link href="/" className="nav-link">Dashboard</Link>
               <Link href="/reports" className="nav-link">Reports</Link>

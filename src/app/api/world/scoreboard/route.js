@@ -108,19 +108,15 @@ export async function GET() {
         .map(([id, gains]) => {
           const entity = entityMap.get(parseInt(id));
           if (!entity) return null;
-          // Return an object that looks like the top 10 models, but with a special `momentum` value
           return {
-            ...entity, // include name, absolute points, etc.
+            ...entity,
             momentum: gains[sortKey]
           };
         })
-        .filter(item => item !== null)
+        .filter(item => item !== null && item.momentum > 0)
         .sort((a, b) => b.momentum - a.momentum)
-        .slice(0, 10);
+        .slice(0, 15);
     };
-
-    const topPlayersMomentum = formatGainerList(playerGains, gpMap, 'pts');
-    const topAlliancesMomentum = formatGainerList(allianceGains, gaMap, 'pts');
 
     return NextResponse.json({
       players: {
@@ -128,14 +124,18 @@ export async function GET() {
         abp: topPlayersABP,
         dbp: topPlayersDBP,
         allbp: topPlayersAllBP,
-        momentum: topPlayersMomentum
+        momentumPts: formatGainerList(playerGains, gpMap, 'pts'),
+        momentumAbp: formatGainerList(playerGains, gpMap, 'abp'),
+        momentumDbp: formatGainerList(playerGains, gpMap, 'dbp')
       },
       alliances: {
         pts: topAlliancesPts,
         abp: topAlliancesABP,
         dbp: topAlliancesDBP,
         allbp: topAlliancesAllBP,
-        momentum: topAlliancesMomentum
+        momentumPts: formatGainerList(allianceGains, gaMap, 'pts'),
+        momentumAbp: formatGainerList(allianceGains, gaMap, 'abp'),
+        momentumDbp: formatGainerList(allianceGains, gaMap, 'dbp')
       },
       conquests: enrichedConquests,
     });
