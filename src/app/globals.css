@@ -261,6 +261,6 @@ a:hover {
 }
 
 /* Remove default focus outline from Recharts */
-.recharts-wrapper {
+.recharts-wrapper, .recharts-wrapper *:focus, .recharts-surface:focus {
   outline: none !important;
 }
