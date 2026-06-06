@@ -259,3 +259,8 @@ a:hover {
   scrollbar-width: thin;
   scrollbar-color: rgba(148, 163, 184, 0.3) rgba(15, 23, 42, 0.3);
 }
+
+/* Remove default focus outline from Recharts */
+.recharts-wrapper {
+  outline: none !important;
+}

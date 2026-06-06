@@ -6,7 +6,7 @@ import {
   Activity, ArrowRight, Search, Zap, Crosshair, Users, Target, X, Pin, Loader2,
   ArrowUpRight, ArrowDownRight, Minus, Skull
 } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, LabelList } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, LabelList, AreaChart, Area } from 'recharts';
 
 export default function ScoreboardDashboard() {
   const [data, setData] = useState(null);
@@ -26,6 +26,10 @@ export default function ScoreboardDashboard() {
   const [playerMetric, setPlayerMetric] = useState('pts');
   
   const [selectedEntity, setSelectedEntity] = useState(null);
+  const [selectedHourlyEntity, setSelectedHourlyEntity] = useState(null);
+  const [hourlyData, setHourlyData] = useState([]);
+  const [hourlyLoading, setHourlyLoading] = useState(false);
+  const [hourlyViewType, setHourlyViewType] = useState('bar');
 
   // Pinned Entities
   const [pinnedPlayers, setPinnedPlayers] = useState([]);
@@ -460,12 +464,48 @@ export default function ScoreboardDashboard() {
     return filtered;
   };
 
+  const openHourlyModal = (dataPoint, entityGroup, metricKey, colorHex) => {
+    const type = entityGroup === 'alliances' ? 'alliance' : 'player';
+    setSelectedHourlyEntity({ ...dataPoint, type, metricKey, colorHex });
+    setHourlyLoading(true);
+    fetch(`/api/world/history/hourly?id=${dataPoint.id}&type=${type}`)
+      .then(res => res.json())
+      .then(d => {
+         setHourlyData(d.history || []);
+         setHourlyLoading(false);
+      })
+      .catch(() => setHourlyLoading(false));
+  };
+
   const renderChartPanel = (title, icon, entityGroup, metricKey, searchKey, dataKeyMapping, colorHex) => {
     const isSearching = chartIsSearching[searchKey];
     const chartData = prepareChartData(entityGroup, metricKey, searchKey, dataKeyMapping);
     const hasData = chartData && chartData.length > 0;
     
     const internalHeight = Math.max(100, chartData.length * 36);
+
+    const ClickableYAxisTick = ({ x, y, payload }) => {
+      return (
+        <text
+          x={x}
+          y={y}
+          dy={4}
+          textAnchor="end"
+          fill="#94a3b8"
+          fontSize={11}
+          style={{ cursor: 'pointer' }}
+          onClick={(e) => {
+            e.stopPropagation();
+            const entity = chartData.find(d => d.name === payload.value);
+            if (entity) setSelectedEntity({ type: entityGroup === 'alliances' ? 'alliance' : 'player', data: entity });
+          }}
+          onMouseEnter={(e) => e.target.style.fill = '#f1f5f9'}
+          onMouseLeave={(e) => e.target.style.fill = '#94a3b8'}
+        >
+          {payload.value}
+        </text>
+      );
+    };
 
     return (
       <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', height: '280px', padding: '16px' }}>
@@ -490,9 +530,16 @@ export default function ScoreboardDashboard() {
                 <BarChart data={chartData} layout="vertical" margin={{ top: 0, right: 60, left: 0, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" horizontal={false} />
                   <XAxis type="number" hide />
-                  <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 11 }} width={100} />
+                  <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={<ClickableYAxisTick />} width={100} />
                   <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
-                  <Bar dataKey="momentum" radius={[0, 4, 4, 0]} maxBarSize={16}>
+                  <Bar 
+                    dataKey="momentum" 
+                    radius={[0, 4, 4, 0]} 
+                    maxBarSize={16}
+                    isAnimationActive={false}
+                    onClick={(dataPoint) => openHourlyModal(dataPoint, entityGroup, metricKey, colorHex)}
+                    style={{ cursor: 'pointer' }}
+                  >
                     {chartData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={colorHex} fillOpacity={0.9 - (index * 0.05)} />
                     ))}
@@ -720,6 +767,92 @@ export default function ScoreboardDashboard() {
               <Activity size={32} color="#3b82f6" style={{ opacity: 0.5, zIndex: 1 }} />
               <span style={{ fontWeight: '600', color: '#94a3b8', zIndex: 1 }}>Historical data assembling...</span>
               <span style={{ fontSize: '12px', color: '#94a3b8', zIndex: 1 }}>(Check back after a few sync cycles)</span>
+            </div>
+          </div>
+        </div>
+      {/* HOURLY VELOCITY MODAL */}
+      {selectedHourlyEntity && (
+        <div 
+          style={{ position: 'fixed', inset: 0, zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(11, 16, 30, 0.8)', backdropFilter: 'blur(8px)' }}
+          onClick={(e) => { if(e.target === e.currentTarget) setSelectedHourlyEntity(null) }}
+        >
+          <div className="glass-panel" style={{ width: '800px', maxWidth: '95vw', position: 'relative' }}>
+            <button onClick={() => setSelectedHourlyEntity(null)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'transparent', border: 'none', cursor: 'pointer', color: '#94a3b8' }}><X size={24} /></button>
+            <div style={{ marginBottom: '24px' }}>
+              <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: 'white', margin: '0 0 4px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Clock size={24} color={selectedHourlyEntity.colorHex} /> Hourly Velocity: {selectedHourlyEntity.name}
+              </h2>
+              <div style={{ color: '#94a3b8', fontSize: '14px' }}>Daily gains breakdown since 2:00 AM</div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+              <button 
+                onClick={() => setHourlyViewType('bar')}
+                style={{ padding: '6px 12px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.1)', background: hourlyViewType === 'bar' ? 'rgba(59, 130, 246, 0.2)' : 'transparent', color: hourlyViewType === 'bar' ? 'white' : '#94a3b8', cursor: 'pointer' }}
+              >Bar Chart (Hourly Deltas)</button>
+              <button 
+                onClick={() => setHourlyViewType('area')}
+                style={{ padding: '6px 12px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.1)', background: hourlyViewType === 'area' ? 'rgba(59, 130, 246, 0.2)' : 'transparent', color: hourlyViewType === 'area' ? 'white' : '#94a3b8', cursor: 'pointer' }}
+              >Area Chart (Cumulative Growth)</button>
+            </div>
+
+            <div style={{ height: '300px', width: '100%', position: 'relative' }}>
+              {hourlyLoading ? (
+                 <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                   <Loader2 size={32} color={selectedHourlyEntity.colorHex} className="animate-spin" />
+                 </div>
+              ) : hourlyData.length === 0 ? (
+                 <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b' }}>
+                   No hourly data recorded yet today.
+                 </div>
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  {hourlyViewType === 'bar' ? (
+                    <BarChart data={hourlyData} margin={{ top: 20, right: 20, left: 0, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
+                      <XAxis dataKey="time" stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} />
+                      <YAxis stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} tickFormatter={formatNumber} />
+                      <Tooltip 
+                        contentStyle={{ backgroundColor: 'rgba(15, 23, 42, 0.95)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: 'white' }}
+                        itemStyle={{ color: selectedHourlyEntity.colorHex, fontWeight: 'bold' }}
+                        formatter={(val) => [`+${formatNumber(val)}`, 'Gain']}
+                      />
+                      <Bar 
+                        dataKey={selectedHourlyEntity.metricKey.toLowerCase().includes('abp') ? 'abpDelta' : selectedHourlyEntity.metricKey.toLowerCase().includes('dbp') ? 'dbpDelta' : 'ptsDelta'} 
+                        fill={selectedHourlyEntity.colorHex} 
+                        radius={[4, 4, 0, 0]} 
+                        isAnimationActive={false}
+                      />
+                    </BarChart>
+                  ) : (
+                    <AreaChart data={hourlyData} margin={{ top: 20, right: 20, left: 0, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="colorGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor={selectedHourlyEntity.colorHex} stopOpacity={0.5}/>
+                          <stop offset="95%" stopColor={selectedHourlyEntity.colorHex} stopOpacity={0}/>
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
+                      <XAxis dataKey="time" stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} />
+                      <YAxis stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} tickFormatter={formatNumber} />
+                      <Tooltip 
+                        contentStyle={{ backgroundColor: 'rgba(15, 23, 42, 0.95)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: 'white' }}
+                        itemStyle={{ color: selectedHourlyEntity.colorHex, fontWeight: 'bold' }}
+                        formatter={(val) => [`${formatNumber(val)}`, 'Total']}
+                      />
+                      <Area 
+                        type="monotone" 
+                        dataKey={selectedHourlyEntity.metricKey.toLowerCase().includes('abp') ? 'cumulativeAbp' : selectedHourlyEntity.metricKey.toLowerCase().includes('dbp') ? 'cumulativeDbp' : 'cumulativePts'} 
+                        stroke={selectedHourlyEntity.colorHex} 
+                        strokeWidth={3}
+                        fillOpacity={1} 
+                        fill="url(#colorGradient)" 
+                        isAnimationActive={false}
+                      />
+                    </AreaChart>
+                  )}
+                </ResponsiveContainer>
+              )}
             </div>
           </div>
         </div>
