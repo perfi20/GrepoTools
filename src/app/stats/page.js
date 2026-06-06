@@ -186,7 +186,7 @@ export default function ScoreboardDashboard() {
       case 'pts': return <Trophy size={size} color={color} />;
       case 'abp': return <Swords size={size} color={color} />;
       case 'dbp': return <Shield size={size} color={color} />;
-      case 'allbp': return <Target size={size} color={color} />;
+      case 'allbp': return <Zap size={size} color={color} />;
       case 'conquests': return <Target size={size} color={color} />;
       case 'losses': return <Skull size={size} color={color} />;
       default: return null;

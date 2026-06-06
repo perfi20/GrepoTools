@@ -275,13 +275,18 @@ export async function GET(request) {
       console.log("Revalidating Next.js cache for /api/world...");
       revalidatePath('/api/world', 'layout');
       
+      console.log("Generating scoreboard cache...");
+      const { generateScoreboardData } = require('@/lib/scoreboard');
+      const scoreboardData = await generateScoreboardData();
+      const scoreboardGzip = zlib.gzipSync(JSON.stringify(scoreboardData)).toString('base64');
+      
       // Update sync metadata
       await prisma.syncMetadata.upsert({
         where: { id: 1 },
-        update: { lastSync: new Date() },
-        create: { id: 1, lastSync: new Date() }
+        update: { lastSync: new Date(), scoreboardCache: scoreboardGzip },
+        create: { id: 1, lastSync: new Date(), scoreboardCache: scoreboardGzip }
       });
-      console.log("Sync metadata updated and cache purged!");
+      console.log("Sync metadata updated, scoreboard cached, and edge cache purged!");
     } catch (e) {
       console.error("Failed to update metadata or purge cache:", e);
     }
