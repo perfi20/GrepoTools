@@ -87,10 +87,15 @@ export async function GET(request) {
     const allianceHistory = [];
     const currentAlliances = await prisma.alliance.findMany();
     const allianceMap = new Map(currentAlliances.map(a => [a.id, a]));
+    const seenAllianceIds = new Set();
 
     for (const row of alliancesRaw) {
       const [idStr, name, pointsStr, townsStr, membersStr, rankStr] = row;
       const id = parseInt(idStr);
+      
+      if (seenAllianceIds.has(id)) continue;
+      seenAllianceIds.add(id);
+
       const points = parseInt(pointsStr);
       const abp = aAttMap.get(id) || 0;
       const dbp = aDefMap.get(id) || 0;
@@ -124,10 +129,15 @@ export async function GET(request) {
     const playerMap = new Map(currentPlayers.map(p => [p.id, p]));
 
     const validAllianceIds = new Set(newAlliances.map(a => a.id));
+    const seenPlayerIds = new Set();
 
     for (const row of playersRaw) {
       const [idStr, name, allianceIdStr, pointsStr, rankStr, townsStr] = row;
       const id = parseInt(idStr);
+      
+      if (seenPlayerIds.has(id)) continue;
+      seenPlayerIds.add(id);
+
       const points = parseInt(pointsStr);
       let allianceId = allianceIdStr ? parseInt(allianceIdStr) : null;
       
@@ -167,10 +177,15 @@ export async function GET(request) {
     const townMap = new Map(currentTowns.map(t => [t.id, t.points]));
 
     const validPlayerIds = new Set(newPlayers.map(p => p.id));
+    const seenTownIds = new Set();
 
     for (const row of townsRaw) {
       const [idStr, playerIdStr, name, xStr, yStr, slotStr, pointsStr] = row;
       const id = parseInt(idStr);
+      
+      if (seenTownIds.has(id)) continue;
+      seenTownIds.add(id);
+
       const points = parseInt(pointsStr);
       let playerId = playerIdStr ? parseInt(playerIdStr) : null;
       
