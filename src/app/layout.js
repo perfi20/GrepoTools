@@ -20,6 +20,7 @@ export default function RootLayout({ children }) {
               <Link href="/snipe" className="nav-link">Snipe Timer</Link>
               <Link href="/world" className="nav-link">World Data</Link>
               <Link href="/map" className="nav-link">World Map</Link>
+              <Link href="/stats" className="nav-link">Scoreboard</Link>
             </div>
           </div>
         </nav>
