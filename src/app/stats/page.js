@@ -770,6 +770,8 @@ export default function ScoreboardDashboard() {
             </div>
           </div>
         </div>
+      )}
+
       {/* HOURLY VELOCITY MODAL */}
       {selectedHourlyEntity && (
         <div 
