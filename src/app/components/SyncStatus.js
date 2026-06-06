@@ -22,7 +22,7 @@ export default function SyncStatus() {
   if (!status) return null;
 
   const minutesAgo = Math.floor((now - status) / 1000 / 60);
-  const nextSyncIn = Math.max(0, 60 - (now.getMinutes() + (now.getSeconds() > 0 ? 1 : 0))); // Rough estimate for hourly cron
+  const nextSyncIn = Math.max(0, 60 - minutesAgo);
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#94a3b8', background: 'rgba(255,255,255,0.05)', padding: '4px 12px', borderRadius: '999px', marginLeft: '16px' }}>

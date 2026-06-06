@@ -219,3 +219,16 @@ a:hover {
   border-top-color: #0f172a !important;
   border-bottom-color: #0f172a !important;
 }
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}

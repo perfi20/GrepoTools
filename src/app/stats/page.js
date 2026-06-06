@@ -3,7 +3,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Trophy, Swords, Shield, TrendingUp, Clock,
-  Activity, ArrowRight, Search, Zap, Crosshair, Users, Target, X, Pin, Loader2
+  Activity, ArrowRight, Search, Zap, Crosshair, Users, Target, X, Pin, Loader2,
+  ArrowUpRight, ArrowDownRight, Minus, Skull
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
@@ -139,7 +140,8 @@ export default function ScoreboardDashboard() {
       case 'abp': return '#ef4444';
       case 'dbp': return '#3b82f6';
       case 'allbp': return '#a855f7';
-      case 'momentum': return '#22c55e';
+      case 'conquests': return '#22c55e';
+      case 'losses': return '#f43f5e';
       default: return '#94a3b8';
     }
   };
@@ -151,7 +153,8 @@ export default function ScoreboardDashboard() {
       case 'abp': return <Swords size={size} color={color} />;
       case 'dbp': return <Shield size={size} color={color} />;
       case 'allbp': return <Target size={size} color={color} />;
-      case 'momentum': return <TrendingUp size={size} color={color} />;
+      case 'conquests': return <Target size={size} color={color} />;
+      case 'losses': return <Skull size={size} color={color} />;
       default: return null;
     }
   };
@@ -162,7 +165,8 @@ export default function ScoreboardDashboard() {
       case 'abp': return 'Attack BP';
       case 'dbp': return 'Defense BP';
       case 'allbp': return 'Combat BP';
-      case 'momentum': return 'Daily Growth';
+      case 'conquests': return 'Daily Conquests';
+      case 'losses': return 'Daily Losses';
       default: return '';
     }
   };
@@ -201,11 +205,38 @@ export default function ScoreboardDashboard() {
     });
   };
 
+  const getTrendPill = (trendValue) => {
+    if (trendValue === undefined || trendValue === null) return null;
+    if (trendValue > 0) {
+      return (
+        <span style={{ display: 'flex', alignItems: 'center', fontSize: '11px', fontWeight: 'bold', color: '#4ade80', background: 'rgba(74, 222, 128, 0.1)', padding: '2px 6px', borderRadius: '4px' }}>
+          <ArrowUpRight size={12} /> {trendValue}%
+        </span>
+      );
+    } else if (trendValue < 0) {
+      return (
+        <span style={{ display: 'flex', alignItems: 'center', fontSize: '11px', fontWeight: 'bold', color: '#f87171', background: 'rgba(248, 113, 113, 0.1)', padding: '2px 6px', borderRadius: '4px' }}>
+          <ArrowDownRight size={12} /> {Math.abs(trendValue)}%
+        </span>
+      );
+    } else {
+      return (
+        <span style={{ display: 'flex', alignItems: 'center', fontSize: '11px', fontWeight: 'bold', color: '#94a3b8', background: 'rgba(148, 163, 184, 0.1)', padding: '2px 6px', borderRadius: '4px' }}>
+          <Minus size={12} /> 0%
+        </span>
+      );
+    }
+  };
+
   const renderSidebarItem = (item, metric, isAlliance, index, isPinned = false) => {
     let mainValue = item[metric];
-    if (metric === 'pts') mainValue = item.points;
-    if (metric === 'allbp') mainValue = item.allBp;
-    if (metric === 'momentum') mainValue = item.momentum || 0;
+    let trend = null;
+
+    if (metric === 'pts') { mainValue = item.points; trend = item.trendPts; }
+    if (metric === 'abp') { trend = item.trendAbp; }
+    if (metric === 'dbp') { trend = item.trendDbp; }
+    if (metric === 'allbp') { mainValue = item.allBp; } // no trend for allbp explicitly
+    if (metric === 'conquests' || metric === 'losses') { mainValue = item.count; }
 
     return (
       <div 
@@ -251,17 +282,18 @@ export default function ScoreboardDashboard() {
 
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', flexShrink: 0 }}>
           <div style={{ fontWeight: 'bold', fontSize: '15px', display: 'flex', alignItems: 'center', gap: '6px', color: getMetricColorHex(metric) }}>
+            {getTrendPill(trend)}
+            {formatNumber(mainValue)}
             {getMetricIcon(metric, 14, true)}
-            {metric === 'momentum' && mainValue > 0 ? '+' : ''}{formatNumber(mainValue)}
           </div>
           
           <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
-            {metric !== 'abp' && metric !== 'allbp' && metric !== 'momentum' && (
+            {metric !== 'abp' && metric !== 'allbp' && metric !== 'conquests' && metric !== 'losses' && (
               <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '10px', color: '#94a3b8' }} title="Attack BP">
                 <Swords size={10} color="#ef4444" /> {formatNumber(item.abp)}
               </div>
             )}
-            {metric !== 'dbp' && metric !== 'allbp' && metric !== 'momentum' && (
+            {metric !== 'dbp' && metric !== 'allbp' && metric !== 'conquests' && metric !== 'losses' && (
               <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '10px', color: '#94a3b8' }} title="Defense BP">
                 <Shield size={10} color="#3b82f6" /> {formatNumber(item.dbp)}
               </div>
@@ -331,7 +363,7 @@ export default function ScoreboardDashboard() {
 
   const renderRankingNav = (currentMetric, setMetric) => (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0', marginBottom: '16px' }}>
-      {['pts', 'abp', 'dbp', 'allbp', 'momentum'].map(m => {
+      {['pts', 'abp', 'dbp', 'allbp', 'conquests', 'losses'].map(m => {
         const isActive = currentMetric === m;
         return (
           <button 
@@ -341,7 +373,7 @@ export default function ScoreboardDashboard() {
               display: 'flex', 
               alignItems: 'center', 
               justifyContent: 'center', 
-              padding: '8px', 
+              padding: '6px', 
               borderRadius: '8px', 
               background: 'transparent',
               border: 'none',
@@ -353,7 +385,7 @@ export default function ScoreboardDashboard() {
             }}
             title={getMetricLabel(m)}
           >
-            {getMetricIcon(m, 24, isActive)}
+            {getMetricIcon(m, 20, isActive)}
             {isActive && (
               <div style={{ position: 'absolute', bottom: '-4px', left: '20%', right: '20%', height: '2px', borderRadius: '2px', background: getMetricColorHex(m) }} />
             )}
@@ -366,8 +398,8 @@ export default function ScoreboardDashboard() {
   // --- CHART RENDERING (6 PANELS) ---
   const prepareChartData = (entityGroup, metricKey, searchKey, dataKeyMapping) => {
     let items = data[entityGroup][metricKey] || [];
-    // Only take top 5
-    let filtered = items.slice(0, 5);
+    // Only take top 15 (user requested 15 entries scrollable)
+    let filtered = items.slice(0, 15);
 
     // If searching, replace or prepend the searched items
     if (chartSearches[searchKey].trim().length >= 2) {
@@ -386,15 +418,18 @@ export default function ScoreboardDashboard() {
     const chartData = prepareChartData(entityGroup, metricKey, searchKey, dataKeyMapping);
     const hasData = chartData && chartData.length > 0;
     
+    // Calculate internal height so it fits ~5 items without scrolling, but scales up to 15 with scrolling.
+    const internalHeight = Math.max(100, chartData.length * 36);
+
     return (
-      <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', height: '260px' }}>
+      <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', height: '280px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: 'white', fontWeight: 'bold', marginBottom: '8px', padding: '0 12px', flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px' }}>
             {icon} {title}
           </div>
         </div>
         
-        <div style={{ flex: 1, paddingRight: '12px', position: 'relative' }}>
+        <div style={{ flex: 1, paddingRight: '4px', position: 'relative', overflowY: 'auto', scrollbarWidth: 'thin' }}>
           {isSearching ? (
              <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: colorHex }}>
                 <Loader2 size={24} className="animate-spin" />
@@ -404,24 +439,26 @@ export default function ScoreboardDashboard() {
               No momentum data.
             </div>
           ) : (
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData} layout="vertical" margin={{ top: 0, right: 10, left: 10, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" horizontal={false} />
-                <XAxis type="number" hide />
-                <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 11 }} width={90} />
-                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
-                <Bar dataKey="momentum" radius={[0, 4, 4, 0]} maxBarSize={20}>
-                  {chartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={colorHex} fillOpacity={0.9 - (index * 0.05)} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+            <div style={{ height: `${internalHeight}px`, minHeight: '100%' }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData} layout="vertical" margin={{ top: 0, right: 10, left: 10, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" horizontal={false} />
+                  <XAxis type="number" hide />
+                  <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 11 }} width={90} />
+                  <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
+                  <Bar dataKey="momentum" radius={[0, 4, 4, 0]} maxBarSize={16}>
+                    {chartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={colorHex} fillOpacity={0.9 - (index * 0.05)} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           )}
         </div>
 
         {/* Chart Search Bar */}
-        <div style={{ position: 'relative', marginTop: '8px', padding: '0 12px' }}>
+        <div style={{ position: 'relative', marginTop: '8px', padding: '0 12px', flexShrink: 0 }}>
           <div style={{ position: 'absolute', left: '20px', top: '50%', transform: 'translateY(-50%)' }}><Search size={12} color="#64748b" /></div>
           <input 
             type="text" 
