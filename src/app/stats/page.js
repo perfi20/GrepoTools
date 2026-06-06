@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Trophy, Swords, Shield, TrendingUp, Clock,
-  Activity, ArrowRight, Search, Zap, Crosshair, Users, Target, X, Pin
+  Activity, ArrowRight, Search, Zap, Crosshair, Users, Target, X, Pin, Loader2
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
@@ -12,8 +12,14 @@ export default function ScoreboardDashboard() {
   const [loading, setLoading] = useState(true);
   
   const [conquestFilter, setConquestFilter] = useState('');
+  
   const [allianceSearch, setAllianceSearch] = useState('');
+  const [allianceIsSearching, setAllianceIsSearching] = useState(false);
+  const [allianceSearchResults, setAllianceSearchResults] = useState([]);
+
   const [playerSearch, setPlayerSearch] = useState('');
+  const [playerIsSearching, setPlayerIsSearching] = useState(false);
+  const [playerSearchResults, setPlayerSearchResults] = useState([]);
 
   const [allianceMetric, setAllianceMetric] = useState('pts');
   const [playerMetric, setPlayerMetric] = useState('pts');
@@ -24,13 +30,21 @@ export default function ScoreboardDashboard() {
   const [pinnedPlayers, setPinnedPlayers] = useState([]);
   const [pinnedAlliances, setPinnedAlliances] = useState([]);
 
-  // Live Chart Toggles
-  const [chartMode, setChartMode] = useState('alliances'); // 'alliances' or 'players'
-  const [chartSearch, setChartSearch] = useState('');
-  const [chartSearchResults, setChartSearchResults] = useState([]);
+  // Chart specific search states
+  const [chartSearches, setChartSearches] = useState({
+    a_pts: '', a_abp: '', a_dbp: '',
+    p_pts: '', p_abp: '', p_dbp: ''
+  });
+  const [chartSearchResults, setChartSearchResults] = useState({
+    a_pts: [], a_abp: [], a_dbp: [],
+    p_pts: [], p_abp: [], p_dbp: []
+  });
+  const [chartIsSearching, setChartIsSearching] = useState({
+    a_pts: false, a_abp: false, a_dbp: false,
+    p_pts: false, p_abp: false, p_dbp: false
+  });
 
   useEffect(() => {
-    // Load pins from localStorage
     try {
       const p = localStorage.getItem('grepoPinnedPlayers');
       const a = localStorage.getItem('grepoPinnedAlliances');
@@ -47,58 +61,68 @@ export default function ScoreboardDashboard() {
       .catch(console.error);
   }, []);
 
-  // Save pins
   useEffect(() => {
     localStorage.setItem('grepoPinnedPlayers', JSON.stringify(pinnedPlayers));
     localStorage.setItem('grepoPinnedAlliances', JSON.stringify(pinnedAlliances));
   }, [pinnedPlayers, pinnedAlliances]);
 
-  // Sidebar Search API Calls (Debounced)
-  const [allianceSearchResults, setAllianceSearchResults] = useState([]);
-  const [playerSearchResults, setPlayerSearchResults] = useState([]);
-
+  // Sidebar Search API (Alliances)
   useEffect(() => {
     if (allianceSearch.length >= 2) {
+      setAllianceIsSearching(true);
       const timer = setTimeout(() => {
         fetch(`/api/world/search?q=${encodeURIComponent(allianceSearch)}`)
           .then(res => res.json())
-          .then(d => setAllianceSearchResults(d.alliances || []))
-          .catch(console.error);
-      }, 300);
+          .then(d => { setAllianceSearchResults(d.alliances || []); setAllianceIsSearching(false); })
+          .catch(() => setAllianceIsSearching(false));
+      }, 400);
       return () => clearTimeout(timer);
     } else {
       setAllianceSearchResults([]);
+      setAllianceIsSearching(false);
     }
   }, [allianceSearch]);
 
+  // Sidebar Search API (Players)
   useEffect(() => {
     if (playerSearch.length >= 2) {
+      setPlayerIsSearching(true);
       const timer = setTimeout(() => {
         fetch(`/api/world/search?q=${encodeURIComponent(playerSearch)}`)
           .then(res => res.json())
-          .then(d => setPlayerSearchResults(d.players || []))
-          .catch(console.error);
-      }, 300);
+          .then(d => { setPlayerSearchResults(d.players || []); setPlayerIsSearching(false); })
+          .catch(() => setPlayerIsSearching(false));
+      }, 400);
       return () => clearTimeout(timer);
     } else {
       setPlayerSearchResults([]);
+      setPlayerIsSearching(false);
     }
   }, [playerSearch]);
 
-  // Chart Search API
-  useEffect(() => {
-    if (chartSearch.length >= 2) {
-      const timer = setTimeout(() => {
-        fetch(`/api/world/search?q=${encodeURIComponent(chartSearch)}`)
+  // Helper to handle Chart specific searches
+  const handleChartSearch = (chartKey, query, type) => {
+    setChartSearches(prev => ({ ...prev, [chartKey]: query }));
+    
+    if (query.length >= 2) {
+      setChartIsSearching(prev => ({ ...prev, [chartKey]: true }));
+      // We debounce manually here by attaching the timeout to the window to avoid complex ref tracking
+      if (window[`timer_${chartKey}`]) clearTimeout(window[`timer_${chartKey}`]);
+      
+      window[`timer_${chartKey}`] = setTimeout(() => {
+        fetch(`/api/world/momentum?q=${encodeURIComponent(query)}&type=${type}`)
           .then(res => res.json())
-          .then(d => setChartSearchResults(chartMode === 'alliances' ? d.alliances : d.players))
-          .catch(console.error);
-      }, 300);
-      return () => clearTimeout(timer);
+          .then(d => {
+            setChartSearchResults(prev => ({ ...prev, [chartKey]: d.results || [] }));
+            setChartIsSearching(prev => ({ ...prev, [chartKey]: false }));
+          })
+          .catch(() => setChartIsSearching(prev => ({ ...prev, [chartKey]: false })));
+      }, 400);
     } else {
-      setChartSearchResults([]);
+      setChartSearchResults(prev => ({ ...prev, [chartKey]: [] }));
+      setChartIsSearching(prev => ({ ...prev, [chartKey]: false }));
     }
-  }, [chartSearch, chartMode]);
+  };
 
 
   const formatNumber = (num) => num ? num.toLocaleString() : '0';
@@ -138,7 +162,7 @@ export default function ScoreboardDashboard() {
       case 'abp': return 'Attack BP';
       case 'dbp': return 'Defense BP';
       case 'allbp': return 'Combat BP';
-      case 'momentum': return '24h Growth';
+      case 'momentum': return 'Daily Growth';
       default: return '';
     }
   };
@@ -258,7 +282,7 @@ export default function ScoreboardDashboard() {
     );
   };
 
-  const renderSidebarList = (entities, metric, search, searchResults, isAlliance = false) => {
+  const renderSidebarList = (entities, metric, search, searchResults, isSearching, isAlliance = false) => {
     let list = entities[metric] || [];
     const pinned = isAlliance ? pinnedAlliances : pinnedPlayers;
 
@@ -266,11 +290,9 @@ export default function ScoreboardDashboard() {
     const pinnedIds = new Set(pinned.map(p => p.id));
     list = list.filter(item => !pinnedIds.has(item.id));
 
-    // If searching, show search results instead of top 10
     if (search.trim().length >= 2) {
       list = searchResults.filter(item => !pinnedIds.has(item.id));
     } else if (search.trim()) {
-       // local filter if < 2
        const lower = search.toLowerCase();
        list = list.filter(e => e.name.toLowerCase().includes(lower));
     }
@@ -280,7 +302,11 @@ export default function ScoreboardDashboard() {
         {pinned.map(item => renderSidebarItem(item, metric, isAlliance, '-', true))}
         {pinned.length > 0 && <div style={{ height: '1px', background: 'rgba(255,255,255,0.1)', margin: '12px 0' }} />}
         
-        {list.length === 0 ? (
+        {isSearching ? (
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '2rem 0', color: '#a855f7' }}>
+            <Loader2 size={24} className="animate-spin" />
+          </div>
+        ) : list.length === 0 ? (
           <div style={{ color: '#64748b', textAlign: 'center', padding: '1rem 0', fontSize: '0.875rem' }}>No results found.</div>
         ) : (
           list.map((item, i) => renderSidebarItem(item, metric, isAlliance, i + 1, false))
@@ -295,7 +321,7 @@ export default function ScoreboardDashboard() {
         <div style={{ backgroundColor: 'rgba(15, 23, 42, 0.95)', border: '1px solid rgba(255,255,255,0.1)', padding: '10px', borderRadius: '8px', color: 'white', backdropFilter: 'blur(10px)', zIndex: 9999 }}>
           <p style={{ fontWeight: 'bold', margin: '0 0 4px 0' }}>{label}</p>
           <p style={{ fontSize: '14px', margin: 0, color: payload[0].fill }}>
-            24h Gain: +{formatNumber(payload[0].value)}
+            Daily Gain: +{formatNumber(payload[0].value)}
           </p>
         </div>
       );
@@ -337,59 +363,74 @@ export default function ScoreboardDashboard() {
     </div>
   );
 
-  // --- CHART RENDERING ---
-  const chartHeight = Math.max(300, 15 * 40); // Enough space for 15 items + padding
-  
-  const prepareChartData = (metricKey) => {
-    let items = chartMode === 'alliances' ? data.alliances[metricKey] : data.players[metricKey];
-    if (!items) items = [];
-    
-    // Add searched items if they have momentum > 0 (Wait, searched items might not have momentum fetched!)
-    // For now, if we search in charts, we'd need their history. Since history is complex to fetch ad-hoc,
-    // let's just plot the top 15 from the API, and append search results if they exist in the top list.
-    // Actually, to just filter the top 15:
-    let filtered = items;
-    if (chartSearch.trim() && chartSearchResults.length > 0) {
-      const searchIds = new Set(chartSearchResults.map(s => s.id));
-      filtered = items.filter(i => searchIds.has(i.id));
+  // --- CHART RENDERING (6 PANELS) ---
+  const prepareChartData = (entityGroup, metricKey, searchKey, dataKeyMapping) => {
+    let items = data[entityGroup][metricKey] || [];
+    // Only take top 5
+    let filtered = items.slice(0, 5);
+
+    // If searching, replace or prepend the searched items
+    if (chartSearches[searchKey].trim().length >= 2) {
+       const mappedSearch = chartSearchResults[searchKey].map(r => ({
+         name: r.name,
+         momentum: r[dataKeyMapping] || 0
+       }));
+       filtered = mappedSearch;
     }
 
     return filtered;
   };
 
-  const renderChart = (title, icon, dataKey, chartData, colorHex) => {
+  const renderChartPanel = (title, icon, entityGroup, metricKey, searchKey, dataKeyMapping, colorHex) => {
+    const isSearching = chartIsSearching[searchKey];
+    const chartData = prepareChartData(entityGroup, metricKey, searchKey, dataKeyMapping);
     const hasData = chartData && chartData.length > 0;
     
     return (
-      <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', height: '400px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: 'white', fontWeight: 'bold', marginBottom: '12px', padding: '0 12px', flexShrink: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', height: '260px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: 'white', fontWeight: 'bold', marginBottom: '8px', padding: '0 12px', flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px' }}>
             {icon} {title}
           </div>
         </div>
         
-        <div style={{ flex: 1, overflowY: 'auto', paddingRight: '12px', scrollbarWidth: 'thin' }}>
-          {!hasData ? (
-            <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', fontSize: '14px' }}>
-              No momentum data yet. Wait for sync.
+        <div style={{ flex: 1, paddingRight: '12px', position: 'relative' }}>
+          {isSearching ? (
+             <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: colorHex }}>
+                <Loader2 size={24} className="animate-spin" />
+             </div>
+          ) : !hasData ? (
+            <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', fontSize: '13px' }}>
+              No momentum data.
             </div>
           ) : (
-            <div style={{ height: `${Math.max(100, chartData.length * 40)}px`, minHeight: '100%' }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData} layout="vertical" margin={{ top: 0, right: 10, left: 10, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" horizontal={false} />
-                  <XAxis type="number" hide />
-                  <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 11 }} width={90} />
-                  <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
-                  <Bar dataKey="momentum" radius={[0, 4, 4, 0]}>
-                    {chartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={colorHex} fillOpacity={0.9 - (index * 0.03)} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={chartData} layout="vertical" margin={{ top: 0, right: 10, left: 10, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" horizontal={false} />
+                <XAxis type="number" hide />
+                <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 11 }} width={90} />
+                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
+                <Bar dataKey="momentum" radius={[0, 4, 4, 0]} maxBarSize={20}>
+                  {chartData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={colorHex} fillOpacity={0.9 - (index * 0.05)} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
           )}
+        </div>
+
+        {/* Chart Search Bar */}
+        <div style={{ position: 'relative', marginTop: '8px', padding: '0 12px' }}>
+          <div style={{ position: 'absolute', left: '20px', top: '50%', transform: 'translateY(-50%)' }}><Search size={12} color="#64748b" /></div>
+          <input 
+            type="text" 
+            placeholder={`Search ${entityGroup}...`}
+            className="input-field"
+            style={{ width: '100%', paddingLeft: '28px', paddingRight: '12px', paddingTop: '6px', paddingBottom: '6px', boxSizing: 'border-box', fontSize: '12px', background: 'rgba(0,0,0,0.3)', borderColor: 'transparent' }}
+            value={chartSearches[searchKey]}
+            onChange={e => handleChartSearch(searchKey, e.target.value, entityGroup === 'alliances' ? 'alliance' : 'player')}
+          />
         </div>
       </div>
     );
@@ -419,61 +460,36 @@ export default function ScoreboardDashboard() {
           {renderRankingNav(allianceMetric, setAllianceMetric)}
         </div>
         <div style={{ flex: 1, overflowY: 'auto', paddingRight: '8px', scrollbarWidth: 'thin' }}>
-          {renderSidebarList(data.alliances, allianceMetric, allianceSearch, allianceSearchResults, true)}
+          {renderSidebarList(data.alliances, allianceMetric, allianceSearch, allianceSearchResults, allianceIsSearching, true)}
         </div>
       </div>
 
       {/* MAIN CENTER PANE */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto', padding: '24px', gap: '24px', scrollbarWidth: 'thin' }}>
         
-        {/* Chart Controls */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-          <div style={{ display: 'flex', gap: '8px', background: 'rgba(0,0,0,0.5)', padding: '4px', borderRadius: '8px' }}>
-            <button 
-              onClick={() => setChartMode('alliances')}
-              style={{ padding: '8px 16px', borderRadius: '6px', background: chartMode === 'alliances' ? '#a855f7' : 'transparent', color: chartMode === 'alliances' ? 'white' : '#94a3b8', border: 'none', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px', transition: 'all 0.2s' }}
-            >
-              <Users size={16} /> Alliances
-            </button>
-            <button 
-              onClick={() => setChartMode('players')}
-              style={{ padding: '8px 16px', borderRadius: '6px', background: chartMode === 'players' ? '#3b82f6' : 'transparent', color: chartMode === 'players' ? 'white' : '#94a3b8', border: 'none', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px', transition: 'all 0.2s' }}
-            >
-              <Trophy size={16} /> Players
-            </button>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <span style={{ color: '#94a3b8', fontSize: '14px', fontWeight: 'bold' }}>24h Momentum Charts</span>
-            <div style={{ position: 'relative' }}>
-              <div style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }}><Search size={14} color="#94a3b8" /></div>
-              <input 
-                type="text" 
-                placeholder={`Filter ${chartMode}...`}
-                className="input-field"
-                style={{ width: '200px', paddingLeft: '32px', paddingRight: '12px', paddingTop: '8px', paddingBottom: '8px', boxSizing: 'border-box', fontSize: '13px' }}
-                value={chartSearch}
-                onChange={e => setChartSearch(e.target.value)}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Momentum Charts */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px' }}>
-          {renderChart("Points Surge", <Activity size={18} color="#22c55e" />, "pts", prepareChartData('momentumPts'), "#22c55e")}
-          {renderChart("Top Attackers", <Crosshair size={18} color="#ef4444" />, "abp", prepareChartData('momentumAbp'), "#ef4444")}
-          {renderChart("Top Defenders", <Shield size={18} color="#3b82f6" />, "dbp", prepareChartData('momentumDbp'), "#3b82f6")}
+        <h2 style={{ fontSize: '18px', fontWeight: 'bold', color: '#94a3b8', margin: 0 }}>Daily Momentum (Since 2:00 AM)</h2>
+        
+        {/* 6 Momentum Charts: Alliances Top, Players Bottom */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px' }}>
+          {/* ALLIANCES ROW */}
+          {renderChartPanel("Alliance Points", <Activity size={16} color="#eab308" />, "alliances", "momentumPts", "a_pts", "momentumPts", "#eab308")}
+          {renderChartPanel("Alliance Attackers", <Crosshair size={16} color="#ef4444" />, "alliances", "momentumAbp", "a_abp", "momentumAbp", "#ef4444")}
+          {renderChartPanel("Alliance Defenders", <Shield size={16} color="#3b82f6" />, "alliances", "momentumDbp", "a_dbp", "momentumDbp", "#3b82f6")}
+          
+          {/* PLAYERS ROW */}
+          {renderChartPanel("Player Points", <Activity size={16} color="#eab308" />, "players", "momentumPts", "p_pts", "momentumPts", "#eab308")}
+          {renderChartPanel("Player Attackers", <Crosshair size={16} color="#ef4444" />, "players", "momentumAbp", "p_abp", "momentumAbp", "#ef4444")}
+          {renderChartPanel("Player Defenders", <Shield size={16} color="#3b82f6" />, "players", "momentumDbp", "p_dbp", "momentumDbp", "#3b82f6")}
         </div>
 
         {/* Live Conquest Feed (Bottom Area) */}
-        <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: '400px', padding: 0, overflow: 'hidden' }}>
+        <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: '300px', padding: 0, overflow: 'hidden' }}>
           
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <Zap size={20} color="#f97316"/>
-              <h2 style={{ fontSize: '1.125rem', fontWeight: 'bold', color: 'white', margin: 0 }}>Live Conquest Feed</h2>
-              <span style={{ padding: '4px 8px', borderRadius: '9999px', background: 'rgba(249, 115, 22, 0.2)', color: '#f97316', fontSize: '12px', fontWeight: 'bold' }}>
+              <Zap size={18} color="#f97316"/>
+              <h2 style={{ fontSize: '1rem', fontWeight: 'bold', color: 'white', margin: 0 }}>Live Conquest Feed</h2>
+              <span style={{ padding: '4px 8px', borderRadius: '9999px', background: 'rgba(249, 115, 22, 0.2)', color: '#f97316', fontSize: '11px', fontWeight: 'bold' }}>
                 {filteredConquests.length} events
               </span>
             </div>
@@ -492,37 +508,37 @@ export default function ScoreboardDashboard() {
           </div>
 
           <div style={{ flex: 1, overflowY: 'auto', scrollbarWidth: 'thin' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '14px' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
               <thead style={{ position: 'sticky', top: 0, background: '#0f172a', zIndex: 10, borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
                 <tr>
-                  <th style={{ padding: '12px 24px', color: '#64748b', fontWeight: '600', textTransform: 'uppercase', fontSize: '12px' }}>Time</th>
-                  <th style={{ padding: '12px 24px', color: '#64748b', fontWeight: '600', textTransform: 'uppercase', fontSize: '12px' }}>Town</th>
-                  <th style={{ padding: '12px 24px', color: '#64748b', fontWeight: '600', textTransform: 'uppercase', fontSize: '12px' }}>Points</th>
-                  <th style={{ padding: '12px 24px', color: '#64748b', fontWeight: '600', textTransform: 'uppercase', fontSize: '12px', textAlign: 'right' }}>Lost By</th>
-                  <th style={{ padding: '12px 24px', color: '#64748b', fontWeight: '600', textTransform: 'uppercase', fontSize: '12px', textAlign: 'center' }}>Status</th>
-                  <th style={{ padding: '12px 24px', color: '#64748b', fontWeight: '600', textTransform: 'uppercase', fontSize: '12px' }}>Conquered By</th>
+                  <th style={{ padding: '8px 24px', color: '#64748b', fontWeight: '600', textTransform: 'uppercase', fontSize: '11px' }}>Time</th>
+                  <th style={{ padding: '8px 24px', color: '#64748b', fontWeight: '600', textTransform: 'uppercase', fontSize: '11px' }}>Town</th>
+                  <th style={{ padding: '8px 24px', color: '#64748b', fontWeight: '600', textTransform: 'uppercase', fontSize: '11px' }}>Points</th>
+                  <th style={{ padding: '8px 24px', color: '#64748b', fontWeight: '600', textTransform: 'uppercase', fontSize: '11px', textAlign: 'right' }}>Lost By</th>
+                  <th style={{ padding: '8px 24px', color: '#64748b', fontWeight: '600', textTransform: 'uppercase', fontSize: '11px', textAlign: 'center' }}>Status</th>
+                  <th style={{ padding: '8px 24px', color: '#64748b', fontWeight: '600', textTransform: 'uppercase', fontSize: '11px' }}>Conquered By</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredConquests.map((c, i) => (
                   <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.02)' }} onMouseEnter={e => e.currentTarget.style.background='rgba(255,255,255,0.02)'} onMouseLeave={e => e.currentTarget.style.background='transparent'}>
-                    <td style={{ padding: '16px 24px', color: '#94a3b8', whiteSpace: 'nowrap' }}>
+                    <td style={{ padding: '12px 24px', color: '#94a3b8', whiteSpace: 'nowrap' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <Clock size={12} color="#64748b"/> {timeSince(c.timestamp)}
                       </div>
                     </td>
-                    <td style={{ padding: '16px 24px', fontWeight: '600', color: 'white', maxWidth: '150px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.townName}</td>
-                    <td style={{ padding: '16px 24px', color: '#cbd5e1', fontFamily: 'monospace', fontSize: '12px' }}>{formatNumber(c.townPoints)}</td>
-                    <td style={{ padding: '16px 24px', textAlign: 'right' }}>
+                    <td style={{ padding: '12px 24px', fontWeight: '600', color: 'white', maxWidth: '150px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.townName}</td>
+                    <td style={{ padding: '12px 24px', color: '#cbd5e1', fontFamily: 'monospace', fontSize: '12px' }}>{formatNumber(c.townPoints)}</td>
+                    <td style={{ padding: '12px 24px', textAlign: 'right' }}>
                       <div style={{ color: '#f87171', fontWeight: '600', maxWidth: '120px', display: 'inline-block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.oldPlayer}</div>
                       <div style={{ fontSize: '10px', color: '#64748b', maxWidth: '120px', display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.oldAlliance}</div>
                     </td>
-                    <td style={{ padding: '16px 24px', textAlign: 'center' }}>
-                      <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto' }}>
-                        <ArrowRight size={14} color="#64748b" />
+                    <td style={{ padding: '12px 24px', textAlign: 'center' }}>
+                      <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto' }}>
+                        <ArrowRight size={12} color="#64748b" />
                       </div>
                     </td>
-                    <td style={{ padding: '16px 24px' }}>
+                    <td style={{ padding: '12px 24px' }}>
                       <div style={{ color: '#4ade80', fontWeight: '600', maxWidth: '120px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.newPlayer}</div>
                       <div style={{ fontSize: '10px', color: '#64748b', maxWidth: '120px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.newAlliance}</div>
                     </td>
@@ -557,7 +573,7 @@ export default function ScoreboardDashboard() {
           {renderRankingNav(playerMetric, setPlayerMetric)}
         </div>
         <div style={{ flex: 1, overflowY: 'auto', paddingLeft: '8px', scrollbarWidth: 'thin' }}>
-          {renderSidebarList(data.players, playerMetric, playerSearch, playerSearchResults, false)}
+          {renderSidebarList(data.players, playerMetric, playerSearch, playerSearchResults, playerIsSearching, false)}
         </div>
       </div>
 

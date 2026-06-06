@@ -3,6 +3,17 @@ import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-static';
 
+const getBaselineTime = () => {
+  const now = new Date();
+  const baseline = new Date(now);
+  baseline.setHours(1, 50, 0, 0); // 01:50:00 AM local time
+  if (now < baseline) {
+    // If it's 00:30 AM right now, the baseline was 01:50 AM *yesterday*
+    baseline.setDate(baseline.getDate() - 1);
+  }
+  return baseline;
+};
+
 export async function GET() {
   try {
     const [
@@ -30,12 +41,12 @@ export async function GET() {
         take: 50
       }),
 
-      // 24h Momentum History
+      // Daily Momentum History (Baseline: 01:50:00 AM)
       prisma.playerHistory.findMany({
-        where: { timestamp: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) } }
+        where: { timestamp: { gte: getBaselineTime() } }
       }),
       prisma.allianceHistory.findMany({
-        where: { timestamp: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) } }
+        where: { timestamp: { gte: getBaselineTime() } }
       })
     ]);
 
