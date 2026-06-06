@@ -48,7 +48,7 @@ export async function GET(request) {
 
     if (type === 'player') {
       const players = await prisma.player.findMany({
-        where: { name: { contains: q } },
+        where: { name: { contains: q, mode: 'insensitive' } },
         take: 5,
         select: { id: true, name: true, points: true, abp: true, dbp: true, allBp: true, alliance: { select: { name: true } } }
       });
@@ -81,7 +81,7 @@ export async function GET(request) {
       }
     } else {
       const alliances = await prisma.alliance.findMany({
-        where: { name: { contains: q } },
+        where: { name: { contains: q, mode: 'insensitive' } },
         take: 5,
         select: { id: true, name: true, points: true, abp: true, dbp: true, allBp: true }
       });

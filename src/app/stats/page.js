@@ -445,6 +445,7 @@ export default function ScoreboardDashboard() {
     // If searching, replace or prepend the searched items
     if (chartSearches[searchKey].trim().length >= 2) {
        const mappedSearch = chartSearchResults[searchKey].map(r => ({
+         ...r,
          name: r.name,
          momentum: r[dataKeyMapping] || 0
        }));
