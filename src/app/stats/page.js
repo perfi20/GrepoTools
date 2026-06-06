@@ -610,23 +610,22 @@ export default function ScoreboardDashboard() {
           {renderSidebarList(data.alliances, allianceMetric, allianceSearch, allianceSearchResults, allianceIsSearching, true)}
         </div>
       </div>
-
       {/* MAIN CENTER PANE */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto', padding: '24px', gap: '24px', scrollbarWidth: 'thin' }}>
         
         <h2 style={{ fontSize: '18px', fontWeight: 'bold', color: '#94a3b8', margin: 0 }}>Daily Momentum (Since 2:00 AM)</h2>
-        
+
         {/* 6 Momentum Charts: Alliances Top, Players Bottom */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px' }}>
           {/* ALLIANCES ROW */}
-          {useMemo(() => renderChartPanel("Alliance Points", <Activity size={16} color="#eab308" />, "alliances", "momentumPts", "a_pts", "momentumPts", "#eab308"), [data?.alliances?.momentumPts, chartSearches.a_pts, chartIsSearching.a_pts, chartSearchResults.a_pts])}
-          {useMemo(() => renderChartPanel("Alliance Attackers", <Crosshair size={16} color="#ef4444" />, "alliances", "momentumAbp", "a_abp", "momentumAbp", "#ef4444"), [data?.alliances?.momentumAbp, chartSearches.a_abp, chartIsSearching.a_abp, chartSearchResults.a_abp])}
-          {useMemo(() => renderChartPanel("Alliance Defenders", <Shield size={16} color="#3b82f6" />, "alliances", "momentumDbp", "a_dbp", "momentumDbp", "#3b82f6"), [data?.alliances?.momentumDbp, chartSearches.a_dbp, chartIsSearching.a_dbp, chartSearchResults.a_dbp])}
+          {chartAlliancesPts}
+          {chartAlliancesAbp}
+          {chartAlliancesDbp}
           
           {/* PLAYERS ROW */}
-          {useMemo(() => renderChartPanel("Player Points", <Activity size={16} color="#eab308" />, "players", "momentumPts", "p_pts", "momentumPts", "#eab308"), [data?.players?.momentumPts, chartSearches.p_pts, chartIsSearching.p_pts, chartSearchResults.p_pts])}
-          {useMemo(() => renderChartPanel("Player Attackers", <Crosshair size={16} color="#ef4444" />, "players", "momentumAbp", "p_abp", "momentumAbp", "#ef4444"), [data?.players?.momentumAbp, chartSearches.p_abp, chartIsSearching.p_abp, chartSearchResults.p_abp])}
-          {useMemo(() => renderChartPanel("Player Defenders", <Shield size={16} color="#3b82f6" />, "players", "momentumDbp", "p_dbp", "momentumDbp", "#3b82f6"), [data?.players?.momentumDbp, chartSearches.p_dbp, chartIsSearching.p_dbp, chartSearchResults.p_dbp])}
+          {chartPlayersPts}
+          {chartPlayersAbp}
+          {chartPlayersDbp}
         </div>
 
         {/* Live Conquest Feed (Bottom Area) */}
