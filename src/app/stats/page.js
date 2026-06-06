@@ -6,7 +6,7 @@ import {
   Activity, ArrowRight, Search, Zap, Crosshair, Users, Target, X, Pin, Loader2,
   ArrowUpRight, ArrowDownRight, Minus, Skull
 } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, LabelList } from 'recharts';
 
 export default function ScoreboardDashboard() {
   const [data, setData] = useState(null);
@@ -397,6 +397,11 @@ export default function ScoreboardDashboard() {
           <p style={{ fontSize: '14px', margin: 0, color: payload[0].fill }}>
             Daily Gain: +{formatNumber(payload[0].value)}
           </p>
+          {payload[0].payload.recentGain > 0 && (
+             <p style={{ fontSize: '12px', margin: '4px 0 0 0', color: '#4ade80' }}>
+               Recent Sync: +{formatNumber(payload[0].payload.recentGain)}
+             </p>
+          )}
         </div>
       );
     }
@@ -483,7 +488,7 @@ export default function ScoreboardDashboard() {
           ) : (
             <div style={{ height: `${internalHeight}px`, minHeight: '100%' }}>
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData} layout="vertical" margin={{ top: 0, right: 10, left: 10, bottom: 0 }}>
+                <BarChart data={chartData} layout="vertical" margin={{ top: 0, right: 40, left: 10, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" horizontal={false} />
                   <XAxis type="number" hide />
                   <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 11 }} width={90} />
@@ -492,6 +497,14 @@ export default function ScoreboardDashboard() {
                     {chartData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={colorHex} fillOpacity={0.9 - (index * 0.05)} />
                     ))}
+                    <LabelList 
+                      dataKey="recentGain" 
+                      position="right" 
+                      fill="#4ade80" 
+                      fontSize={11} 
+                      fontWeight="bold" 
+                      formatter={(val) => val > 0 ? `+${formatNumber(val)} ↑` : ''} 
+                    />
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
@@ -500,7 +513,7 @@ export default function ScoreboardDashboard() {
         </div>
 
         {/* Chart Search Bar */}
-        <div style={{ position: 'relative', marginTop: '8px', padding: '0 12px', flexShrink: 0, display: 'flex', justifyContent: 'center' }}>
+        <div style={{ position: 'relative', marginTop: 'auto', padding: '0 12px 12px 12px', flexShrink: 0, display: 'flex', justifyContent: 'center' }}>
           <div style={{ width: '80%', position: 'relative' }}>
             <div style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)' }}><Search size={12} color="#64748b" /></div>
             <input 

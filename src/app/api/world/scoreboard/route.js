@@ -18,6 +18,7 @@ export async function GET() {
     const baseline = getBaselineTime();
     const windowBStart = new Date(baseline.getTime() - 24 * 60 * 60 * 1000);
     const windowBEnd = baseline;
+    const recentStart = new Date(Date.now() - 65 * 60 * 1000);
 
     const [
       players,
@@ -26,7 +27,9 @@ export async function GET() {
       playerHistoryA,
       allianceHistoryA,
       playerHistoryB,
-      allianceHistoryB
+      allianceHistoryB,
+      recentPlayerHistory,
+      recentAllianceHistory
     ] = await Promise.all([
       prisma.player.findMany({
         select: { id: true, name: true, points: true, abp: true, dbp: true, allBp: true, alliance: { select: { name: true } } }
@@ -44,7 +47,10 @@ export async function GET() {
       prisma.allianceHistory.findMany({ where: { timestamp: { gte: baseline } } }),
       // Window B (Previous Day)
       prisma.playerHistory.findMany({ where: { timestamp: { gte: windowBStart, lt: windowBEnd } } }),
-      prisma.allianceHistory.findMany({ where: { timestamp: { gte: windowBStart, lt: windowBEnd } } })
+      prisma.allianceHistory.findMany({ where: { timestamp: { gte: windowBStart, lt: windowBEnd } } }),
+      // Recent Velocity
+      prisma.playerHistory.findMany({ where: { timestamp: { gte: recentStart } } }),
+      prisma.allianceHistory.findMany({ where: { timestamp: { gte: recentStart } } })
     ]);
 
     // Fast lookups
@@ -96,6 +102,8 @@ export async function GET() {
     const allianceGainsA = calculateGains(allianceHistoryA);
     const playerGainsB = calculateGains(playerHistoryB);
     const allianceGainsB = calculateGains(allianceHistoryB);
+    const recentPlayerGains = calculateGains(recentPlayerHistory);
+    const recentAllianceGains = calculateGains(recentAllianceHistory);
 
     const calcTrend = (valA, valB) => {
       if (valB === 0) return valA > 0 ? 100 : 0;
@@ -121,14 +129,15 @@ export async function GET() {
         }));
     };
 
-    const formatGainerList = (gainsDict, entityMap, sortKey) => {
+    const formatGainerList = (gainsDict, entityMap, sortKey, recentGains) => {
       return Object.entries(gainsDict)
         .map(([id, gains]) => {
           const entity = entityMap.get(parseInt(id));
           if (!entity) return null;
           return {
             ...entity,
-            momentum: gains[sortKey]
+            momentum: gains[sortKey],
+            recentGain: recentGains[id] ? recentGains[id][sortKey] : 0
           };
         })
         .filter(item => item !== null && item.momentum > 0)
@@ -154,9 +163,9 @@ export async function GET() {
         abp: attachTrendsAndGetTop(gpMap, playerGainsA, playerGainsB, 'abp'),
         dbp: attachTrendsAndGetTop(gpMap, playerGainsA, playerGainsB, 'dbp'),
         allbp: attachTrendsAndGetTop(gpMap, playerGainsA, playerGainsB, 'allBp'),
-        momentumPts: formatGainerList(playerGainsA, gpMap, 'pts'),
-        momentumAbp: formatGainerList(playerGainsA, gpMap, 'abp'),
-        momentumDbp: formatGainerList(playerGainsA, gpMap, 'dbp'),
+        momentumPts: formatGainerList(playerGainsA, gpMap, 'pts', recentPlayerGains),
+        momentumAbp: formatGainerList(playerGainsA, gpMap, 'abp', recentPlayerGains),
+        momentumDbp: formatGainerList(playerGainsA, gpMap, 'dbp', recentPlayerGains),
         conquests: formatCounts(pConquests, gpMap),
         losses: formatCounts(pLosses, gpMap)
       },
@@ -165,9 +174,9 @@ export async function GET() {
         abp: attachTrendsAndGetTop(gaMap, allianceGainsA, allianceGainsB, 'abp'),
         dbp: attachTrendsAndGetTop(gaMap, allianceGainsA, allianceGainsB, 'dbp'),
         allbp: attachTrendsAndGetTop(gaMap, allianceGainsA, allianceGainsB, 'allBp'),
-        momentumPts: formatGainerList(allianceGainsA, gaMap, 'pts'),
-        momentumAbp: formatGainerList(allianceGainsA, gaMap, 'abp'),
-        momentumDbp: formatGainerList(allianceGainsA, gaMap, 'dbp'),
+        momentumPts: formatGainerList(allianceGainsA, gaMap, 'pts', recentAllianceGains),
+        momentumAbp: formatGainerList(allianceGainsA, gaMap, 'abp', recentAllianceGains),
+        momentumDbp: formatGainerList(allianceGainsA, gaMap, 'dbp', recentAllianceGains),
         conquests: formatCounts(aConquests, gaMap),
         losses: formatCounts(aLosses, gaMap)
       },
