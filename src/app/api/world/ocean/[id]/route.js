@@ -42,6 +42,7 @@ export async function GET(request, props) {
     
     // Fetch Top 10 Alliances for coloring
     const dbAlliances = await prisma.alliance.findMany({
+      cacheStrategy: { ttl: 600, swr: 60 },
       orderBy: { towns: 'desc' },
       take: 10,
       select: { name: true }
@@ -70,6 +71,7 @@ export async function GET(request, props) {
     const worldRadiusSq = Math.pow(250, 2);
 
     const islands = await prisma.island.findMany({
+      cacheStrategy: { ttl: 600, swr: 60 },
       where: { OR: orConditions },
       select: { id: true, x: true, y: true, availableTowns: true, resourcePlus: true, resourceMinus: true }
     });
@@ -86,6 +88,7 @@ export async function GET(request, props) {
     });
 
     const towns = await prisma.town.findMany({
+      cacheStrategy: { ttl: 600, swr: 60 },
       where: { OR: townOrConditions },
       select: {
         id: true, name: true, points: true, islandX: true, islandY: true, islandSlot: true,

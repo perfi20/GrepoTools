@@ -13,26 +13,29 @@ export async function GET() {
       recentAllianceHistory
     ] = await Promise.all([
       // Players
-      prisma.player.findMany({ orderBy: { points: 'desc' }, take: 10, select: { id: true, name: true, points: true, abp: true, dbp: true, alliance: { select: { name: true } } } }),
-      prisma.player.findMany({ orderBy: { abp: 'desc' }, take: 10, select: { id: true, name: true, points: true, abp: true, dbp: true, alliance: { select: { name: true } } } }),
-      prisma.player.findMany({ orderBy: { dbp: 'desc' }, take: 10, select: { id: true, name: true, points: true, abp: true, dbp: true, alliance: { select: { name: true } } } }),
+      prisma.player.findMany({ cacheStrategy: { ttl: 600, swr: 60 }, orderBy: { points: 'desc' }, take: 10, select: { id: true, name: true, points: true, abp: true, dbp: true, alliance: { select: { name: true } } } }),
+      prisma.player.findMany({ cacheStrategy: { ttl: 600, swr: 60 }, orderBy: { abp: 'desc' }, take: 10, select: { id: true, name: true, points: true, abp: true, dbp: true, alliance: { select: { name: true } } } }),
+      prisma.player.findMany({ cacheStrategy: { ttl: 600, swr: 60 }, orderBy: { dbp: 'desc' }, take: 10, select: { id: true, name: true, points: true, abp: true, dbp: true, alliance: { select: { name: true } } } }),
       
       // Alliances
-      prisma.alliance.findMany({ orderBy: { points: 'desc' }, take: 10, select: { id: true, name: true, points: true, abp: true, dbp: true } }),
-      prisma.alliance.findMany({ orderBy: { abp: 'desc' }, take: 10, select: { id: true, name: true, points: true, abp: true, dbp: true } }),
-      prisma.alliance.findMany({ orderBy: { dbp: 'desc' }, take: 10, select: { id: true, name: true, points: true, abp: true, dbp: true } }),
+      prisma.alliance.findMany({ cacheStrategy: { ttl: 600, swr: 60 }, orderBy: { points: 'desc' }, take: 10, select: { id: true, name: true, points: true, abp: true, dbp: true } }),
+      prisma.alliance.findMany({ cacheStrategy: { ttl: 600, swr: 60 }, orderBy: { abp: 'desc' }, take: 10, select: { id: true, name: true, points: true, abp: true, dbp: true } }),
+      prisma.alliance.findMany({ cacheStrategy: { ttl: 600, swr: 60 }, orderBy: { dbp: 'desc' }, take: 10, select: { id: true, name: true, points: true, abp: true, dbp: true } }),
       
       // Conquests (last 50)
       prisma.conquest.findMany({
+        cacheStrategy: { ttl: 600, swr: 60 },
         orderBy: { timestamp: 'desc' },
         take: 50
       }),
 
       // History for gainers (last 3 hours just to be safe)
       prisma.playerHistory.findMany({
+        cacheStrategy: { ttl: 600, swr: 60 },
         where: { timestamp: { gte: new Date(Date.now() - 3 * 60 * 60 * 1000) } }
       }),
       prisma.allianceHistory.findMany({
+        cacheStrategy: { ttl: 600, swr: 60 },
         where: { timestamp: { gte: new Date(Date.now() - 3 * 60 * 60 * 1000) } }
       })
     ]);
@@ -51,9 +54,9 @@ export async function GET() {
     });
 
     const [playersMapData, alliancesMapData, townsMapData] = await Promise.all([
-      prisma.player.findMany({ where: { id: { in: Array.from(playerIds) } }, select: { id: true, name: true } }),
-      prisma.alliance.findMany({ where: { id: { in: Array.from(allianceIds) } }, select: { id: true, name: true } }),
-      prisma.town.findMany({ where: { id: { in: Array.from(townIds) } }, select: { id: true, name: true } })
+      prisma.player.findMany({ cacheStrategy: { ttl: 600, swr: 60 }, where: { id: { in: Array.from(playerIds) } }, select: { id: true, name: true } }),
+      prisma.alliance.findMany({ cacheStrategy: { ttl: 600, swr: 60 }, where: { id: { in: Array.from(allianceIds) } }, select: { id: true, name: true } }),
+      prisma.town.findMany({ cacheStrategy: { ttl: 600, swr: 60 }, where: { id: { in: Array.from(townIds) } }, select: { id: true, name: true } })
     ]);
 
     const playerMap = new Map(playersMapData.map(p => [p.id, p.name]));
@@ -94,8 +97,8 @@ export async function GET() {
     const gainerAIds = Object.keys(allianceGains).map(Number);
 
     const [gainerPlayers, gainerAlliances] = await Promise.all([
-      prisma.player.findMany({ where: { id: { in: gainerPIds } }, select: { id: true, name: true, alliance: { select: { name: true } } } }),
-      prisma.alliance.findMany({ where: { id: { in: gainerAIds } }, select: { id: true, name: true } })
+      prisma.player.findMany({ cacheStrategy: { ttl: 600, swr: 60 }, where: { id: { in: gainerPIds } }, select: { id: true, name: true, alliance: { select: { name: true } } } }),
+      prisma.alliance.findMany({ cacheStrategy: { ttl: 600, swr: 60 }, where: { id: { in: gainerAIds } }, select: { id: true, name: true } })
     ]);
 
     const gpMap = new Map(gainerPlayers.map(p => [p.id, p]));
