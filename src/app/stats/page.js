@@ -125,12 +125,27 @@ export default function ScoreboardDashboard() {
         <div 
           key={item.id} 
           onClick={() => setSelectedEntity({ type: isAlliance ? 'alliance' : 'player', data: item })}
-          className="flex flex-col p-3 rounded-xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.08] hover:border-white/20 transition cursor-pointer group"
+          className="flex flex-col p-3 rounded-xl border transition cursor-pointer group"
+          style={{ 
+            background: 'var(--bg-card)', 
+            borderColor: 'var(--border-color)',
+            marginBottom: '0.5rem'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateY(-2px)';
+            e.currentTarget.style.borderColor = 'var(--primary)';
+            e.currentTarget.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.2)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'none';
+            e.currentTarget.style.borderColor = 'var(--border-color)';
+            e.currentTarget.style.boxShadow = 'none';
+          }}
         >
           <div className="flex justify-between items-center mb-1">
             <div className="flex items-center gap-3">
-              <div className="w-5 text-center font-bold text-slate-500 text-sm group-hover:text-slate-300 transition-colors">{i+1}</div>
-              <div className="font-bold text-slate-200 text-sm">{item.name}</div>
+              <div className="w-5 text-center font-bold text-secondary text-sm group-hover:text-primary transition-colors">{i+1}</div>
+              <div className="font-bold text-white text-sm group-hover:text-primary transition-colors">{item.name}</div>
             </div>
             <div className={`font-bold text-sm ${getMetricColor(metric)}`}>
               {metric === 'momentum' ? '+' : ''}{formatNumber(mainValue)}
@@ -174,11 +189,12 @@ export default function ScoreboardDashboard() {
             Top Alliances
           </h1>
           <div className="relative mt-3">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={14} />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-secondary" size={14} />
             <input 
               type="text" 
               placeholder="Search alliances..." 
-              className="w-full pl-9 pr-4 py-2 bg-black/30 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:border-purple-500/50 transition"
+              className="input-field"
+              style={{ paddingLeft: '2.25rem', paddingRight: '1rem', paddingTop: '0.5rem', paddingBottom: '0.5rem' }}
               value={allianceSearch}
               onChange={e => setAllianceSearch(e.target.value)}
             />
@@ -191,7 +207,12 @@ export default function ScoreboardDashboard() {
             <button 
               key={m} 
               onClick={() => setAllianceMetric(m)}
-              className={`flex-1 flex justify-center items-center py-1.5 rounded-md transition-all ${allianceMetric === m ? 'bg-white/10 shadow-sm' : 'hover:bg-white/5 opacity-50 hover:opacity-100'}`}
+              className="flex-1 flex justify-center items-center py-1.5 rounded-md transition-all cursor-pointer border-none"
+              style={{ 
+                background: allianceMetric === m ? 'var(--primary)' : 'transparent',
+                opacity: allianceMetric === m ? 1 : 0.5,
+                boxShadow: allianceMetric === m ? '0 0 10px rgba(59, 130, 246, 0.5)' : 'none'
+              }}
               title={m.toUpperCase()}
             >
               {getMetricIcon(m)}
@@ -294,11 +315,12 @@ export default function ScoreboardDashboard() {
             </div>
             
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={14} />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-secondary" size={14} />
               <input 
                 type="text" 
                 placeholder="Filter feed..." 
-                className="pl-9 pr-4 py-1.5 bg-black/30 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:border-orange-500/50 transition w-64"
+                className="input-field"
+                style={{ paddingLeft: '2.25rem', paddingRight: '1rem', paddingTop: '0.375rem', paddingBottom: '0.375rem', width: '16rem' }}
                 value={conquestFilter}
                 onChange={e => setConquestFilter(e.target.value)}
               />
@@ -367,11 +389,12 @@ export default function ScoreboardDashboard() {
             Top Players
           </h1>
           <div className="relative mt-3">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={14} />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-secondary" size={14} />
             <input 
               type="text" 
               placeholder="Search players..." 
-              className="w-full pl-9 pr-4 py-2 bg-black/30 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:border-blue-500/50 transition"
+              className="input-field"
+              style={{ paddingLeft: '2.25rem', paddingRight: '1rem', paddingTop: '0.5rem', paddingBottom: '0.5rem' }}
               value={playerSearch}
               onChange={e => setPlayerSearch(e.target.value)}
             />
@@ -384,7 +407,12 @@ export default function ScoreboardDashboard() {
             <button 
               key={m} 
               onClick={() => setPlayerMetric(m)}
-              className={`flex-1 flex justify-center items-center py-1.5 rounded-md transition-all ${playerMetric === m ? 'bg-white/10 shadow-sm' : 'hover:bg-white/5 opacity-50 hover:opacity-100'}`}
+              className="flex-1 flex justify-center items-center py-1.5 rounded-md transition-all cursor-pointer border-none"
+              style={{ 
+                background: playerMetric === m ? 'var(--primary)' : 'transparent',
+                opacity: playerMetric === m ? 1 : 0.5,
+                boxShadow: playerMetric === m ? '0 0 10px rgba(59, 130, 246, 0.5)' : 'none'
+              }}
               title={m.toUpperCase()}
             >
               {getMetricIcon(m)}
@@ -400,50 +428,55 @@ export default function ScoreboardDashboard() {
 
       {/* DEEP DIVE MODAL SKELETON */}
       {selectedEntity && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="glass-panel bg-[#0b101e]/90 border border-white/10 p-8 rounded-2xl w-[600px] max-w-[90vw] shadow-2xl relative">
+        <div 
+          style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(11, 16, 30, 0.8)', backdropFilter: 'blur(8px)' }}
+          onClick={(e) => { if(e.target === e.currentTarget) setSelectedEntity(null) }}
+        >
+          <div className="glass-panel" style={{ width: '600px', maxWidth: '90vw', position: 'relative' }}>
             <button 
               onClick={() => setSelectedEntity(null)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-white transition bg-white/5 p-1 rounded-full"
+              className="absolute top-4 right-4 text-secondary hover:text-white transition"
+              style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}
             >
-              <X size={20} />
+              <X size={24} />
             </button>
             
             <div className="flex items-center gap-4 mb-6">
-              <div className={`p-4 rounded-xl bg-gradient-to-br ${selectedEntity.type === 'alliance' ? 'from-purple-500/20 to-purple-900/20 text-purple-400' : 'from-blue-500/20 to-blue-900/20 text-blue-400'} border border-white/10`}>
-                {selectedEntity.type === 'alliance' ? <Users size={32} /> : <Trophy size={32} />}
+              <div className="p-4 rounded-xl glass-panel border border-white/10" style={{ background: selectedEntity.type === 'alliance' ? 'rgba(139, 92, 246, 0.2)' : 'rgba(59, 130, 246, 0.2)' }}>
+                {selectedEntity.type === 'alliance' ? <Users size={32} className="text-purple-400" /> : <Trophy size={32} className="text-blue-400" />}
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-white leading-tight">{selectedEntity.data.name}</h2>
+                <h2 className="text-2xl font-bold text-white leading-tight mb-0">{selectedEntity.data.name}</h2>
                 {selectedEntity.type === 'player' && selectedEntity.data.alliance && (
-                  <div className="text-purple-400 text-sm font-semibold">{selectedEntity.data.alliance.name}</div>
+                  <div className="gradient-text text-sm font-semibold">{selectedEntity.data.alliance.name}</div>
                 )}
-                <div className="text-slate-400 text-sm capitalize">{selectedEntity.type} Intelligence</div>
+                <div className="text-secondary text-sm capitalize">{selectedEntity.type} Intelligence</div>
               </div>
             </div>
 
             <div className="grid grid-cols-3 gap-4 mb-8">
-              <div className="bg-black/30 border border-white/5 p-4 rounded-xl text-center">
-                <Trophy size={16} className="text-yellow-500 mx-auto mb-2" />
-                <div className="text-xl font-bold text-white">{formatNumber(selectedEntity.data.points)}</div>
-                <div className="text-xs text-slate-500">Total Points</div>
+              <div className="glass-panel p-4 text-center" style={{ background: 'rgba(0,0,0,0.2)' }}>
+                <Trophy size={20} className="text-yellow-500 mx-auto mb-2" />
+                <div className="text-2xl font-bold text-white">{formatNumber(selectedEntity.data.points)}</div>
+                <div className="text-xs text-secondary mt-1">Total Points</div>
               </div>
-              <div className="bg-black/30 border border-white/5 p-4 rounded-xl text-center">
-                <Swords size={16} className="text-red-500 mx-auto mb-2" />
-                <div className="text-xl font-bold text-white">{formatNumber(selectedEntity.data.abp)}</div>
-                <div className="text-xs text-slate-500">Attack BP</div>
+              <div className="glass-panel p-4 text-center" style={{ background: 'rgba(0,0,0,0.2)' }}>
+                <Swords size={20} className="text-red-500 mx-auto mb-2" />
+                <div className="text-2xl font-bold text-white">{formatNumber(selectedEntity.data.abp)}</div>
+                <div className="text-xs text-secondary mt-1">Attack BP</div>
               </div>
-              <div className="bg-black/30 border border-white/5 p-4 rounded-xl text-center">
-                <Shield size={16} className="text-blue-500 mx-auto mb-2" />
-                <div className="text-xl font-bold text-white">{formatNumber(selectedEntity.data.dbp)}</div>
-                <div className="text-xs text-slate-500">Defense BP</div>
+              <div className="glass-panel p-4 text-center" style={{ background: 'rgba(0,0,0,0.2)' }}>
+                <Shield size={20} className="text-blue-500 mx-auto mb-2" />
+                <div className="text-2xl font-bold text-white">{formatNumber(selectedEntity.data.dbp)}</div>
+                <div className="text-xs text-secondary mt-1">Defense BP</div>
               </div>
             </div>
 
-            <div className="h-48 border border-white/5 rounded-xl flex items-center justify-center bg-black/20 text-slate-500 flex-col gap-2">
-              <Activity size={24} className="opacity-50" />
-              <span>Historical data assembling...</span>
-              <span className="text-xs">(Check back after a few sync cycles)</span>
+            <div className="h-48 border border-white/10 rounded-xl flex items-center justify-center bg-black/30 text-secondary flex-col gap-2 relative overflow-hidden">
+              <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
+              <Activity size={32} className="opacity-50 text-primary" />
+              <span className="font-semibold" style={{ zIndex: 1 }}>Historical data assembling...</span>
+              <span className="text-xs" style={{ zIndex: 1 }}>(Check back after a few sync cycles)</span>
             </div>
             
           </div>
