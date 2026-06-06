@@ -217,18 +217,7 @@ export default function ScoreboardDashboard() {
     );
   }, [data, conquestFilter]);
 
-  if (loading) {
-    return (
-      <div style={{ position: 'fixed', top: '73px', left: 0, right: 0, bottom: 0, backgroundColor: '#0b101e', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <Trophy size={48} color="#eab308" style={{ marginBottom: '1rem' }} />
-          <h2 style={{ fontSize: '1.25rem', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'white' }}>Loading Intelligence...</h2>
-        </div>
-      </div>
-    );
-  }
 
-  if (!data) return <div style={{ color: 'white', padding: '2rem' }}>Error loading data.</div>;
 
   const togglePin = (item, isAlliance) => {
     const setList = isAlliance ? setPinnedAlliances : setPinnedPlayers;
@@ -448,6 +437,7 @@ export default function ScoreboardDashboard() {
 
   // --- CHART RENDERING (6 PANELS) ---
   const prepareChartData = (entityGroup, metricKey, searchKey, dataKeyMapping) => {
+    if (!data || !data[entityGroup]) return [];
     let items = data[entityGroup][metricKey] || [];
     // Only take top 15 (user requested 15 entries scrollable)
     let filtered = items.slice(0, 15);
@@ -591,6 +581,19 @@ export default function ScoreboardDashboard() {
   const chartPlayersPts = useMemo(() => renderChartPanel("Player Points", <Activity size={16} color="#eab308" />, "players", "momentumPts", "p_pts", "momentumPts", "#eab308"), [data?.players?.momentumPts, chartSearches.p_pts, chartIsSearching.p_pts, chartSearchResults.p_pts]);
   const chartPlayersAbp = useMemo(() => renderChartPanel("Player Attackers", <Crosshair size={16} color="#ef4444" />, "players", "momentumAbp", "p_abp", "momentumAbp", "#ef4444"), [data?.players?.momentumAbp, chartSearches.p_abp, chartIsSearching.p_abp, chartSearchResults.p_abp]);
   const chartPlayersDbp = useMemo(() => renderChartPanel("Player Defenders", <Shield size={16} color="#3b82f6" />, "players", "momentumDbp", "p_dbp", "momentumDbp", "#3b82f6"), [data?.players?.momentumDbp, chartSearches.p_dbp, chartIsSearching.p_dbp, chartSearchResults.p_dbp]);
+
+  if (loading) {
+    return (
+      <div style={{ position: 'fixed', top: '73px', left: 0, right: 0, bottom: 0, backgroundColor: '#0b101e', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <Trophy size={48} color="#eab308" style={{ marginBottom: '1rem' }} />
+          <h2 style={{ fontSize: '1.25rem', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'white' }}>Loading Intelligence...</h2>
+        </div>
+      </div>
+    );
+  }
+
+  if (!data) return <div style={{ color: 'white', padding: '2rem' }}>Error loading data.</div>;
 
   return (
     <div style={{ position: 'fixed', top: '73px', left: 0, right: 0, bottom: 0, backgroundColor: '#0b101e', zIndex: 10, display: 'flex', overflow: 'hidden', fontFamily: 'sans-serif' }}>
