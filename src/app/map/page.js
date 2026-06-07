@@ -79,7 +79,21 @@ export default function WorldMap() {
   const [topPlayers, setTopPlayers] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-
+  const [loading, setLoading] = useState(true);
+  const [mapProcessing, setMapProcessing] = useState(true);
+  const [hoverInfo, setHoverInfo] = useState(null);
+  const [worldStats, setWorldStats] = useState(null);
+  const [lastSync, setLastSync] = useState(null);
+  const [cursorGrid, setCursorGrid] = useState(null);
+  const [jumpX, setJumpX] = useState("");
+  const [jumpY, setJumpY] = useState("");
+  const [customColors, setCustomColors] = useState({});
+  const [selectedIsland, setSelectedIsland] = useState(null);
+  const [highlightedPlayers, setHighlightedPlayers] = useState({});
+  const [highlightedAlliances, setHighlightedAlliances] = useState({});
+  const [manualHighlightInput, setManualHighlightInput] = useState("");
+  const mapRef = useRef();
+  const oceanGrid = useMemo(() => generateOceanGrid(), []);
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearch(searchQuery);
