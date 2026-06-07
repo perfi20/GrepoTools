@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { getCachedSyncEpoch } from '@/lib/syncMetadata';
 
 export const dynamic = 'force-dynamic';
 
@@ -23,17 +24,22 @@ export async function GET(request) {
       return NextResponse.json({ error: 'Missing or invalid parameters' }, { status: 400 });
     }
 
+    const epoch = await getCachedSyncEpoch();
+    console.log(`[API /history/hourly] Executing Prisma Query with cache-buster epoch: ${epoch}`);
+
     const baseline = getBaselineTime();
 
     let history;
     if (type === 'player') {
       history = await prisma.playerHistory.findMany({
-        where: { playerId: id, timestamp: { gte: baseline } },
+        cacheStrategy: { ttl: 3600, swr: 3600 },
+        where: { playerId: id, timestamp: { gte: baseline }, id: { not: -epoch } },
         orderBy: { timestamp: 'asc' }
       });
     } else {
       history = await prisma.allianceHistory.findMany({
-        where: { allianceId: id, timestamp: { gte: baseline } },
+        cacheStrategy: { ttl: 3600, swr: 3600 },
+        where: { allianceId: id, timestamp: { gte: baseline }, id: { not: -epoch } },
         orderBy: { timestamp: 'asc' }
       });
     }

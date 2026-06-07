@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
+import { getCachedSyncEpoch } from '@/lib/syncMetadata';
+
 export const dynamic = 'force-dynamic';
 
 export async function GET(request) {
@@ -12,14 +14,19 @@ export async function GET(request) {
   }
 
   try {
+    const epoch = await getCachedSyncEpoch();
+    console.log(`[API /search] Executing Prisma Query with cache-buster epoch: ${epoch}`);
+
     const [players, alliances] = await Promise.all([
       prisma.player.findMany({
-        where: { name: { contains: q, mode: 'insensitive' } },
+        cacheStrategy: { ttl: 3600, swr: 3600 },
+        where: { name: { contains: q, mode: 'insensitive' }, id: { not: -epoch } },
         take: 10,
         select: { id: true, name: true, points: true, abp: true, dbp: true, allBp: true, alliance: { select: { name: true } } }
       }),
       prisma.alliance.findMany({
-        where: { name: { contains: q, mode: 'insensitive' } },
+        cacheStrategy: { ttl: 3600, swr: 3600 },
+        where: { name: { contains: q, mode: 'insensitive' }, id: { not: -epoch } },
         take: 10,
         select: { id: true, name: true, points: true, abp: true, dbp: true, allBp: true }
       })

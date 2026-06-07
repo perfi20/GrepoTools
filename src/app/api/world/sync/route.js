@@ -287,21 +287,26 @@ export async function GET(request) {
 
     // 5. Purge Vercel CDN Edge Cache for all world map APIs
     try {
+      const { revalidateTag } = require('next/cache');
       console.log("Revalidating Next.js cache for /api/world...");
       revalidatePath('/api/world', 'layout');
+      revalidateTag('sync-meta');
       
-      console.log("Generating scoreboard cache...");
+      console.log("Generating scoreboard and geoJson caches...");
       const { generateScoreboardData } = require('@/lib/scoreboard');
       const scoreboardData = await generateScoreboardData();
       const scoreboardGzip = zlib.gzipSync(JSON.stringify(scoreboardData)).toString('base64');
       
+      const geoJsonData = await generateGeoJSON();
+      const geoJsonGzip = zlib.gzipSync(JSON.stringify(geoJsonData)).toString('base64');
+      
       // Update sync metadata
       await prisma.syncMetadata.upsert({
         where: { id: 1 },
-        update: { lastSync: new Date(), scoreboardCache: scoreboardGzip },
-        create: { id: 1, lastSync: new Date(), scoreboardCache: scoreboardGzip }
+        update: { lastSync: new Date(), scoreboardCache: scoreboardGzip, geoJsonCache: geoJsonGzip },
+        create: { id: 1, lastSync: new Date(), scoreboardCache: scoreboardGzip, geoJsonCache: geoJsonGzip }
       });
-      console.log("Sync metadata updated, scoreboard cached, and edge cache purged!");
+      console.log("Sync metadata updated, scoreboard & geojson cached, and edge cache purged!");
     } catch (e) {
       console.error("Failed to update metadata or purge cache:", e);
     }

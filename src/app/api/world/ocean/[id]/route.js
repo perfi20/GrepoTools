@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { getCachedSyncEpoch } from '@/lib/syncMetadata';
 
 const PALETTE = [
   "#ef4444", "#3b82f6", "#22c55e", "#a855f7", "#f97316", 
@@ -27,22 +28,15 @@ export async function GET(request, props) {
       return NextResponse.json({ error: "Invalid ocean ID" }, { status: 400 });
     }
 
+    const epoch = await getCachedSyncEpoch();
+    console.log(`[API /ocean/${oceanId}] Executing Prisma Query with cache-buster epoch: ${epoch}`);
+
     const oceanIds = [parseInt(oceanId, 10)];
 
-    // Determine the bounding box for all requested oceans
-    // Ocean NN means X between (N%10)*100 and (N%10)*100+100
-    // Actually Ocean 45: X=400..500, Y=500..600? Wait, Grepolis grid:
-    // X goes 0-1000. Y goes 0-1000.
-    // Ocean X is Math.floor(gridX / 100), Ocean Y is Math.floor(gridY / 100).
-    // So Ocean 45 -> X is 4, Y is 5? Or is it X=4, Y=5 -> Ocean 45?
-    // Let's assume Ocean ID is represented as XY (e.g. 45 -> X=4, Y=5).
-    // Wait, let's verify if standard Grepolis logic is Ocean = X*10 + Y or Y*10 + X.
-    // Usually Ocean 45 means X=400-499, Y=500-599. Or X=4, Y=5. Wait, X is horizontal, Y is vertical.
-    // If Ocean is 45, the first digit is X, second is Y. So 4 and 5.
-    
     // Fetch Top 10 Alliances for coloring
     const dbAlliances = await prisma.alliance.findMany({
-      cacheStrategy: { ttl: 600, swr: 60 },
+      cacheStrategy: { ttl: 3600, swr: 3600 },
+      where: { id: { not: -epoch } },
       orderBy: { towns: 'desc' },
       take: 10,
       select: { name: true }
@@ -55,8 +49,6 @@ export async function GET(request, props) {
     const outputIslands = [];
     const outputTowns = [];
 
-    // To optimize the query, we can query all islands and towns matching the ocean criteria.
-    // However, since we might request multiple oceans, we can just use an OR query.
     const orConditions = oceanIds.map(o => {
       const xStr = o.toString().padStart(2, '0');
       const oceanX = parseInt(xStr[0], 10);
@@ -67,16 +59,14 @@ export async function GET(request, props) {
       };
     });
 
-    // Hardcode world border radius to 250 (center 500,500)
     const worldRadiusSq = Math.pow(250, 2);
 
     const islands = await prisma.island.findMany({
-      cacheStrategy: { ttl: 600, swr: 60 },
-      where: { OR: orConditions },
+      cacheStrategy: { ttl: 3600, swr: 3600 },
+      where: { OR: orConditions, id: { not: -epoch } },
       select: { id: true, x: true, y: true, availableTowns: true, resourcePlus: true, resourceMinus: true }
     });
 
-    // Also fetch towns in these oceans
     const townOrConditions = oceanIds.map(o => {
       const xStr = o.toString().padStart(2, '0');
       const oceanX = parseInt(xStr[0], 10);
@@ -88,8 +78,8 @@ export async function GET(request, props) {
     });
 
     const towns = await prisma.town.findMany({
-      cacheStrategy: { ttl: 600, swr: 60 },
-      where: { OR: townOrConditions },
+      cacheStrategy: { ttl: 3600, swr: 3600 },
+      where: { OR: townOrConditions, id: { not: -epoch } },
       select: {
         id: true, name: true, points: true, islandX: true, islandY: true, islandSlot: true,
         player: {
