@@ -330,11 +330,53 @@ export async function GET(request) {
     if (newTowns.length > 0) chunkArray(newTowns, BATCH_SIZE).forEach(chunk => tx.push(prisma.town.createMany({ data: chunk })));
     if (newIslands.length > 0) chunkArray(newIslands, BATCH_SIZE).forEach(chunk => tx.push(prisma.island.createMany({ data: chunk })));
 
-    // Updates
-    alliancesToUpdate.forEach(u => tx.push(prisma.alliance.update({ where: { id: u.id }, data: u })));
-    playersToUpdate.forEach(u => tx.push(prisma.player.update({ where: { id: u.id }, data: u })));
-    townsToUpdate.forEach(u => tx.push(prisma.town.update({ where: { id: u.id }, data: u })));
-    islandsToUpdate.forEach(u => tx.push(prisma.island.update({ where: { id: u.id }, data: { availableTowns: u.availableTowns } })));
+    // Updates (Optimized with raw SQL bulk updates)
+    if (alliancesToUpdate.length > 0) {
+      chunkArray(alliancesToUpdate, BATCH_SIZE).forEach(chunk => {
+        const values = chunk.map(a => `(${a.id}, '${a.name.replace(/'/g, "''")}', ${a.points}, ${a.towns}, ${a.members}, ${a.rank}, ${a.abp}, ${a.dbp}, ${a.allBp})`).join(',');
+        tx.push(prisma.$executeRawUnsafe(`
+          UPDATE "Alliance" AS a SET
+            "name" = v."name", "points" = v."points", "towns" = v."towns", "members" = v."members", "rank" = v."rank", "abp" = v."abp", "dbp" = v."dbp", "allBp" = v."allBp"
+          FROM (VALUES ${values}) AS v("id", "name", "points", "towns", "members", "rank", "abp", "dbp", "allBp")
+          WHERE a."id" = v."id"
+        `));
+      });
+    }
+    
+    if (playersToUpdate.length > 0) {
+      chunkArray(playersToUpdate, BATCH_SIZE).forEach(chunk => {
+        const values = chunk.map(p => `(${p.id}, '${p.name.replace(/'/g, "''")}', ${p.allianceId || 'NULL'}, ${p.points}, ${p.rank}, ${p.towns}, ${p.abp}, ${p.dbp}, ${p.allBp})`).join(',');
+        tx.push(prisma.$executeRawUnsafe(`
+          UPDATE "Player" AS p SET
+            "name" = v."name", "allianceId" = v."allianceId", "points" = v."points", "rank" = v."rank", "towns" = v."towns", "abp" = v."abp", "dbp" = v."dbp", "allBp" = v."allBp"
+          FROM (VALUES ${values}) AS v("id", "name", "allianceId", "points", "rank", "towns", "abp", "dbp", "allBp")
+          WHERE p."id" = v."id"
+        `));
+      });
+    }
+
+    if (townsToUpdate.length > 0) {
+      chunkArray(townsToUpdate, BATCH_SIZE).forEach(chunk => {
+        const values = chunk.map(t => `(${t.id}, ${t.playerId || 'NULL'}, '${t.name.replace(/'/g, "''")}', ${t.islandX}, ${t.islandY}, ${t.islandSlot}, ${t.points})`).join(',');
+        tx.push(prisma.$executeRawUnsafe(`
+          UPDATE "Town" AS t SET
+            "playerId" = v."playerId", "name" = v."name", "islandX" = v."islandX", "islandY" = v."islandY", "islandSlot" = v."islandSlot", "points" = v."points"
+          FROM (VALUES ${values}) AS v("id", "playerId", "name", "islandX", "islandY", "islandSlot", "points")
+          WHERE t."id" = v."id"
+        `));
+      });
+    }
+
+    if (islandsToUpdate.length > 0) {
+      chunkArray(islandsToUpdate, BATCH_SIZE).forEach(chunk => {
+        const values = chunk.map(i => `(${i.id}, ${i.availableTowns})`).join(',');
+        tx.push(prisma.$executeRawUnsafe(`
+          UPDATE "Island" AS i SET "availableTowns" = v."availableTowns"
+          FROM (VALUES ${values}) AS v("id", "availableTowns")
+          WHERE i."id" = v."id"
+        `));
+      });
+    }
 
     // History & Conquers
     if (allianceHistory.length > 0) chunkArray(allianceHistory, BATCH_SIZE).forEach(chunk => tx.push(prisma.allianceHistory.createMany({ data: chunk })));
@@ -344,28 +386,31 @@ export async function GET(request) {
 
     await prisma.$transaction(tx);
 
-    // 5. Purge Vercel CDN Edge Cache for all world map APIs
+    // 5. Trigger Async Cache Generation and Purge
     try {
-      const { revalidateTag } = require('next/cache');
-      console.log("Revalidating Next.js cache for /api/world...");
-      revalidatePath('/api/world', 'layout');
-      revalidateTag('sync-meta', 'max');
+      // We don't await this fetch so it runs independently in the background
+      const baseUrl = request.headers.get('origin') || process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : new URL(request.url).origin;
+      const cacheUrl = `${baseUrl}/api/world/sync-cache`;
       
-      console.log("Generating scoreboard and geoJson caches...");
-      const { generateScoreboardData } = require('@/lib/scoreboard');
-      const scoreboardData = await generateScoreboardData();
-      const scoreboardGzip = zlib.gzipSync(JSON.stringify(scoreboardData)).toString('base64');
+      console.log(`Triggering background cache generation at: ${cacheUrl}`);
       
-      const geoJsonData = await generateGeoJSON();
-      const geoJsonGzip = zlib.gzipSync(JSON.stringify(geoJsonData)).toString('base64');
-      
-      // Update sync metadata
+      fetch(cacheUrl, { 
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ trigger: 'sync', force: true })
+      }).catch(err => console.error("Failed to trigger cache sync:", err));
+
+      // Just update lastSync immediately so frontend knows DB is fresh
       await prisma.syncMetadata.upsert({
         where: { id: 1 },
-        update: { lastSync: new Date(), scoreboardCache: scoreboardGzip, geoJsonCache: geoJsonGzip },
-        create: { id: 1, lastSync: new Date(), scoreboardCache: scoreboardGzip, geoJsonCache: geoJsonGzip }
+        update: { lastSync: new Date() },
+        create: { id: 1, lastSync: new Date() }
       });
-      console.log("Sync metadata updated, scoreboard & geojson cached, and edge cache purged!");
+      
+      const { revalidatePath, revalidateTag } = require('next/cache');
+      revalidatePath('/api/world', 'layout');
+      revalidateTag('sync-meta');
+      console.log("Database sync finished and edge cache purged!");
     } catch (e) {
       console.error("Failed to update metadata or purge cache:", e);
     }

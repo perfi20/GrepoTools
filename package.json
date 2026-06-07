@@ -10,7 +10,7 @@
     "postinstall": "prisma generate && prisma db push"
   },
   "dependencies": {
-    "@prisma/client": "^5.22.0",
+    "@prisma/client": "^6.19.3",
     "@prisma/extension-accelerate": "^3.0.1",
     "cheerio": "^1.2.0",
     "lucide-react": "^1.17.0",
@@ -25,7 +25,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.7",
     "playwright": "^1.60.0",
-    "prisma": "^5.22.0",
+    "prisma": "^6.19.3",
     "tsx": "^4.22.4"
   }
 }
