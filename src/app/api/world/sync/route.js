@@ -84,6 +84,7 @@ export async function GET(request) {
 
     // 1. Process Alliances
     const newAlliances = [];
+    const alliancesToUpdate = [];
     const allianceHistory = [];
     const currentAlliances = await prisma.alliance.findMany();
     const allianceMap = new Map(currentAlliances.map(a => [a.id, a]));
@@ -101,34 +102,44 @@ export async function GET(request) {
       const dbp = aDefMap.get(id) || 0;
       const allBp = aAllMap.get(id) || 0;
       
-      newAlliances.push({
+      const newData = {
         id, name, points, 
         towns: parseInt(townsStr), 
         members: parseInt(membersStr), 
         rank: parseInt(rankStr),
         abp, dbp, allBp
-      });
+      };
 
       const existing = allianceMap.get(id);
-      if (existing && (existing.points !== points || existing.abp !== abp || existing.dbp !== dbp)) {
-        allianceHistory.push({
-          allianceId: id,
-          oldPoints: existing.points,
-          newPoints: points,
-          abpDelta: abp - existing.abp,
-          dbpDelta: dbp - existing.dbp,
-          allBpDelta: allBp - existing.allBp,
-        });
+      if (!existing) {
+        newAlliances.push(newData);
+      } else {
+        let changed = false;
+        if (existing.points !== points || existing.abp !== abp || existing.dbp !== dbp) {
+          allianceHistory.push({
+            allianceId: id,
+            oldPoints: existing.points,
+            newPoints: points,
+            abpDelta: abp - existing.abp,
+            dbpDelta: dbp - existing.dbp,
+            allBpDelta: allBp - existing.allBp,
+          });
+          changed = true;
+        }
+        if (existing.name !== name || existing.towns !== newData.towns || existing.members !== newData.members || existing.rank !== newData.rank || existing.allBp !== allBp) changed = true;
+        
+        if (changed) alliancesToUpdate.push(newData);
       }
     }
 
     // 2. Process Players
     const newPlayers = [];
+    const playersToUpdate = [];
     const playerHistory = [];
     const currentPlayers = await prisma.player.findMany();
     const playerMap = new Map(currentPlayers.map(p => [p.id, p]));
 
-    const validAllianceIds = new Set(newAlliances.map(a => a.id));
+    const validAllianceIds = new Set(seenAllianceIds);
     const seenPlayerIds = new Set();
 
     for (const row of playersRaw) {
@@ -149,34 +160,43 @@ export async function GET(request) {
       const dbp = pDefMap.get(id) || 0;
       const allBp = pAllMap.get(id) || 0;
 
-      newPlayers.push({
+      const newData = {
         id, name, allianceId, points, 
         rank: parseInt(rankStr), 
         towns: parseInt(townsStr),
         abp, dbp, allBp
-      });
+      };
 
       const existing = playerMap.get(id);
-      if (existing && (existing.points !== points || existing.abp !== abp || existing.dbp !== dbp)) {
-        playerHistory.push({
-          playerId: id,
-          oldPoints: existing.points,
-          newPoints: points,
-          abpDelta: abp - existing.abp,
-          dbpDelta: dbp - existing.dbp,
-          allBpDelta: allBp - existing.allBp,
-        });
+      if (!existing) {
+        newPlayers.push(newData);
+      } else {
+        let changed = false;
+        if (existing.points !== points || existing.abp !== abp || existing.dbp !== dbp) {
+          playerHistory.push({
+            playerId: id,
+            oldPoints: existing.points,
+            newPoints: points,
+            abpDelta: abp - existing.abp,
+            dbpDelta: dbp - existing.dbp,
+            allBpDelta: allBp - existing.allBp,
+          });
+          changed = true;
+        }
+        if (existing.name !== name || existing.allianceId !== allianceId || existing.rank !== newData.rank || existing.towns !== newData.towns || existing.allBp !== allBp) changed = true;
+        
+        if (changed) playersToUpdate.push(newData);
       }
     }
 
     // 3. Process Towns
     const newTowns = [];
+    const townsToUpdate = [];
     const townHistory = [];
-    // Only fetch ID and points to save memory for towns (can be 50k+)
-    const currentTowns = await prisma.town.findMany({ select: { id: true, points: true } });
-    const townMap = new Map(currentTowns.map(t => [t.id, t.points]));
+    const currentTowns = await prisma.town.findMany({ select: { id: true, points: true, playerId: true, name: true } });
+    const townMap = new Map(currentTowns.map(t => [t.id, t]));
 
-    const validPlayerIds = new Set(newPlayers.map(p => p.id));
+    const validPlayerIds = new Set(seenPlayerIds);
     const seenTownIds = new Set();
 
     for (const row of townsRaw) {
@@ -189,12 +209,12 @@ export async function GET(request) {
       const points = parseInt(pointsStr);
       let playerId = playerIdStr ? parseInt(playerIdStr) : null;
       
-      // Ensure referential integrity (Orphaned towns become ghost towns)
+      // Ensure referential integrity
       if (playerId && !validPlayerIds.has(playerId)) {
           playerId = null;
       }
 
-      newTowns.push({
+      const newData = {
         id,
         playerId,
         name,
@@ -202,27 +222,44 @@ export async function GET(request) {
         islandY: parseInt(yStr),
         islandSlot: parseInt(slotStr),
         points
-      });
+      };
 
-      const oldPoints = townMap.get(id);
-      if (oldPoints !== undefined && oldPoints !== points) {
-        townHistory.push({
-          townId: id,
-          oldPoints: oldPoints,
-          newPoints: points
-        });
+      const existing = townMap.get(id);
+      if (!existing) {
+        newTowns.push(newData);
+      } else {
+        let changed = false;
+        if (existing.points !== points) {
+          townHistory.push({
+            townId: id,
+            oldPoints: existing.points,
+            newPoints: points
+          });
+          changed = true;
+        }
+        if (existing.playerId !== playerId || existing.name !== name) changed = true;
+        
+        if (changed) townsToUpdate.push(newData);
       }
     }
     
     // 4. Process Islands
     const populatedSet = new Set();
-    for (const t of newTowns) {
-      populatedSet.add(`${t.islandX},${t.islandY}`);
+    // Reconstruct populated towns from seenTowns
+    const townList = [...newTowns, ...townsToUpdate, ...currentTowns.filter(t => seenTownIds.has(t.id) && !townsToUpdate.some(u => u.id === t.id))];
+    for (const t of townList) {
+      if (t.islandX && t.islandY) populatedSet.add(`${t.islandX},${t.islandY}`);
     }
 
+    const currentIslands = await prisma.island.findMany({ select: { id: true, availableTowns: true } });
+    const islandMap = new Map(currentIslands.map(i => [i.id, i]));
     const newIslands = [];
+    const islandsToUpdate = [];
+    const seenIslandIds = new Set();
+
     for (const row of islandsRaw) {
         const [idStr, xStr, yStr, type, towns, rPlus, rMinus] = row;
+        const id = parseInt(idStr);
         const x = parseInt(xStr);
         const y = parseInt(yStr);
 
@@ -232,11 +269,19 @@ export async function GET(request) {
         const availableTowns = parseInt(towns);
         if (availableTowns === 0 && !populatedSet.has(`${x},${y}`)) continue;
 
-        newIslands.push({
-            id: parseInt(idStr), x, y,
+        seenIslandIds.add(id);
+        const newData = {
+            id, x, y,
             type: parseInt(type), availableTowns,
             resourcePlus: rPlus, resourceMinus: rMinus
-        });
+        };
+
+        const existing = islandMap.get(id);
+        if (!existing) {
+            newIslands.push(newData);
+        } else if (existing.availableTowns !== availableTowns) {
+            islandsToUpdate.push(newData);
+        }
     }
 
     // 5. Process Conquers
@@ -260,12 +305,18 @@ export async function GET(request) {
     }
 
     // Execute Database Transactions
-    const tx = [
-      prisma.town.deleteMany(),
-      prisma.player.deleteMany(),
-      prisma.alliance.deleteMany(),
-      prisma.island.deleteMany(),
-    ];
+    const tx = [];
+
+    // Removals (Towns -> Players -> Alliances -> Islands) to respect foreign keys
+    const townsToRemove = currentTowns.filter(t => !seenTownIds.has(t.id)).map(t => t.id);
+    const playersToRemove = currentPlayers.filter(p => !seenPlayerIds.has(p.id)).map(p => p.id);
+    const alliancesToRemove = currentAlliances.filter(a => !seenAllianceIds.has(a.id)).map(a => a.id);
+    const islandsToRemove = currentIslands.filter(i => !seenIslandIds.has(i.id)).map(i => i.id);
+
+    if (townsToRemove.length > 0) tx.push(prisma.town.deleteMany({ where: { id: { in: townsToRemove } } }));
+    if (playersToRemove.length > 0) tx.push(prisma.player.deleteMany({ where: { id: { in: playersToRemove } } }));
+    if (alliancesToRemove.length > 0) tx.push(prisma.alliance.deleteMany({ where: { id: { in: alliancesToRemove } } }));
+    if (islandsToRemove.length > 0) tx.push(prisma.island.deleteMany({ where: { id: { in: islandsToRemove } } }));
 
     const chunkArray = (arr, size) => {
       const chunks = [];
@@ -273,11 +324,19 @@ export async function GET(request) {
       return chunks;
     };
 
-    chunkArray(newAlliances, BATCH_SIZE).forEach(chunk => tx.push(prisma.alliance.createMany({ data: chunk })));
-    chunkArray(newPlayers, BATCH_SIZE).forEach(chunk => tx.push(prisma.player.createMany({ data: chunk })));
-    chunkArray(newTowns, BATCH_SIZE).forEach(chunk => tx.push(prisma.town.createMany({ data: chunk })));
-    chunkArray(newIslands, BATCH_SIZE).forEach(chunk => tx.push(prisma.island.createMany({ data: chunk })));
+    // Inserts
+    if (newAlliances.length > 0) chunkArray(newAlliances, BATCH_SIZE).forEach(chunk => tx.push(prisma.alliance.createMany({ data: chunk })));
+    if (newPlayers.length > 0) chunkArray(newPlayers, BATCH_SIZE).forEach(chunk => tx.push(prisma.player.createMany({ data: chunk })));
+    if (newTowns.length > 0) chunkArray(newTowns, BATCH_SIZE).forEach(chunk => tx.push(prisma.town.createMany({ data: chunk })));
+    if (newIslands.length > 0) chunkArray(newIslands, BATCH_SIZE).forEach(chunk => tx.push(prisma.island.createMany({ data: chunk })));
 
+    // Updates
+    alliancesToUpdate.forEach(u => tx.push(prisma.alliance.update({ where: { id: u.id }, data: u })));
+    playersToUpdate.forEach(u => tx.push(prisma.player.update({ where: { id: u.id }, data: u })));
+    townsToUpdate.forEach(u => tx.push(prisma.town.update({ where: { id: u.id }, data: u })));
+    islandsToUpdate.forEach(u => tx.push(prisma.island.update({ where: { id: u.id }, data: { availableTowns: u.availableTowns } })));
+
+    // History & Conquers
     if (allianceHistory.length > 0) chunkArray(allianceHistory, BATCH_SIZE).forEach(chunk => tx.push(prisma.allianceHistory.createMany({ data: chunk })));
     if (playerHistory.length > 0) chunkArray(playerHistory, BATCH_SIZE).forEach(chunk => tx.push(prisma.playerHistory.createMany({ data: chunk })));
     if (townHistory.length > 0) chunkArray(townHistory, BATCH_SIZE).forEach(chunk => tx.push(prisma.townHistory.createMany({ data: chunk })));

@@ -150,8 +150,9 @@ export default function SnipeTimerPage() {
               <div>
                 <label className="text-sm text-secondary block mb-2">Travel Time (HH:MM:SS)</label>
                 <input 
-                  type="time" 
-                  step="1"
+                  type="text" 
+                  pattern="^\d+:\d{2}:\d{2}$"
+                  placeholder="e.g. 45:15:00"
                   className="input-field"
                   value={travelTime}
                   onChange={e => setTravelTime(e.target.value)}

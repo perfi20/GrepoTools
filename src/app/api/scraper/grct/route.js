@@ -28,18 +28,38 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Could not parse report content' }, { status: 400 });
     }
 
-    // Try to extract date
-    const dateMatch = messageText.match(/\((.*?)\)/);
-    let date = new Date();
-    if (dateMatch) {
-        // e.g. "2026/06/03 11:46:13"
-        const parsedDate = new Date(dateMatch[1]);
-        if (!isNaN(parsedDate)) date = parsedDate;
+    // Extract date using a strict regex for the exact GRCT timestamp format
+    const dateMatch = messageText.match(/\(\d{4}\/\d{2}\/\d{2}\s\d{2}:\d{2}:\d{2}\)/);
+    if (!dateMatch) {
+      return NextResponse.json({ error: 'Could not confidently parse the report date. Please verify the report format.' }, { status: 400 });
+    }
+    
+    const date = new Date(dateMatch[0].replace(/[()]/g, ''));
+    if (isNaN(date.getTime())) {
+      return NextResponse.json({ error: 'Parsed report date is invalid.' }, { status: 400 });
     }
 
-    // Attempt to extract attacker and defender from the title text
-    // Format usually: "Attacker attacks Defender" in various languages
-    // We'll extract raw text and let the user correct it if needed
+    // Extract attacker and defender by targeting player links or specific spans
+    const players = [];
+    $('a[href*="player_id="]').each((i, el) => {
+      const name = $(el).text().trim();
+      if (name) players.push(name);
+    });
+    
+    // Fallback if links are missing
+    if (players.length < 2) {
+      $('.rep_player').each((i, el) => {
+        const name = $(el).text().trim();
+        if (name && !players.includes(name)) players.push(name);
+      });
+    }
+
+    if (players.length < 2) {
+      return NextResponse.json({ error: 'Could not confidently parse attacker and defender names from the DOM.' }, { status: 400 });
+    }
+
+    const attacker = players[0];
+    const defender = players[1];
     
     // Extract resources by looking at text nodes near img tags
     let wood = 0, stone = 0, iron = 0;
@@ -65,8 +85,8 @@ export async function POST(request) {
     const report = await prisma.report.create({
       data: {
         originalId: reportId,
-        attacker: "Unknown Attacker (Parsed)",
-        defender: "Unknown Defender (Parsed)",
+        attacker: attacker,
+        defender: defender,
         date,
         lootedWood: wood,
         lootedStone: stone,
