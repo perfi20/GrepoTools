@@ -11,10 +11,11 @@ export async function GET() {
     if (meta && meta.geoJsonCache) {
       // Decode Base64 from Postgres back into a raw binary GZIP buffer
       const gzipBuffer = Buffer.from(meta.geoJsonCache, 'base64');
+      const uint8Array = new Uint8Array(gzipBuffer);
       
       // Serve the compressed binary buffer instantly!
       // The browser natively unzips it because we specify Content-Encoding: gzip
-      return new NextResponse(gzipBuffer, {
+      return new NextResponse(uint8Array, {
         headers: {
           'Content-Type': 'application/json',
           'Content-Encoding': 'gzip',

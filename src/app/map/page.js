@@ -130,7 +130,7 @@ export default function WorldMap() {
   }, []);
 
   const islandsData = useMemo(() => {
-    if (!data) return null;
+    if (!data || !data.features) return null;
     let features = data.features.filter(f => f.properties.renderType === 'island');
     
     // Apply custom colors if present
@@ -159,7 +159,7 @@ export default function WorldMap() {
   }, [data, customColors]);
 
   const rocksData = useMemo(() => {
-    if (!data) return null;
+    if (!data || !data.features) return null;
     return { 
       type: 'FeatureCollection', 
       features: data.features.filter(f => f.properties.renderType === 'rock') 
@@ -167,7 +167,7 @@ export default function WorldMap() {
   }, [data]);
 
   const emptySlotsData = useMemo(() => {
-    if (!data) return null;
+    if (!data || !data.features) return null;
     return { 
       type: 'FeatureCollection', 
       features: data.features.filter(f => f.properties.renderType === 'empty-slot') 
@@ -175,7 +175,7 @@ export default function WorldMap() {
   }, [data]);
 
   const townsData = useMemo(() => {
-    if (!data) return null;
+    if (!data || !data.features) return null;
     let towns = data.features.filter(f => f.properties.renderType === 'town');
     
     // Apply highlights

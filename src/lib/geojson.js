@@ -89,7 +89,6 @@ export async function generateGeoJSON() {
   });
 
   const outputIslands = [];
-  const outputTowns = [];
 
   for (const island of islands) {
     const islandTowns = townLookup[`${island.x},${island.y}`] || [];
@@ -136,19 +135,6 @@ export async function generateGeoJSON() {
       color: islandColor,
       alliance: dominantAlliance || "None"
     });
-
-    for (const t of islandTowns) {
-      outputTowns.push({
-        id: t.id,
-        islandX: t.islandX,
-        islandY: t.islandY,
-        slot: t.islandSlot,
-        name: t.name,
-        points: t.points,
-        player: t.player ? t.player.name : 'Ghost Town',
-        alliance: t.player && t.player.alliance ? t.player.alliance.name : 'None',
-      });
-    }
   }
 
   const features = [];
@@ -174,12 +160,18 @@ export async function generateGeoJSON() {
       }
     });
 
-    const islandTowns = outputTowns.filter(t => t.islandX === island.x && t.islandY === island.y);
-    if (islandTowns.length === 0) continue;
-
     const townSlotMap = {};
-    for (const t of islandTowns) {
-      townSlotMap[t.slot] = t;
+    const islandTownsList = townLookup[`${island.x},${island.y}`] || [];
+    if (islandTownsList.length === 0) continue;
+
+    for (const t of islandTownsList) {
+      townSlotMap[t.islandSlot] = {
+        id: t.id,
+        name: t.name,
+        points: t.points,
+        player: t.player ? t.player.name : 'Ghost Town',
+        alliance: t.player && t.player.alliance ? t.player.alliance.name : 'None',
+      };
     }
 
     const isRock = island.type === 'rock';
