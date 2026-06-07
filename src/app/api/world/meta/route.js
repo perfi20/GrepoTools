@@ -9,18 +9,25 @@ const PALETTE = [
   "#ec4899", "#eab308", "#06b6d4", "#84cc16", "#14b8a6"
 ];
 
-export async function GET() {
+export async function GET(request) {
   try {
+    const meta = await prisma.syncMetadata.findUnique({ where: { id: 1 }, select: { lastSync: true } });
+    if (meta) {
+      const etag = `W/"${meta.lastSync.getTime()}"`;
+      if (request.headers.get('if-none-match') === etag) {
+        return new NextResponse(null, { status: 304 });
+      }
+    }
+
     // Execute all independent database queries concurrently to resolve N+1 blocking behavior
-    const [dbAlliances, dbPlayers, totalPlayers, totalAlliances, totalTowns, totalIslands, populatedIslandsCoords, meta] = await Promise.all([
+    const [dbAlliances, dbPlayers, totalPlayers, totalAlliances, totalTowns, totalIslands, populatedIslandsCoords] = await Promise.all([
       prisma.alliance.findMany({ orderBy: { towns: 'desc' }, take: 10, select: { name: true } }),
       prisma.player.findMany({ orderBy: { points: 'desc' }, take: 10, select: { name: true, points: true, towns: true, alliance: { select: { name: true } } } }),
       prisma.player.count(),
       prisma.alliance.count(),
       prisma.town.count(),
       prisma.island.count(),
-      prisma.town.groupBy({ by: ['islandX', 'islandY'] }),
-      prisma.syncMetadata.findUnique({ where: { id: 1 }, select: { lastSync: true } })
+      prisma.town.groupBy({ by: ['islandX', 'islandY'] })
     ]);
     
     const topAlliancesData = dbAlliances.map((a, i) => ({
@@ -50,7 +57,8 @@ export async function GET() {
       lastSync: lastSyncStr
     }, {
       headers: {
-        'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400'
+        'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
+        'ETag': meta ? `W/"${meta.lastSync.getTime()}"` : `W/"${Date.now()}"`
       }
     });
 

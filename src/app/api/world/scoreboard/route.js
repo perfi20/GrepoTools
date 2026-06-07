@@ -4,18 +4,26 @@ import { generateScoreboardData } from '@/lib/scoreboard';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function GET(request) {
   try {
     const meta = await prisma.syncMetadata.findUnique({ where: { id: 1 } });
     
     if (meta && meta.scoreboardCache) {
+      const etag = `W/"${meta.lastSync.getTime()}"`;
+      if (request.headers.get('if-none-match') === etag) {
+        return new NextResponse(null, { status: 304 });
+      }
+
       // Decode Base64 from Postgres back into a raw binary GZIP buffer
       const gzipBuffer = Buffer.from(meta.scoreboardCache, 'base64');
+      const uint8Array = new Uint8Array(gzipBuffer);
       
-      return new NextResponse(gzipBuffer, {
+      return new NextResponse(uint8Array, {
         headers: {
           'Content-Type': 'application/json',
           'Content-Encoding': 'gzip',
+          'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
+          'ETag': etag,
           'X-Last-Sync': meta.lastSync.toISOString(),
         },
       });
@@ -27,6 +35,7 @@ export async function GET() {
     return NextResponse.json(data, {
       headers: {
         'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
+        'ETag': meta ? `W/"${meta.lastSync.getTime()}"` : `W/"${Date.now()}"`,
         'X-Last-Sync': meta ? meta.lastSync.toISOString() : new Date().toISOString(),
       },
     });
