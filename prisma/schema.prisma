@@ -49,6 +49,10 @@ model Report {
   lootedStone  Int      @default(0)
   lootedIron   Int      @default(0)
   createdAt    DateTime @default(now())
+
+  @@index([attackerTown])
+  @@index([defenderTown])
+  @@index([date])
 }
 
 model Island {
@@ -73,6 +77,8 @@ model Player {
   allBp      Int       @default(0)
   townsList  Town[]
   alliance   Alliance? @relation(fields: [allianceId], references: [id])
+
+  @@index([name])
 }
 
 model PlayerHistory {
@@ -84,6 +90,8 @@ model PlayerHistory {
   dbpDelta  Int      @default(0)
   allBpDelta Int     @default(0)
   timestamp DateTime @default(now())
+
+  @@index([playerId, timestamp])
 }
 
 model Alliance {
@@ -97,6 +105,8 @@ model Alliance {
   dbp     Int      @default(0)
   allBp   Int      @default(0)
   players Player[]
+
+  @@index([name])
 }
 
 model AllianceHistory {
@@ -108,6 +118,8 @@ model AllianceHistory {
   dbpDelta   Int      @default(0)
   allBpDelta Int      @default(0)
   timestamp  DateTime @default(now())
+
+  @@index([allianceId, timestamp])
 }
 
 model Town {
@@ -119,6 +131,8 @@ model Town {
   islandSlot Int
   points     Int
   player     Player? @relation(fields: [playerId], references: [id])
+
+  @@index([islandX, islandY])
 }
 
 model TownHistory {
@@ -127,6 +141,8 @@ model TownHistory {
   oldPoints Int
   newPoints Int
   timestamp DateTime @default(now())
+
+  @@index([townId, timestamp])
 }
 
 model Conquest {

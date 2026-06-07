@@ -11,30 +11,23 @@ const PALETTE = [
 
 export async function GET() {
   try {
-    // 1. Get Top 10 Alliances
-    const dbAlliances = await prisma.alliance.findMany({
-      orderBy: { towns: 'desc' },
-      take: 10,
-      select: { name: true }
-    });
+    // Execute all independent database queries concurrently to resolve N+1 blocking behavior
+    const [dbAlliances, dbPlayers, totalPlayers, totalAlliances, totalTowns, totalIslands, populatedIslandsCoords, meta] = await Promise.all([
+      prisma.alliance.findMany({ orderBy: { towns: 'desc' }, take: 10, select: { name: true } }),
+      prisma.player.findMany({ orderBy: { points: 'desc' }, take: 10, select: { name: true, points: true, towns: true, alliance: { select: { name: true } } } }),
+      prisma.player.count(),
+      prisma.alliance.count(),
+      prisma.town.count(),
+      prisma.island.count(),
+      prisma.town.groupBy({ by: ['islandX', 'islandY'] }),
+      prisma.syncMetadata.findUnique({ where: { id: 1 }, select: { lastSync: true } })
+    ]);
     
     const topAlliancesData = dbAlliances.map((a, i) => ({
       name: a.name,
       color: PALETTE[i] || "#ffffff"
     }));
 
-    // 2. Get Top 10 Players
-    const dbPlayers = await prisma.player.findMany({
-      orderBy: { points: 'desc' },
-      take: 10,
-      select: { 
-        name: true, 
-        points: true, 
-        towns: true, 
-        alliance: { select: { name: true } } 
-      }
-    });
-    
     const topPlayersData = dbPlayers.map(p => ({
       name: p.name,
       points: p.points,
@@ -42,24 +35,7 @@ export async function GET() {
       alliance: p.alliance ? p.alliance.name : 'None'
     }));
 
-    // 3. Get World Stats
-    const totalPlayers = await prisma.player.count();
-    const totalAlliances = await prisma.alliance.count();
-    const totalTowns = await prisma.town.count();
-    const totalIslands = await prisma.island.count();
-    
-    // Number of islands that have at least one town
-    const populatedIslandsCoords = await prisma.town.groupBy({
-      by: ['islandX', 'islandY'],
-    });
     const populatedIslands = populatedIslandsCoords.length;
-
-    // 4. Get Last Sync
-    const meta = await prisma.syncMetadata.findUnique({
-      where: { id: 1 },
-      select: { lastSync: true }
-    });
-
     const lastSyncStr = meta ? meta.lastSync.toISOString() : new Date().toISOString();
 
     return NextResponse.json({

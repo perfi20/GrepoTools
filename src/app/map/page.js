@@ -6,15 +6,7 @@ import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import IslandModal from "@/components/IslandModal";
 
-// Convert Grepolis Grid (0-1000) to Geographic coordinates
-const gridToLng = (x) => (x / 1000) * 360 - 180;
-const gridToLat = (y) => -((y / 1000) * 180 - 90);
-
-function getOrbitPoint(centerLng, centerLat, radiusDeg, angle) {
-  const lat = centerLat + Math.sin(angle) * radiusDeg;
-  const lng = centerLng + Math.cos(angle) * radiusDeg / Math.cos(centerLat * Math.PI / 180);
-  return [lng, lat];
-}
+// Direct binary fetch, no geographic calculations needed on client!
 
 const MAP_STYLE = {
   version: 8,
@@ -38,19 +30,25 @@ function generateOceanGrid() {
       type: "Feature",
       geometry: {
         type: "LineString",
-        coordinates: [[gridToLng(coord), gridToLat(0)], [gridToLng(coord), gridToLat(1000)]]
+        coordinates: [
+          [(coord / 1000) * 360 - 180, -((0 / 1000) * 180 - 90)], 
+          [(coord / 1000) * 360 - 180, -((1000 / 1000) * 180 - 90)]
+        ]
       }
     });
     features.push({
       type: "Feature",
       geometry: {
         type: "LineString",
-        coordinates: [[gridToLng(0), gridToLat(coord)], [gridToLng(1000), gridToLat(coord)]]
+        coordinates: [
+          [(0 / 1000) * 360 - 180, -((coord / 1000) * 180 - 90)],
+          [(1000 / 1000) * 360 - 180, -((coord / 1000) * 180 - 90)]
+        ]
       }
     });
   }
 
-  // Place Ocean labels uniformly across the ocean grid (e.g. every 20 points) to ensure visibility everywhere
+  // Place Ocean labels uniformly across the ocean grid
   for (let ox = 0; ox < 10; ox++) {
     for (let oy = 0; oy < 10; oy++) {
       const offsets = [10, 30, 50, 70, 90];
@@ -60,7 +58,10 @@ function generateOceanGrid() {
             type: "Feature",
             geometry: {
               type: "Point",
-              coordinates: [gridToLng(ox * 100 + dx), gridToLat(oy * 100 + dy)]
+              coordinates: [
+                ((ox * 100 + dx) / 1000) * 360 - 180,
+                -(((oy * 100 + dy) / 1000) * 180 - 90)
+              ]
             },
             properties: { label: `O${ox}${oy}` }
           });
@@ -73,182 +74,36 @@ function generateOceanGrid() {
 }
 
 export default function WorldMap() {
-  const [rawData, setRawData] = useState({ islands: [], towns: [], topAlliances: [], topPlayers: [] });
-  const [loading, setLoading] = useState(true);
-  const [mapProcessing, setMapProcessing] = useState(true);
-  const [hoverInfo, setHoverInfo] = useState(null);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [worldStats, setWorldStats] = useState(null);
-  
-  // New States
-  const [lastSync, setLastSync] = useState(null);
-  const [cursorGrid, setCursorGrid] = useState(null);
-  const [jumpX, setJumpX] = useState("");
-  const [jumpY, setJumpY] = useState("");
-  const [customColors, setCustomColors] = useState({});
-  const [selectedIsland, setSelectedIsland] = useState(null);
-  const [highlightedPlayers, setHighlightedPlayers] = useState({});
-  const [highlightedAlliances, setHighlightedAlliances] = useState({});
-  const [manualHighlightInput, setManualHighlightInput] = useState("");
-  
-  const mapRef = useRef();
+  const [data, setData] = useState(null);
+  const [topAlliances, setTopAlliances] = useState([]);
+  const [topPlayers, setTopPlayers] = useState([]);
+  const [debouncedSearch, setDebouncedSearch] = useState("");
 
-  const oceanGrid = useMemo(() => generateOceanGrid(), []);
-
-  // Compile the Raw Data into a GeoJSON FeatureCollection instantly in the browser memory
-  const data = useMemo(() => {
-    if (!rawData || !rawData.islands) return { type: 'FeatureCollection', features: [] };
-
-    const features = [];
-    const townsByIsland = {};
-
-    // Group towns by island
-    if (rawData.towns) {
-      for (const t of rawData.towns) {
-        const key = `${t.islandX},${t.islandY}`;
-        if (!townsByIsland[key]) townsByIsland[key] = [];
-        townsByIsland[key].push(t);
-      }
-    }
-
-    for (const island of rawData.islands) {
-      const islandLng = gridToLng(island.x);
-      const islandLat = gridToLat(island.y);
-
-      // Add the Island/Rock feature
-      features.push({
-        type: 'Feature',
-        geometry: { type: 'Point', coordinates: [islandLng, islandLat] },
-        properties: {
-          renderType: island.type,
-          id: island.id,
-          x: island.x,
-          y: island.y,
-          resourcePlus: island.resourcePlus,
-          resourceMinus: island.resourceMinus,
-          availableTowns: island.availableTowns,
-          colonizedCount: island.colonizedCount,
-          islandColor: island.color,
-          dominantAlliance: island.alliance
-        }
-      });
-
-      const islandTowns = townsByIsland[`${island.x},${island.y}`] || [];
-      if (islandTowns.length === 0) {
-        // Optimization: Do NOT generate individual empty slots for completely empty islands!
-        // This cuts out 90% of the computation and memory footprint!
-        continue;
-      }
-
-      const townSlotMap = {};
-      for (const t of islandTowns) {
-        townSlotMap[t.slot] = t;
-      }
-
-      const isRock = island.type === 'rock';
-      const orbitRadius = !isRock ? 0.15 : 0.10;
-      
-      const maxSlotOnIsland = Math.max(-1, ...Object.keys(townSlotMap).map(Number));
-      const loopSlots = Math.max(island.availableTowns, maxSlotOnIsland + 1, 1);
-
-      for (let slot = 0; slot < loopSlots; slot++) {
-        const angle = (slot / loopSlots) * Math.PI * 2;
-        const [slotLng, slotLat] = getOrbitPoint(islandLng, islandLat, orbitRadius, angle);
-
-        const town = townSlotMap[slot];
-        if (town) {
-          features.push({
-            type: 'Feature',
-            geometry: { type: 'Point', coordinates: [slotLng, slotLat] },
-            properties: {
-              renderType: 'town',
-              id: town.id,
-              name: town.name,
-              points: town.points,
-              player: town.player,
-              alliance: town.alliance,
-            }
-          });
-        } else if (slot < island.availableTowns) {
-          features.push({
-            type: 'Feature',
-            geometry: { type: 'Point', coordinates: [slotLng, slotLat] },
-            properties: {
-              renderType: 'empty-slot',
-              islandId: island.id,
-              slot: slot
-            }
-          });
-        }
-      }
-    }
-
-    return { type: 'FeatureCollection', features };
-  }, [rawData]);
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [searchQuery]);
 
   useEffect(() => {
     async function loadData() {
       try {
-        // 1. Fetch Meta
-        const metaRes = await fetch('/api/world/meta');
-        const meta = await metaRes.json();
+        const [metaRes, geoRes] = await Promise.all([
+          fetch('/api/world/meta'),
+          fetch('/api/world/geojson')
+        ]);
         
-        setRawData(prev => ({
-          ...prev,
-          topAlliances: meta.topAlliances,
-          topPlayers: meta.topPlayers
-        }));
+        const meta = await metaRes.json();
+        const geojson = await geoRes.json();
+
+        setTopAlliances(meta.topAlliances || []);
+        setTopPlayers(meta.topPlayers || []);
         setWorldStats(meta.stats);
         if (meta.lastSync) setLastSync(new Date(meta.lastSync));
 
-        // 2. Define Ocean Batches
-        const core = ["44","45","54","55"];
-        const inner = [];
-        for (let x=3; x<=6; x++) {
-          for (let y=3; y<=6; y++) {
-            const id = `${x}${y}`;
-            if (!core.includes(id)) inner.push(id);
-          }
-        }
-        
-        const outer = [];
-        for (let x=2; x<=7; x++) {
-          for (let y=2; y<=7; y++) {
-            const id = `${x}${y}`;
-            if (!core.includes(id) && !inner.includes(id)) outer.push(id);
-          }
-        }
-
-        const fetchOceanBatch = async (ids) => {
-          const responses = await Promise.all(ids.map(id => fetch(`/api/world/ocean/${id}`)));
-          
-          const batchIslands = [];
-          const batchTowns = [];
-
-          for (const res of responses) {
-            if (res.ok) {
-              const data = await res.json();
-              if (data.islands) batchIslands.push(...data.islands);
-              if (data.towns) batchTowns.push(...data.towns);
-            }
-          }
-
-          if (batchIslands.length > 0) {
-            setRawData(prev => ({
-              ...prev,
-              islands: [...prev.islands, ...batchIslands],
-              towns: [...prev.towns, ...batchTowns]
-            }));
-          }
-        };
-
-        // Fetch Core First (awaited so we can dismiss loading screen)
-        await fetchOceanBatch(core);
+        setData(geojson);
         setLoading(false);
-
-        // Fetch remaining asynchronously
-        await fetchOceanBatch(inner);
-        await fetchOceanBatch(outer);
 
       } catch (error) {
         console.error("Map load error:", error);
@@ -324,12 +179,12 @@ export default function WorldMap() {
       });
     }
 
-    if (searchQuery.trim()) {
-      const lowerQuery = searchQuery.toLowerCase();
+    if (debouncedSearch.trim()) {
+      const lowerQuery = debouncedSearch.toLowerCase();
       towns = towns.filter(f => 
-        f.properties.player.toLowerCase().includes(lowerQuery) ||
-        f.properties.alliance.toLowerCase().includes(lowerQuery) ||
-        f.properties.name.toLowerCase().includes(lowerQuery)
+        (f.properties.player && f.properties.player.toLowerCase().includes(lowerQuery)) ||
+        (f.properties.alliance && f.properties.alliance.toLowerCase().includes(lowerQuery)) ||
+        (f.properties.name && f.properties.name.toLowerCase().includes(lowerQuery))
       );
     }
     
@@ -341,10 +196,10 @@ export default function WorldMap() {
     });
 
     return { type: 'FeatureCollection', features: towns };
-  }, [data, searchQuery, highlightedPlayers, highlightedAlliances]);
+  }, [data, debouncedSearch, highlightedPlayers, highlightedAlliances]);
 
   const searchStats = useMemo(() => {
-    if (!townsData || !searchQuery.trim()) return null;
+    if (!townsData || !debouncedSearch.trim()) return null;
     const towns = townsData.features;
     let totalPoints = 0;
     towns.forEach(t => totalPoints += t.properties.points);
@@ -352,7 +207,7 @@ export default function WorldMap() {
       count: towns.length,
       points: totalPoints
     };
-  }, [townsData, searchQuery]);
+  }, [townsData, debouncedSearch]);
 
   // World Stats comes directly from Meta now
 
@@ -365,7 +220,7 @@ export default function WorldMap() {
     if (isNaN(x) || isNaN(y)) return;
     if (mapRef.current) {
       mapRef.current.flyTo({
-        center: [gridToLng(x), gridToLat(y)],
+        center: [((x / 1000) * 360 - 180), -((y / 1000) * 180 - 90)],
         zoom: 6,
         duration: 1000
       });
@@ -414,8 +269,8 @@ export default function WorldMap() {
             zoom: 2
           }}
           maxBounds={[
-            [gridToLng(250), gridToLat(750)], // South West
-            [gridToLng(750), gridToLat(250)]  // North East
+            [((250 / 1000) * 360 - 180), -((750 / 1000) * 180 - 90)], // South West
+            [((750 / 1000) * 360 - 180), -((250 / 1000) * 180 - 90)]  // North East
           ]}
           mapStyle={MAP_STYLE}
           interactiveLayerIds={["town-points", "islands-points", "rocks-points", "empty-slots-points"]}
@@ -704,7 +559,7 @@ export default function WorldMap() {
         <div className="flex flex-col" style={{ gap: '0.5rem' }}>
           <h2 style={{ fontSize: '1.125rem', fontWeight: 'bold', color: 'var(--primary)' }}>Top 10 Alliances</h2>
           <div className="flex flex-col" style={{ gap: '0.25rem' }}>
-            {rawData && rawData.topAlliances ? rawData.topAlliances.map((ally) => {
+            {topAlliances.length > 0 ? topAlliances.map((ally) => {
               const activeColor = customColors[ally.name] || ally.color;
               return (
                 <div key={ally.name} className="flex items-center justify-between" style={{ fontSize: '0.875rem', padding: '0.25rem', borderRadius: '4px', transition: 'background 0.2s' }}>
@@ -772,7 +627,7 @@ export default function WorldMap() {
         <div className="flex flex-col" style={{ gap: '0.5rem' }}>
           <h2 style={{ fontSize: '1.125rem', fontWeight: 'bold', color: 'var(--primary)' }}>Top 10 Players</h2>
           <div className="flex flex-col" style={{ gap: '0.25rem' }}>
-            {rawData && rawData.topPlayers ? rawData.topPlayers.map((player) => {
+            {topPlayers.length > 0 ? topPlayers.map((player) => {
               const isHighlighted = highlightedPlayers[player.name];
               const highlightColor = isHighlighted || customColors[player.alliance] || '#3b82f6';
               return (

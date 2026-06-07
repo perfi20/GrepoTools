@@ -115,7 +115,7 @@ export default function ScoreboardDashboard() {
       // Mark as fetching to avoid infinite loops
       setList(prev => prev.map(p => missing.find(m => m.id === p.id) ? { ...p, _isFetchingTrend: true } : p));
 
-      for (const item of missing) {
+      await Promise.all(missing.map(async (item) => {
         try {
           const res = await fetch(`/api/world/momentum?q=${encodeURIComponent(item.name)}&type=${type}`);
           const d = await res.json();
@@ -128,7 +128,7 @@ export default function ScoreboardDashboard() {
         } catch(e) {
           setList(prev => prev.map(p => p.id === item.id ? { ...p, _isFetchingTrend: false } : p));
         }
-      }
+      }));
     };
 
     fetchMissingTrends(pinnedPlayers, 'player', setPinnedPlayers);

@@ -11,8 +11,7 @@ function getOrbitPoint(centerLng, centerLat, radiusDeg, angle) {
   return [lng, lat];
 }
 
-// Note: We are no longer generating literal GeoJSON here to save network bandwidth.
-// This function now returns ultra-condensed raw data which the browser will compile.
+// This function now returns a compiled GeoJSON FeatureCollection to shift load off the client.
 export async function generateGeoJSON() {
   console.time("GeoJSON Generation");
   // Fetch towns with only required fields to dramatically reduce memory payload
@@ -152,38 +151,80 @@ export async function generateGeoJSON() {
     }
   }
 
+  const features = [];
+  
+  for (const island of outputIslands) {
+    const islandLng = gridToLng(island.x);
+    const islandLat = gridToLat(island.y);
+
+    features.push({
+      type: 'Feature',
+      geometry: { type: 'Point', coordinates: [islandLng, islandLat] },
+      properties: {
+        renderType: island.type,
+        id: island.id,
+        x: island.x,
+        y: island.y,
+        resourcePlus: island.resourcePlus,
+        resourceMinus: island.resourceMinus,
+        availableTowns: island.availableTowns,
+        colonizedCount: island.colonizedCount,
+        islandColor: island.color,
+        dominantAlliance: island.alliance
+      }
+    });
+
+    const islandTowns = outputTowns.filter(t => t.islandX === island.x && t.islandY === island.y);
+    if (islandTowns.length === 0) continue;
+
+    const townSlotMap = {};
+    for (const t of islandTowns) {
+      townSlotMap[t.slot] = t;
+    }
+
+    const isRock = island.type === 'rock';
+    const orbitRadius = !isRock ? 0.15 : 0.10;
+    
+    const maxSlotOnIsland = Math.max(-1, ...Object.keys(townSlotMap).map(Number));
+    const loopSlots = Math.max(island.availableTowns, maxSlotOnIsland + 1, 1);
+
+    for (let slot = 0; slot < loopSlots; slot++) {
+      const angle = (slot / loopSlots) * Math.PI * 2;
+      const [slotLng, slotLat] = getOrbitPoint(islandLng, islandLat, orbitRadius, angle);
+
+      const town = townSlotMap[slot];
+      if (town) {
+        features.push({
+          type: 'Feature',
+          geometry: { type: 'Point', coordinates: [slotLng, slotLat] },
+          properties: {
+            renderType: 'town',
+            id: town.id,
+            name: town.name,
+            points: town.points,
+            player: town.player,
+            alliance: town.alliance,
+          }
+        });
+      } else if (slot < island.availableTowns) {
+        features.push({
+          type: 'Feature',
+          geometry: { type: 'Point', coordinates: [slotLng, slotLat] },
+          properties: {
+            renderType: 'empty-slot',
+            islandId: island.id,
+            slot: slot
+          }
+        });
+      }
+    }
+  }
+
   console.timeEnd("GeoJSON Generation");
   
-  const topAlliancesData = topAlliances.map(name => ({
-    name,
-    color: allianceColors[name]
-  }));
-
-  // Fetch Top 10 Players
-  const dbPlayers = await prisma.player.findMany({
-    orderBy: { points: 'desc' },
-    take: 10,
-    select: { 
-      name: true, 
-      points: true, 
-      towns: true, 
-      alliance: { select: { name: true } } 
-    }
-  });
-  
-  const topPlayersData = dbPlayers.map(p => ({
-    name: p.name,
-    points: p.points,
-    towns: p.towns,
-    alliance: p.alliance ? p.alliance.name : 'None'
-  }));
-
   return { 
-    type: 'RawMapData', 
-    islands: outputIslands, 
-    towns: outputTowns,
-    topAlliances: topAlliancesData,
-    topPlayers: topPlayersData
+    type: 'FeatureCollection', 
+    features
   };
 }
 
