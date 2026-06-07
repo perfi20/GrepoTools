@@ -77,6 +77,7 @@ export default function WorldMap() {
   const [data, setData] = useState(null);
   const [topAlliances, setTopAlliances] = useState([]);
   const [topPlayers, setTopPlayers] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
 
   useEffect(() => {
