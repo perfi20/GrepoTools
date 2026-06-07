@@ -290,7 +290,7 @@ export async function GET(request) {
       const { revalidateTag } = require('next/cache');
       console.log("Revalidating Next.js cache for /api/world...");
       revalidatePath('/api/world', 'layout');
-      revalidateTag('sync-meta');
+      revalidateTag('sync-meta', 'max');
       
       console.log("Generating scoreboard and geoJson caches...");
       const { generateScoreboardData } = require('@/lib/scoreboard');
