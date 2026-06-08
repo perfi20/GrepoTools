@@ -317,7 +317,7 @@ export async function GET(request) {
     const lastConquestEpoch = latestDbConquest ? Math.floor(latestDbConquest.timestamp.getTime() / 1000) : 0;
     
     for (const row of conquersRaw) {
-      const [tsStr, townIdStr, oldPStr, newPStr, oldAStr, newAStr, pointsStr] = row;
+      const [townIdStr, tsStr, newPStr, oldPStr, newAStr, oldAStr, pointsStr] = row;
       const timestampSec = parseInt(tsStr);
       
       // Fix: Compare against the actual latest conquest in the database to prevent gaps
