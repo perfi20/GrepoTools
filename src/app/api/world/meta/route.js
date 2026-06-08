@@ -21,8 +21,8 @@ export async function GET(request) {
 
     // Execute all independent database queries concurrently to resolve N+1 blocking behavior
     const [dbAlliances, dbPlayers, totalPlayers, totalAlliances, totalTowns, totalIslands, populatedIslandsCoords] = await Promise.all([
-      prisma.alliance.findMany({ orderBy: { towns: 'desc' }, take: 10, select: { name: true } }),
-      prisma.player.findMany({ orderBy: { points: 'desc' }, take: 10, select: { name: true, points: true, towns: true, alliance: { select: { name: true } } } }),
+      prisma.alliance.findMany({ orderBy: { towns: 'desc' }, take: 10 }),
+      prisma.player.findMany({ orderBy: { points: 'desc' }, take: 10, include: { alliance: true } }),
       prisma.player.count(),
       prisma.alliance.count(),
       prisma.town.count(),
@@ -31,14 +31,12 @@ export async function GET(request) {
     ]);
     
     const topAlliancesData = dbAlliances.map((a, i) => ({
-      name: a.name,
+      ...a,
       color: PALETTE[i] || "#ffffff"
     }));
 
     const topPlayersData = dbPlayers.map(p => ({
-      name: p.name,
-      points: p.points,
-      towns: p.towns,
+      ...p,
       alliance: p.alliance ? p.alliance.name : 'None'
     }));
 
