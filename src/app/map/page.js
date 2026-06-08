@@ -4,7 +4,12 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import Map, { Source, Layer, Popup } from "react-map-gl/maplibre";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
+import { 
+  Menu, X, Search, Map as MapIcon, Globe, MapPin, 
+  Trophy, Users, Loader2, Navigation, Target, Activity, Swords 
+} from 'lucide-react';
 import IslandModal from "@/components/IslandModal";
+import DeepDiveModal from "@/components/DeepDiveModal";
 
 // Direct binary fetch, no geographic calculations needed on client!
 
@@ -92,6 +97,7 @@ export default function WorldMap() {
   const [highlightedPlayers, setHighlightedPlayers] = useState({});
   const [highlightedAlliances, setHighlightedAlliances] = useState({});
   const [manualHighlightInput, setManualHighlightInput] = useState("");
+  const [selectedEntity, setSelectedEntity] = useState(null);
   const mapRef = useRef();
   const oceanGrid = useMemo(() => generateOceanGrid(), []);
   useEffect(() => {
@@ -186,6 +192,10 @@ export default function WorldMap() {
         let hColor = null;
         if (highlightedPlayers[pName]) hColor = highlightedPlayers[pName];
         else if (highlightedAlliances[aName]) hColor = highlightedAlliances[aName];
+        else if (customColors[aName]) {
+          // If the alliance color was overridden manually, use the override!
+          return { ...t, properties: { ...t.properties, townColor: customColors[aName] } };
+        }
 
         if (hColor) {
           return { ...t, properties: { ...t.properties, highlightColor: hColor } };
@@ -377,7 +387,7 @@ export default function WorldMap() {
                     20, 262144
                   ],
                   "circle-color": ["get", "islandColor"],
-                  "circle-opacity": 0.8,
+                  "circle-opacity": 0.35,
                   "circle-stroke-width": 2,
                   "circle-stroke-color": "#0f172a"
                 }}
@@ -483,7 +493,7 @@ export default function WorldMap() {
                   "circle-color": [
                     "case",
                     ["has", "highlightColor"], ["get", "highlightColor"],
-                    searchQuery ? "#ef4444" : "#eab308"
+                    searchQuery ? "#ef4444" : ["get", "townColor"]
                   ],
                   "circle-radius": [
                     "interpolate", ["linear"], ["zoom"],
@@ -549,7 +559,13 @@ export default function WorldMap() {
               islandData={selectedIsland} 
               onClose={() => setSelectedIsland(null)} 
               customColors={customColors}
+              onTownClick={(town) => setSelectedEntity({ type: 'town', data: town })}
             />
+          )}
+
+          {/* Deep Dive Modal */}
+          {selectedEntity && (
+            <DeepDiveModal entity={selectedEntity} onClose={() => setSelectedEntity(null)} />
           )}
         </Map>
       </div>
@@ -562,55 +578,51 @@ export default function WorldMap() {
           World Map Viewer
         </h1>
 
-        {/* Data Status */}
-        <div className="flex flex-col" style={{ gap: '0.25rem' }}>
-          <h2 style={{ fontSize: '1.125rem', fontWeight: 'bold', color: 'var(--primary)' }}>Data Status</h2>
-          <div className="text-secondary" style={{ fontSize: '0.875rem' }}>
-            {lastSync ? `Synced: ${lastSync.toLocaleString()}` : "Loading..."}
-          </div>
-        </div>
+
 
         {/* Top 10 Alliances Legend */}
         <div className="flex flex-col" style={{ gap: '0.5rem' }}>
           <h2 style={{ fontSize: '1.125rem', fontWeight: 'bold', color: 'var(--primary)' }}>Top 10 Alliances</h2>
           <div className="flex flex-col" style={{ gap: '0.25rem' }}>
-            {topAlliances.length > 0 ? topAlliances.map((ally) => {
-              const activeColor = customColors[ally.name] || ally.color;
+            {topAlliances.length > 0 ? topAlliances.map((a) => {
+              const activeColor = customColors[a.name] || a.color;
               return (
-                <div key={ally.name} className="flex items-center justify-between" style={{ fontSize: '0.875rem', padding: '0.25rem', borderRadius: '4px', transition: 'background 0.2s' }}>
-                  <span style={{ color: '#cbd5e1', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: '0.5rem' }}>{ally.name}</span>
-                  <div className="flex gap-2 items-center">
+                <div key={a.name} className="flex items-center justify-between" style={{ fontSize: '0.875rem', padding: '0.25rem', borderRadius: '4px', transition: 'background 0.2s' }}>
+                  <div className="flex gap-2 items-center flex-1">
                     <button 
-                      onClick={() => {
-                        setHighlightedAlliances(prev => {
-                          const next = {...prev};
-                          if (next[ally.name]) delete next[ally.name];
-                          else next[ally.name] = activeColor;
-                          return next;
-                        });
-                      }}
-                      style={{ 
-                        background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, 
-                        opacity: highlightedAlliances[ally.name] ? 1 : 0.3,
-                        filter: highlightedAlliances[ally.name] ? `drop-shadow(0 0 5px ${activeColor})` : 'none'
-                      }}
-                      title="Highlight all towns on map"
+                      onClick={() => setHighlightedAlliances(prev => {
+                        const copy = { ...prev };
+                        if (copy[a.name]) delete copy[a.name];
+                        else copy[a.name] = activeColor;
+                        return copy;
+                      })}
+                      className="cursor-pointer"
                     >
-                      👁️
+                      <div 
+                        style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: activeColor, flexShrink: 0 }}
+                        title="Toggle Map Highlight"
+                      />
                     </button>
-                    <input 
-                      type="color" 
-                      value={activeColor}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        setCustomColors(prev => ({...prev, [ally.name]: val}));
-                        if (highlightedAlliances[ally.name]) {
-                          setHighlightedAlliances(prev => ({...prev, [ally.name]: val}));
-                        }
-                      }}
-                      style={{ width: '20px', height: '20px', border: 'none', background: 'transparent', cursor: 'pointer', padding: 0 }}
-                    />
+                    <div 
+                      style={{ flex: 1, minWidth: 0, cursor: 'pointer' }} 
+                      onClick={(e) => { e.stopPropagation(); setSelectedEntity({ type: 'alliance', data: a }); }}
+                    >
+                      <div className="font-bold text-white truncate text-sm hover:underline">{a.name}</div>
+                      <div className="text-xs text-secondary truncate">{a.points.toLocaleString()} pts</div>
+                    </div>
                   </div>
+                  <input 
+                    type="color" 
+                    value={activeColor}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setCustomColors(prev => ({...prev, [a.name]: val}));
+                      if (highlightedAlliances[a.name]) {
+                        setHighlightedAlliances(prev => ({...prev, [a.name]: val}));
+                      }
+                    }}
+                    style={{ width: '20px', height: '20px', border: 'none', background: 'transparent', cursor: 'pointer', padding: 0 }}
+                  />
                 </div>
               );
             }) : (
@@ -642,31 +654,31 @@ export default function WorldMap() {
         <div className="flex flex-col" style={{ gap: '0.5rem' }}>
           <h2 style={{ fontSize: '1.125rem', fontWeight: 'bold', color: 'var(--primary)' }}>Top 10 Players</h2>
           <div className="flex flex-col" style={{ gap: '0.25rem' }}>
-            {topPlayers.length > 0 ? topPlayers.map((player) => {
-              const isHighlighted = highlightedPlayers[player.name];
-              const highlightColor = isHighlighted || customColors[player.alliance] || '#3b82f6';
+            {topPlayers.length > 0 ? topPlayers.map((p) => {
+              const isHighlighted = highlightedPlayers[p.name];
+              const highlightColor = isHighlighted || customColors[p.alliance] || '#3b82f6';
               return (
-                <div key={player.name} className="flex flex-col" style={{ fontSize: '0.875rem', padding: '0.5rem', borderRadius: '6px', background: isHighlighted ? `rgba(59, 130, 246, 0.1)` : 'rgba(255,255,255,0.03)', border: `1px solid ${isHighlighted ? highlightColor : 'transparent'}`, transition: 'all 0.2s' }}>
-                  <div className="flex items-center justify-between">
-                    <span style={{ color: 'white', fontWeight: 'bold', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{player.name}</span>
-                    <button 
-                      onClick={() => {
-                        setHighlightedPlayers(prev => {
-                          const next = {...prev};
-                          if (next[player.name]) delete next[player.name];
-                          else next[player.name] = highlightColor;
-                          return next;
-                        });
-                      }}
-                      style={{ background: 'transparent', border: 'none', cursor: 'pointer', opacity: isHighlighted ? 1 : 0.3 }}
-                      title="Highlight player's towns"
-                    >
-                      👁️
-                    </button>
-                  </div>
-                  <div className="flex justify-between text-secondary" style={{ fontSize: '0.75rem', marginTop: '2px' }}>
-                    <span>{player.points.toLocaleString()} pts • {player.towns} towns</span>
-                    <span style={{ color: customColors[player.alliance] || '#94a3b8' }}>{player.alliance}</span>
+                <div key={p.name} className="flex items-center gap-2" style={{ fontSize: '0.875rem', padding: '0.5rem', borderRadius: '6px', background: isHighlighted ? `rgba(59, 130, 246, 0.1)` : 'rgba(255,255,255,0.03)', border: `1px solid ${isHighlighted ? highlightColor : 'transparent'}`, transition: 'all 0.2s' }}>
+                  <button 
+                    onClick={() => setHighlightedPlayers(prev => {
+                      const copy = { ...prev };
+                      if (copy[p.name]) delete copy[p.name];
+                      else copy[p.name] = highlightColor;
+                      return copy;
+                    })}
+                    className="cursor-pointer"
+                  >
+                    <div 
+                      style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: highlightColor, flexShrink: 0 }}
+                      title="Toggle Map Highlight"
+                    />
+                  </button>
+                  <div 
+                    style={{ flex: 1, minWidth: 0, cursor: 'pointer' }}
+                    onClick={(e) => { e.stopPropagation(); setSelectedEntity({ type: 'player', data: p }); }}
+                  >
+                    <div className="font-bold text-white truncate text-sm hover:underline">{p.name}</div>
+                    <div className="text-xs text-secondary truncate">{p.points.toLocaleString()} pts</div>
                   </div>
                 </div>
               );
@@ -707,8 +719,7 @@ export default function WorldMap() {
           {Object.entries(highlightedPlayers).length > 0 && (
             <div className="flex flex-col gap-2 mt-2">
               {Object.entries(highlightedPlayers).map(([name, color]) => {
-                // Skip if it's already in Top 10 (we show it above)
-                const isTop10 = rawData?.topPlayers?.some(p => p.name === name);
+                const isTop10 = topPlayers.some(p => p.name === name);
                 if (isTop10) return null;
                 return (
                   <div key={name} className="flex items-center justify-between" style={{ fontSize: '0.875rem', padding: '0.5rem', borderRadius: '6px', background: 'rgba(255,255,255,0.03)', border: `1px solid ${color}` }}>

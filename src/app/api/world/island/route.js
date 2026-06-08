@@ -61,19 +61,38 @@ export async function GET(request) {
       }
     }
 
-    // Fetch Recent Reports for these Towns
-    const townNames = towns.map(t => t.name);
-    const reports = await prisma.report.findMany({
+    // Fetch Recent Conquests for these Towns
+    const conquestsDb = await prisma.conquest.findMany({
       where: {
-        OR: [
-          { attackerTown: { in: townNames } },
-          { defenderTown: { in: townNames } }
-        ],
-        date: { gte: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000) } // Last 14 days
+        townId: { in: townIds },
+        timestamp: { gte: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000) } // Last 14 days
       },
-      orderBy: { date: 'desc' },
+      orderBy: { timestamp: 'desc' },
       take: 20
     });
+
+    const pIds = new Set();
+    const aIds = new Set();
+    conquestsDb.forEach(c => {
+      if (c.oldPlayerId) pIds.add(c.oldPlayerId);
+      if (c.newPlayerId) pIds.add(c.newPlayerId);
+      if (c.oldAllianceId) aIds.add(c.oldAllianceId);
+      if (c.newAllianceId) aIds.add(c.newAllianceId);
+    });
+
+    const players = await prisma.player.findMany({ where: { id: { in: Array.from(pIds) } }, select: { id: true, name: true }});
+    const alliances = await prisma.alliance.findMany({ where: { id: { in: Array.from(aIds) } }, select: { id: true, name: true }});
+    
+    const pMap = new Map(players.map(p => [p.id, p]));
+    const aMap = new Map(alliances.map(a => [a.id, a]));
+
+    const conquests = conquestsDb.map(c => ({
+      ...c,
+      oldPlayerObj: c.oldPlayerId ? pMap.get(c.oldPlayerId) : null,
+      newPlayerObj: c.newPlayerId ? pMap.get(c.newPlayerId) : null,
+      oldAllianceObj: c.oldAllianceId ? aMap.get(c.oldAllianceId) : null,
+      newAllianceObj: c.newAllianceId ? aMap.get(c.newAllianceId) : null
+    }));
 
     return NextResponse.json({
       island,
@@ -81,7 +100,7 @@ export async function GET(request) {
         ...t,
         activity: activityMap[t.id]
       })),
-      reports
+      conquests
     });
 
   } catch (error) {

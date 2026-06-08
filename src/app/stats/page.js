@@ -4,9 +4,10 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Trophy, Swords, Shield, TrendingUp, Clock,
   Activity, ArrowRight, Search, Zap, Crosshair, Users, Target, X, Pin, Loader2,
-  ArrowUpRight, ArrowDownRight, Minus, Skull, HelpCircle, MapPin
+  ArrowUpRight, ArrowDownRight, Minus, Skull, HelpCircle, MapPin, ChevronDown, Filter
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, LabelList, AreaChart, Area } from 'recharts';
+import DeepDiveModal from '@/components/DeepDiveModal';
 
 export default function ScoreboardDashboard() {
   const [data, setData] = useState(null);
@@ -768,51 +769,9 @@ export default function ScoreboardDashboard() {
         </div>
       </div>
 
-      {/* DEEP DIVE MODAL SKELETON */}
+      {/* DEEP DIVE MODAL */}
       {selectedEntity && (
-        <div 
-          style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(11, 16, 30, 0.8)', backdropFilter: 'blur(8px)' }}
-          onClick={(e) => { if(e.target === e.currentTarget) setSelectedEntity(null) }}
-        >
-          <div className="glass-panel" style={{ width: '600px', maxWidth: '90vw', position: 'relative' }}>
-            <button onClick={() => setSelectedEntity(null)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'transparent', border: 'none', cursor: 'pointer', color: '#94a3b8' }}><X size={24} /></button>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
-              <div className="glass-panel" style={{ padding: '16px', background: selectedEntity.type === 'alliance' ? 'rgba(139, 92, 246, 0.2)' : 'rgba(59, 130, 246, 0.2)' }}>
-                {selectedEntity.type === 'alliance' ? <Users size={32} color="#a855f7" /> : <Trophy size={32} color="#3b82f6" />}
-              </div>
-              <div>
-                <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: 'white', margin: '0 0 4px 0' }}>{selectedEntity.data.name}</h2>
-                {selectedEntity.type === 'player' && selectedEntity.data.alliance && (
-                  <div className="gradient-text" style={{ fontSize: '14px', fontWeight: '600' }}>{selectedEntity.data.alliance.name}</div>
-                )}
-                <div style={{ color: '#94a3b8', fontSize: '14px', textTransform: 'capitalize', marginTop: '4px' }}>{selectedEntity.type} Intelligence</div>
-              </div>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '32px' }}>
-              <div className="glass-panel" style={{ padding: '16px', textAlign: 'center', background: 'rgba(0,0,0,0.2)' }}>
-                <Trophy size={20} color="#eab308" style={{ margin: '0 auto 8px auto' }} />
-                <div style={{ fontSize: '24px', fontWeight: 'bold', color: 'white' }}>{formatNumber(selectedEntity.data.points || selectedEntity.data.pts)}</div>
-                <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '4px' }}>Total Points</div>
-              </div>
-              <div className="glass-panel" style={{ padding: '16px', textAlign: 'center', background: 'rgba(0,0,0,0.2)' }}>
-                <Swords size={20} color="#ef4444" style={{ margin: '0 auto 8px auto' }} />
-                <div style={{ fontSize: '24px', fontWeight: 'bold', color: 'white' }}>{formatNumber(selectedEntity.data.abp)}</div>
-                <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '4px' }}>Attack BP</div>
-              </div>
-              <div className="glass-panel" style={{ padding: '16px', textAlign: 'center', background: 'rgba(0,0,0,0.2)' }}>
-                <Shield size={20} color="#3b82f6" style={{ margin: '0 auto 8px auto' }} />
-                <div style={{ fontSize: '24px', fontWeight: 'bold', color: 'white' }}>{formatNumber(selectedEntity.data.dbp)}</div>
-                <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '4px' }}>Defense BP</div>
-              </div>
-            </div>
-            <div style={{ height: '192px', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.3)', flexDirection: 'column', gap: '8px', position: 'relative', overflow: 'hidden' }}>
-              <div style={{ position: 'absolute', inset: 0, opacity: 0.1, backgroundImage: "url('https://www.transparenttextures.com/patterns/cubes.png')" }}></div>
-              <Activity size={32} color="#3b82f6" style={{ opacity: 0.5, zIndex: 1 }} />
-              <span style={{ fontWeight: '600', color: '#94a3b8', zIndex: 1 }}>Historical data assembling...</span>
-              <span style={{ fontSize: '12px', color: '#94a3b8', zIndex: 1 }}>(Check back after a few sync cycles)</span>
-            </div>
-          </div>
-        </div>
+        <DeepDiveModal entity={selectedEntity} onClose={() => setSelectedEntity(null)} />
       )}
 
       {/* HOURLY VELOCITY MODAL */}

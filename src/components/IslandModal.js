@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 
-export default function IslandModal({ islandData, onClose, customColors }) {
+export default function IslandModal({ islandData, onClose, customColors, onTownClick }) {
   const [details, setDetails] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -144,26 +144,24 @@ export default function IslandModal({ islandData, onClose, customColors }) {
 
             {/* Recent Reports (Battle Activity) */}
             <div style={{ background: 'rgba(0,0,0,0.3)', padding: '1rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)', flex: 1, display: 'flex', flexDirection: 'column' }}>
-              <h3 style={{ fontSize: '1.1rem', marginBottom: '0.5rem', color: '#f8fafc' }}>Recent Activity (14d)</h3>
-              {details.reports.length === 0 ? (
-                <div style={{ color: '#64748b', fontSize: '0.9rem', fontStyle: 'italic' }}>No known battles recorded for this island recently.</div>
+              <h3 style={{ fontSize: '1.1rem', marginBottom: '0.5rem', color: '#f8fafc' }}>Recent Conquests (14d)</h3>
+              {details.conquests.length === 0 ? (
+                <div style={{ color: '#64748b', fontSize: '0.9rem', fontStyle: 'italic' }}>No known conquests recorded for this island recently.</div>
               ) : (
                 <div style={{ overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                  {details.reports.map(r => (
-                    <div key={r.id} style={{ fontSize: '0.8rem', padding: '0.5rem', background: 'rgba(255,255,255,0.05)', borderRadius: '6px' }}>
-                      <div style={{ color: '#94a3b8', marginBottom: '2px' }}>{new Date(r.date).toLocaleDateString()}</div>
-                      <div>
-                        <span style={{ color: '#ef4444' }}>{r.attackerTown || r.attacker}</span> 
-                        {' ⚔️ '} 
-                        <span style={{ color: '#3b82f6' }}>{r.defenderTown || r.defender}</span>
-                      </div>
-                      {(r.lootedWood > 0 || r.lootedStone > 0 || r.lootedIron > 0) && (
-                        <div style={{ color: '#eab308', marginTop: '2px' }}>
-                          Loot: {(r.lootedWood + r.lootedStone + r.lootedIron).toLocaleString()}
+                  {details.conquests.map(c => {
+                    const townName = details.towns.find(t => t.id === c.townId)?.name || 'Town';
+                    return (
+                      <div key={c.id} style={{ fontSize: '0.8rem', padding: '0.5rem', background: 'rgba(255,255,255,0.05)', borderRadius: '6px' }}>
+                        <div style={{ color: '#94a3b8', marginBottom: '2px' }}>{new Date(c.timestamp).toLocaleString()}</div>
+                        <div>
+                          <span style={{ color: 'white', fontWeight: 'bold' }}>{townName}</span>: <span style={{ color: '#ef4444' }}>{c.newPlayerObj?.name || 'Ghost'}</span> 
+                          {' ⚔️ '} 
+                          <span style={{ color: '#3b82f6' }}>{c.oldPlayerObj?.name || 'Ghost'}</span>
                         </div>
-                      )}
-                    </div>
-                  ))}
+                      </div>
+                    )
+                  })}
                 </div>
               )}
             </div>
@@ -181,10 +179,15 @@ export default function IslandModal({ islandData, onClose, customColors }) {
                 const allyColor = customColors[allyName] || '#94a3b8';
 
                 return (
-                  <div key={t.id} style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.03)', padding: '0.75rem', borderRadius: '8px', borderLeft: `4px solid ${isGhost ? '#64748b' : allyColor}` }}>
+                  <div 
+                    key={t.id} 
+                    style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.03)', padding: '0.75rem', borderRadius: '8px', borderLeft: `4px solid ${isGhost ? '#64748b' : allyColor}`, cursor: 'pointer' }}
+                    onClick={() => onTownClick && onTownClick(t)}
+                    className="hover:bg-slate-800 transition-colors"
+                  >
                     <div style={{ width: '2rem', color: '#64748b', fontWeight: 'bold', fontSize: '0.9rem' }}>#{t.islandSlot}</div>
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontWeight: 'bold', color: isGhost ? '#94a3b8' : 'white', fontSize: '1rem' }}>{t.name}</div>
+                      <div style={{ fontWeight: 'bold', color: isGhost ? '#94a3b8' : 'white', fontSize: '1rem' }} className="hover:underline">{t.name}</div>
                       <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>
                         {isGhost ? 'Ghost Town' : t.player.name} • {allyName}
                       </div>

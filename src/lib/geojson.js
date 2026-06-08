@@ -171,6 +171,7 @@ export async function generateGeoJSON() {
         points: t.points,
         player: t.player ? t.player.name : 'Ghost Town',
         alliance: t.player && t.player.alliance ? t.player.alliance.name : 'None',
+        townColor: (t.player && t.player.alliance && allianceColors[t.player.alliance.name]) ? allianceColors[t.player.alliance.name] : '#94a3b8'
       };
     }
 
@@ -196,6 +197,7 @@ export async function generateGeoJSON() {
             points: town.points,
             player: town.player,
             alliance: town.alliance,
+            townColor: town.townColor
           }
         });
       } else if (slot < island.availableTowns) {
