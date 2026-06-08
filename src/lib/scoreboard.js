@@ -11,10 +11,15 @@ const getBaselineTime = () => {
 };
 
 export async function generateScoreboardData() {
+  const meta = await prisma.syncMetadata.findUnique({ where: { id: 1 } });
+  const baselineSyncTime = meta ? meta.lastSync : new Date();
+  
   const baseline = getBaselineTime();
   const windowBStart = new Date(baseline.getTime() - 24 * 60 * 60 * 1000);
   const windowBEnd = baseline;
-  const recentStart = new Date(Date.now() - 65 * 60 * 1000);
+  
+  // Lock the rolling window to the exact time of the last successful data update
+  const recentStart = new Date(baselineSyncTime.getTime() - 65 * 60 * 1000);
 
   const [
     players,

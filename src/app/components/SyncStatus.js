@@ -23,13 +23,15 @@ export default function SyncStatus() {
 
   const minutesAgo = Math.floor((now - status) / 1000 / 60);
   const nextSyncIn = Math.max(0, 60 - minutesAgo);
+  
+  const timeString = status.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#94a3b8', background: 'rgba(255,255,255,0.05)', padding: '4px 12px', borderRadius: '999px', marginLeft: '16px' }}>
       <Clock size={12} color="#a855f7" />
-      <span>Synced {minutesAgo}m ago</span>
+      <span>Synced at {timeString}</span>
       <span style={{ opacity: 0.5 }}>•</span>
-      <span>Next in ~{nextSyncIn}m</span>
+      <span>Next expected in ~{nextSyncIn}m</span>
     </div>
   );
 }
