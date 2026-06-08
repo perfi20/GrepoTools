@@ -220,7 +220,7 @@ export async function GET(request) {
     const newTowns = [];
     const townsToUpdate = [];
     const townHistory = [];
-    const currentTowns = await prisma.town.findMany({ select: { id: true, points: true, playerId: true, name: true } });
+    const currentTowns = await prisma.town.findMany({ select: { id: true, points: true, playerId: true, name: true, islandX: true, islandY: true } });
     const townMap = new Map(currentTowns.map(t => [t.id, t]));
 
     const validPlayerIds = new Set(seenPlayerIds);
