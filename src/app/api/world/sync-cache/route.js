@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/prisma';
 import zlib from 'zlib';
 import { generateGeoJSON } from '@/lib/geojson';
@@ -28,6 +29,10 @@ export async function POST(request) {
     });
     
     console.log("Async Cache Sync metadata updated successfully!");
+
+    revalidatePath('/api/world/scoreboard');
+    revalidatePath('/api/world/geojson');
+    console.log("Edge caches revalidated successfully!");
 
     return NextResponse.json({ success: true, message: 'Caches rebuilt' });
   } catch (error) {
