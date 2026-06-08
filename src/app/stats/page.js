@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Trophy, Swords, Shield, TrendingUp, Clock,
   Activity, ArrowRight, Search, Zap, Crosshair, Users, Target, X, Pin, Loader2,
-  ArrowUpRight, ArrowDownRight, Minus, Skull, HelpCircle
+  ArrowUpRight, ArrowDownRight, Minus, Skull, HelpCircle, MapPin
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, LabelList, AreaChart, Area } from 'recharts';
 
@@ -393,7 +393,7 @@ export default function ScoreboardDashboard() {
           </p>
           {payload[0].payload.recentGain > 0 && (
              <p style={{ fontSize: '12px', margin: '4px 0 0 0', color: '#4ade80' }}>
-               Recent Sync: +{formatNumber(payload[0].payload.recentGain)}
+               Last 65m Window: +{formatNumber(payload[0].payload.recentGain)}
              </p>
           )}
         </div>
@@ -653,7 +653,7 @@ export default function ScoreboardDashboard() {
         </div>
 
         {/* Live Conquest Feed (Bottom Area) */}
-        <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: '300px', padding: 0, overflow: 'hidden' }}>
+        <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: '600px', padding: 0, overflow: 'hidden' }}>
           
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -697,20 +697,37 @@ export default function ScoreboardDashboard() {
                         <Clock size={12} color="#64748b"/> {timeSince(c.timestamp)}
                       </div>
                     </td>
-                    <td style={{ padding: '12px 24px', fontWeight: '600', color: 'white', maxWidth: '150px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.townName}</td>
+                    <td style={{ padding: '12px 24px', fontWeight: '600', color: 'white', maxWidth: '150px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        {c.townName}
+                        {c.townX && c.townY && (
+                          <a href={`/map?x=${c.townX}&y=${c.townY}`} target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6', cursor: 'pointer', display: 'flex', alignItems: 'center' }} title="View on Map">
+                            <MapPin size={12} />
+                          </a>
+                        )}
+                      </div>
+                    </td>
                     <td style={{ padding: '12px 24px', color: '#cbd5e1', fontFamily: 'monospace', fontSize: '12px' }}>{formatNumber(c.townPoints)}</td>
                     <td style={{ padding: '12px 24px', textAlign: 'right' }}>
-                      <div style={{ color: '#f87171', fontWeight: '600', maxWidth: '120px', display: 'inline-block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.oldPlayer}</div>
-                      <div style={{ fontSize: '10px', color: '#64748b', maxWidth: '120px', display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.oldAlliance}</div>
+                      <div 
+                        onClick={() => c.oldPlayerId && setSelectedEntity({ type: 'player', data: { id: c.oldPlayerId, name: c.oldPlayer } })}
+                        style={{ color: '#f87171', fontWeight: '600', maxWidth: '120px', display: 'inline-block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', cursor: c.oldPlayerId ? 'pointer' : 'default' }}>{c.oldPlayer}</div>
+                      <div 
+                        onClick={() => c.oldAllianceId && setSelectedEntity({ type: 'alliance', data: { id: c.oldAllianceId, name: c.oldAlliance } })}
+                        style={{ fontSize: '10px', color: '#64748b', maxWidth: '120px', display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', cursor: c.oldAllianceId ? 'pointer' : 'default' }}>{c.oldAlliance}</div>
                     </td>
                     <td style={{ padding: '12px 24px', textAlign: 'center' }}>
                       <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto' }}>
-                        <ArrowRight size={12} color="#64748b" />
+                        <ArrowRight size={12} color={!c.oldPlayerId || !c.newPlayerId ? '#a855f7' : (c.oldAllianceId === c.newAllianceId && c.oldAllianceId) ? '#3b82f6' : '#22c55e'} />
                       </div>
                     </td>
                     <td style={{ padding: '12px 24px' }}>
-                      <div style={{ color: '#4ade80', fontWeight: '600', maxWidth: '120px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.newPlayer}</div>
-                      <div style={{ fontSize: '10px', color: '#64748b', maxWidth: '120px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.newAlliance}</div>
+                      <div 
+                        onClick={() => c.newPlayerId && setSelectedEntity({ type: 'player', data: { id: c.newPlayerId, name: c.newPlayer } })}
+                        style={{ color: '#4ade80', fontWeight: '600', maxWidth: '120px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', cursor: c.newPlayerId ? 'pointer' : 'default' }}>{c.newPlayer}</div>
+                      <div 
+                        onClick={() => c.newAllianceId && setSelectedEntity({ type: 'alliance', data: { id: c.newAllianceId, name: c.newAlliance } })}
+                        style={{ fontSize: '10px', color: '#64748b', maxWidth: '120px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', cursor: c.newAllianceId ? 'pointer' : 'default' }}>{c.newAlliance}</div>
                     </td>
                   </tr>
                 ))}

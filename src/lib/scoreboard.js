@@ -61,6 +61,14 @@ export async function generateScoreboardData() {
   const gaMap = new Map();
   alliances.forEach(a => gaMap.set(a.id, a));
 
+  // Fetch Towns for Conquests
+  const townIds = conquests.map(c => c.townId);
+  const towns = await prisma.town.findMany({
+    where: { id: { in: townIds } },
+    select: { id: true, name: true, x: true, y: true }
+  });
+  const townMap = new Map(towns.map(t => [t.id, t]));
+
   // Enrich Conquests & Count
   const pConquests = {};
   const pLosses = {};
@@ -72,6 +80,7 @@ export async function generateScoreboardData() {
     const op = gpMap.get(c.oldPlayerId);
     const na = gaMap.get(c.newAllianceId);
     const oa = gaMap.get(c.oldAllianceId);
+    const t = townMap.get(c.townId);
     
     if (c.newPlayerId) pConquests[c.newPlayerId] = (pConquests[c.newPlayerId] || 0) + 1;
     if (c.oldPlayerId) pLosses[c.oldPlayerId] = (pLosses[c.oldPlayerId] || 0) + 1;
@@ -80,6 +89,9 @@ export async function generateScoreboardData() {
 
     return {
       ...c,
+      townName: t ? t.name : `Ghost Town (${c.townId})`,
+      townX: t ? t.x : null,
+      townY: t ? t.y : null,
       newPlayer: np ? np.name : null,
       oldPlayer: op ? op.name : null,
       newAlliance: na ? na.name : null,

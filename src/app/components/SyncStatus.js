@@ -22,7 +22,10 @@ export default function SyncStatus() {
   if (!status) return null;
 
   const minutesAgo = Math.floor((now - status) / 1000 / 60);
-  const nextSyncIn = Math.max(0, 60 - minutesAgo);
+  
+  // Calculate next 10-minute interval check
+  const nowMinutes = now.getMinutes();
+  const nextSyncIn = 10 - (nowMinutes % 10);
   
   const timeString = status.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
@@ -31,7 +34,7 @@ export default function SyncStatus() {
       <Clock size={12} color="#a855f7" />
       <span>Synced at {timeString}</span>
       <span style={{ opacity: 0.5 }}>•</span>
-      <span>Next expected in ~{nextSyncIn}m</span>
+      <span>Next sync try in ~{nextSyncIn}m</span>
     </div>
   );
 }
