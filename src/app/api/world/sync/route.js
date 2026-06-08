@@ -46,11 +46,38 @@ export async function GET(request) {
   try {
     const meta = await prisma.syncMetadata.findUnique({ where: { id: 1 } });
     if (meta && !force) {
-      const minutesSinceLastSync = (new Date() - meta.lastSync) / 1000 / 60;
-      if (minutesSinceLastSync < 50) {
+      // Perform lightweight HEAD requests on all files to check their Last-Modified headers
+      const filesToCheck = [
+        'players.txt.gz', 'alliances.txt.gz', 'towns.txt.gz', 'islands.txt.gz',
+        'player_kills_att.txt.gz', 'player_kills_def.txt.gz', 'player_kills_all.txt.gz',
+        'alliance_kills_att.txt.gz', 'alliance_kills_def.txt.gz', 'alliance_kills_all.txt.gz',
+        'conquers.txt.gz'
+      ];
+      
+      const headRequests = filesToCheck.map(filename => 
+        fetch(`https://${SERVER}.grepolis.com/data/${filename}`, { method: 'HEAD' })
+          .then(res => res.headers.get('last-modified'))
+          .catch(() => null)
+      );
+      
+      const lastModifiedHeaders = await Promise.all(headRequests);
+      
+      // Find the most recent modified date among all files
+      let latestModifiedDate = new Date(0);
+      for (const headerStr of lastModifiedHeaders) {
+        if (headerStr) {
+          const modDate = new Date(headerStr);
+          if (modDate > latestModifiedDate) {
+            latestModifiedDate = modDate;
+          }
+        }
+      }
+
+      // If the most recent file update is older or exactly equal to our last sync, we skip
+      if (latestModifiedDate.getTime() > 0 && meta.lastSync >= latestModifiedDate) {
         return NextResponse.json({ 
           success: true, 
-          message: `Data is fresh. Last synced ${Math.round(minutesSinceLastSync)} minutes ago. Next update available in ${Math.round(50 - minutesSinceLastSync)} minutes.`,
+          message: `Data is fresh. Grepolis latest update: ${latestModifiedDate.toISOString()}. Our last sync: ${meta.lastSync.toISOString()}.`,
           skipped: true,
           lastSync: meta.lastSync
         });
@@ -286,12 +313,15 @@ export async function GET(request) {
 
     // 5. Process Conquers
     const newConquers = [];
-    const lastSyncEpoch = meta ? Math.floor(meta.lastSync.getTime() / 1000) : 0;
+    const latestDbConquest = await prisma.conquest.findFirst({ orderBy: { timestamp: 'desc' } });
+    const lastConquestEpoch = latestDbConquest ? Math.floor(latestDbConquest.timestamp.getTime() / 1000) : 0;
     
     for (const row of conquersRaw) {
       const [tsStr, townIdStr, oldPStr, newPStr, oldAStr, newAStr, pointsStr] = row;
       const timestampSec = parseInt(tsStr);
-      if (timestampSec > lastSyncEpoch) {
+      
+      // Fix: Compare against the actual latest conquest in the database to prevent gaps
+      if (timestampSec > lastConquestEpoch) {
         newConquers.push({
           townId: parseInt(townIdStr),
           townPoints: parseInt(pointsStr),
