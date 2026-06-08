@@ -32,6 +32,7 @@ export async function POST(request) {
 
     revalidatePath('/api/world/scoreboard');
     revalidatePath('/api/world/geojson');
+    revalidatePath('/api/world/meta');
     console.log("Edge caches revalidated successfully!");
 
     return NextResponse.json({ success: true, message: 'Caches rebuilt' });

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 
 // Pre-assign a specific color palette to the top 10 alliances
 const PALETTE = [
