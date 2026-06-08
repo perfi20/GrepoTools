@@ -65,7 +65,7 @@ export async function generateScoreboardData() {
   const townIds = conquests.map(c => c.townId);
   const towns = await prisma.town.findMany({
     where: { id: { in: townIds } },
-    select: { id: true, name: true, x: true, y: true }
+    select: { id: true, name: true, islandX: true, islandY: true }
   });
   const townMap = new Map(towns.map(t => [t.id, t]));
 
@@ -90,12 +90,16 @@ export async function generateScoreboardData() {
     return {
       ...c,
       townName: t ? t.name : `Ghost Town (${c.townId})`,
-      townX: t ? t.x : null,
-      townY: t ? t.y : null,
+      townX: t ? t.islandX : null,
+      townY: t ? t.islandY : null,
       newPlayer: np ? np.name : null,
       oldPlayer: op ? op.name : null,
       newAlliance: na ? na.name : null,
       oldAlliance: oa ? oa.name : null,
+      newPlayerObj: np || null,
+      oldPlayerObj: op || null,
+      newAllianceObj: na || null,
+      oldAllianceObj: oa || null,
     };
   });
 

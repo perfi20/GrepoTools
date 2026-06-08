@@ -210,7 +210,7 @@ export default function ScoreboardDashboard() {
     if (!conquestFilter.trim()) return data.conquests;
     const term = conquestFilter.toLowerCase();
     return data.conquests.filter(c => 
-      c.townName.toLowerCase().includes(term) ||
+      (c.townName || '').toLowerCase().includes(term) ||
       (c.oldPlayer || '').toLowerCase().includes(term) ||
       (c.newPlayer || '').toLowerCase().includes(term) ||
       (c.oldAlliance || '').toLowerCase().includes(term) ||
@@ -709,12 +709,14 @@ export default function ScoreboardDashboard() {
                     </td>
                     <td style={{ padding: '12px 24px', color: '#cbd5e1', fontFamily: 'monospace', fontSize: '12px' }}>{formatNumber(c.townPoints)}</td>
                     <td style={{ padding: '12px 24px', textAlign: 'right' }}>
-                      <div 
-                        onClick={() => c.oldPlayerId && setSelectedEntity({ type: 'player', data: { id: c.oldPlayerId, name: c.oldPlayer } })}
-                        style={{ color: '#f87171', fontWeight: '600', maxWidth: '120px', display: 'inline-block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', cursor: c.oldPlayerId ? 'pointer' : 'default' }}>{c.oldPlayer}</div>
-                      <div 
-                        onClick={() => c.oldAllianceId && setSelectedEntity({ type: 'alliance', data: { id: c.oldAllianceId, name: c.oldAlliance } })}
-                        style={{ fontSize: '10px', color: '#64748b', maxWidth: '120px', display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', cursor: c.oldAllianceId ? 'pointer' : 'default' }}>{c.oldAlliance}</div>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                        <div 
+                          onClick={() => c.oldPlayerId && c.oldPlayerObj && setSelectedEntity({ type: 'player', data: c.oldPlayerObj })}
+                          style={{ color: '#f87171', fontWeight: '600', maxWidth: '120px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', cursor: c.oldPlayerId ? 'pointer' : 'default' }}>{c.oldPlayer}</div>
+                        <div 
+                          onClick={() => c.oldAllianceId && c.oldAllianceObj && setSelectedEntity({ type: 'alliance', data: c.oldAllianceObj })}
+                          style={{ fontSize: '10px', color: '#64748b', maxWidth: '120px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', cursor: c.oldAllianceId ? 'pointer' : 'default' }}>{c.oldAlliance}</div>
+                      </div>
                     </td>
                     <td style={{ padding: '12px 24px', textAlign: 'center' }}>
                       <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto' }}>
@@ -722,12 +724,14 @@ export default function ScoreboardDashboard() {
                       </div>
                     </td>
                     <td style={{ padding: '12px 24px' }}>
-                      <div 
-                        onClick={() => c.newPlayerId && setSelectedEntity({ type: 'player', data: { id: c.newPlayerId, name: c.newPlayer } })}
-                        style={{ color: '#4ade80', fontWeight: '600', maxWidth: '120px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', cursor: c.newPlayerId ? 'pointer' : 'default' }}>{c.newPlayer}</div>
-                      <div 
-                        onClick={() => c.newAllianceId && setSelectedEntity({ type: 'alliance', data: { id: c.newAllianceId, name: c.newAlliance } })}
-                        style={{ fontSize: '10px', color: '#64748b', maxWidth: '120px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', cursor: c.newAllianceId ? 'pointer' : 'default' }}>{c.newAlliance}</div>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                        <div 
+                          onClick={() => c.newPlayerId && c.newPlayerObj && setSelectedEntity({ type: 'player', data: c.newPlayerObj })}
+                          style={{ color: '#4ade80', fontWeight: '600', maxWidth: '120px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', cursor: c.newPlayerId ? 'pointer' : 'default' }}>{c.newPlayer}</div>
+                        <div 
+                          onClick={() => c.newAllianceId && c.newAllianceObj && setSelectedEntity({ type: 'alliance', data: c.newAllianceObj })}
+                          style={{ fontSize: '10px', color: '#64748b', maxWidth: '120px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', cursor: c.newAllianceId ? 'pointer' : 'default' }}>{c.newAlliance}</div>
+                      </div>
                     </td>
                   </tr>
                 ))}
