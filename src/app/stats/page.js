@@ -110,7 +110,7 @@ export default function ScoreboardDashboard() {
   // Fetch missing trends for pinned items dynamically
   useEffect(() => {
     const fetchMissingTrends = async (items, type, setList) => {
-      const missing = items.filter(i => i.trendPts === undefined && !i._isFetchingTrend);
+      const missing = items.filter(i => !i._isFresh && !i._isFetchingTrend);
       if (missing.length === 0) return;
 
       // Mark as fetching to avoid infinite loops
@@ -122,12 +122,12 @@ export default function ScoreboardDashboard() {
           const d = await res.json();
           const match = (d.results || []).find(r => r.id === item.id);
           if (match) {
-            setList(prev => prev.map(p => p.id === match.id ? { ...p, ...match, _isFetchingTrend: false } : p));
+            setList(prev => prev.map(p => p.id === match.id ? { ...p, ...match, _isFetchingTrend: false, _isFresh: true } : p));
           } else {
-             setList(prev => prev.map(p => p.id === item.id ? { ...p, _isFetchingTrend: false, trendPts: 0, gainsAPts: 0, gainsBPts: 0 } : p));
+             setList(prev => prev.map(p => p.id === item.id ? { ...p, _isFetchingTrend: false, _isFresh: true, trendPts: 0, gainsAPts: 0, gainsBPts: 0 } : p));
           }
         } catch(e) {
-          setList(prev => prev.map(p => p.id === item.id ? { ...p, _isFetchingTrend: false } : p));
+          setList(prev => prev.map(p => p.id === item.id ? { ...p, _isFetchingTrend: false, _isFresh: true } : p));
         }
       }));
     };
@@ -353,6 +353,7 @@ export default function ScoreboardDashboard() {
 
   const renderSidebarList = (entities, metric, search, searchResults, isSearching, isAlliance = false) => {
     let list = entities[metric] || [];
+    list = list.map((item, i) => ({ ...item, _originalRank: i + 1 }));
     const pinned = isAlliance ? pinnedAlliances : pinnedPlayers;
 
     // Remove pinned from main list to avoid duplicates
@@ -360,7 +361,7 @@ export default function ScoreboardDashboard() {
     list = list.filter(item => !pinnedIds.has(item.id));
 
     if (search.trim().length >= 2) {
-      list = searchResults.filter(item => !pinnedIds.has(item.id));
+      list = searchResults.map(item => ({ ...item, _originalRank: '-' })).filter(item => !pinnedIds.has(item.id));
     } else if (search.trim()) {
        const lower = search.toLowerCase();
        list = list.filter(e => e.name.toLowerCase().includes(lower));
@@ -378,7 +379,7 @@ export default function ScoreboardDashboard() {
         ) : list.length === 0 ? (
           <div style={{ color: '#64748b', textAlign: 'center', padding: '1rem 0', fontSize: '0.875rem' }}>No results found.</div>
         ) : (
-          list.map((item, i) => renderSidebarItem(item, metric, isAlliance, i + 1, false))
+          list.map((item, i) => renderSidebarItem(item, metric, isAlliance, item._originalRank, false))
         )}
       </>
     );
@@ -541,7 +542,7 @@ export default function ScoreboardDashboard() {
                       fill="#ffffff" 
                       fontSize={11} 
                       fontWeight="bold" 
-                      formatter={(val) => `+${formatNumber(val)}`} 
+                      formatter={(val) => val > 0 ? `+${formatNumber(val)}` : formatNumber(val)} 
                     />
                     <LabelList 
                       dataKey="recentGain" 

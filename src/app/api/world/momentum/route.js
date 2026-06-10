@@ -47,7 +47,7 @@ export async function GET(request) {
     const calcTrend = (valA, valB) => {
       if (valB === 0) return valA > 0 ? 100 : 0;
       let trend = ((valA - valB) / Math.abs(valB)) * 100;
-      return Math.round(Math.max(-100, Math.min(100, trend)));
+      return Math.round(Math.max(-100, trend));
     };
 
     if (type === 'player') {

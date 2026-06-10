@@ -21,10 +21,16 @@ export default function DeepDiveModal({ entity, onClose }) {
           if (res.ok) {
             setData(await res.json());
           }
-        } else {
-          // For now, Player/Alliance don't have deep API endpoints, so we just use the passed data
-          // and mock the historical chart until we build the backend for it.
-          setData({ history: [], conquests: [] });
+        } else if (entity.type === 'player') {
+          const res = await fetch(`/api/world/player/${entity.data.id}`);
+          if (res.ok) {
+            setData(await res.json());
+          }
+        } else if (entity.type === 'alliance') {
+          const res = await fetch(`/api/world/alliance/${entity.data.id}`);
+          if (res.ok) {
+            setData(await res.json());
+          }
         }
       } catch (err) {
         console.error("DeepDiveModal error:", err);
@@ -178,39 +184,37 @@ export default function DeepDiveModal({ entity, onClose }) {
               </div>
             </div>
 
-            {/* Conquest Timeline (Only for Towns right now) */}
-            {entity.type === 'town' && (
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: 'white', margin: '0 0 16px 0' }}>Conquest History</h3>
-                <div style={{ flex: 1, background: 'rgba(0,0,0,0.3)', borderRadius: '12px', padding: '16px', border: '1px solid rgba(255,255,255,0.05)', overflowY: 'auto' }}>
-                  {data?.conquests && data.conquests.length > 0 ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                      {data.conquests.map((c, i) => (
-                        <div key={i} style={{ display: 'flex', gap: '12px', position: 'relative' }}>
-                          <div style={{ width: '2px', background: 'rgba(255,255,255,0.1)', position: 'absolute', left: '15px', top: '30px', bottom: '-16px', display: i === data.conquests.length - 1 ? 'none' : 'block' }}></div>
-                          <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(239, 68, 68, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1, flexShrink: 0 }}>
-                            <Swords size={16} color="#ef4444" />
+            {/* Conquest Timeline (Available for Town, Player, Alliance) */}
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+              <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: 'white', margin: '0 0 16px 0' }}>Conquest History</h3>
+              <div style={{ flex: 1, background: 'rgba(0,0,0,0.3)', borderRadius: '12px', padding: '16px', border: '1px solid rgba(255,255,255,0.05)', overflowY: 'auto' }}>
+                {data?.conquests && data.conquests.length > 0 ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    {data.conquests.map((c, i) => (
+                      <div key={i} style={{ display: 'flex', gap: '12px', position: 'relative' }}>
+                        <div style={{ width: '2px', background: 'rgba(255,255,255,0.1)', position: 'absolute', left: '15px', top: '30px', bottom: '-16px', display: i === data.conquests.length - 1 ? 'none' : 'block' }}></div>
+                        <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(239, 68, 68, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1, flexShrink: 0 }}>
+                          <Swords size={16} color="#ef4444" />
+                        </div>
+                        <div>
+                          <div style={{ color: '#94a3b8', fontSize: '12px' }}>{new Date(c.timestamp).toLocaleString()}</div>
+                          <div style={{ fontSize: '14px', marginTop: '2px', lineHeight: '1.4' }}>
+                            <span style={{ color: '#ef4444', fontWeight: 'bold' }}>{c.newPlayerObj?.name || 'Ghost'}</span> conquered from <span style={{ color: '#3b82f6' }}>{c.oldPlayerObj?.name || 'Ghost'}</span>
                           </div>
-                          <div>
-                            <div style={{ color: '#94a3b8', fontSize: '12px' }}>{new Date(c.timestamp).toLocaleString()}</div>
-                            <div style={{ fontSize: '14px', marginTop: '2px', lineHeight: '1.4' }}>
-                              <span style={{ color: '#ef4444', fontWeight: 'bold' }}>{c.newPlayerObj?.name || 'Ghost'}</span> conquered from <span style={{ color: '#3b82f6' }}>{c.oldPlayerObj?.name || 'Ghost'}</span>
-                            </div>
-                            <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>
-                              Points: {formatNumber(c.townPoints)}
-                            </div>
+                          <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>
+                            Points: {formatNumber(c.townPoints)}
                           </div>
                         </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', fontStyle: 'italic', textAlign: 'center' }}>
-                      No conquests recorded for this town.
-                    </div>
-                  )}
-                </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', fontStyle: 'italic', textAlign: 'center' }}>
+                    No conquests recorded.
+                  </div>
+                )}
               </div>
-            )}
+            </div>
             
           </div>
         )}
