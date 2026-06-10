@@ -20,17 +20,15 @@ export async function generateScoreboardData() {
   
   // Lock the rolling window to the exact time of the last successful data update
   const recentStart = new Date(baselineSyncTime.getTime() - 65 * 60 * 1000);
+  
+  const queryStart = new Date(Math.min(windowBStart.getTime(), recentStart.getTime()));
 
   const [
     players,
     alliances,
     conquests,
-    playerHistoryA,
-    allianceHistoryA,
-    playerHistoryB,
-    allianceHistoryB,
-    recentPlayerHistory,
-    recentAllianceHistory
+    allPlayerHistory,
+    allAllianceHistory
   ] = await Promise.all([
     prisma.player.findMany({
       select: { id: true, name: true, points: true, abp: true, dbp: true, allBp: true, alliance: { select: { name: true } } }
@@ -43,16 +41,19 @@ export async function generateScoreboardData() {
       orderBy: { timestamp: 'desc' },
       take: 50
     }),
-    // Window A (Current Day)
-    prisma.playerHistory.findMany({ where: { timestamp: { gte: baseline } } }),
-    prisma.allianceHistory.findMany({ where: { timestamp: { gte: baseline } } }),
-    // Window B (Previous Day)
-    prisma.playerHistory.findMany({ where: { timestamp: { gte: windowBStart, lt: windowBEnd } } }),
-    prisma.allianceHistory.findMany({ where: { timestamp: { gte: windowBStart, lt: windowBEnd } } }),
-    // Recent Velocity
-    prisma.playerHistory.findMany({ where: { timestamp: { gte: recentStart } } }),
-    prisma.allianceHistory.findMany({ where: { timestamp: { gte: recentStart } } })
+    // Fetch all history since queryStart to combine queries and save operations
+    prisma.playerHistory.findMany({ where: { timestamp: { gte: queryStart } } }),
+    prisma.allianceHistory.findMany({ where: { timestamp: { gte: queryStart } } })
   ]);
+
+  // Filter history in memory to save Prisma operations
+  const playerHistoryA = allPlayerHistory.filter(h => h.timestamp >= baseline);
+  const playerHistoryB = allPlayerHistory.filter(h => h.timestamp >= windowBStart && h.timestamp < windowBEnd);
+  const recentPlayerHistory = allPlayerHistory.filter(h => h.timestamp >= recentStart);
+
+  const allianceHistoryA = allAllianceHistory.filter(h => h.timestamp >= baseline);
+  const allianceHistoryB = allAllianceHistory.filter(h => h.timestamp >= windowBStart && h.timestamp < windowBEnd);
+  const recentAllianceHistory = allAllianceHistory.filter(h => h.timestamp >= recentStart);
 
   // Fast lookups
   const gpMap = new Map();

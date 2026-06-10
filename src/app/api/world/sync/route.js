@@ -6,7 +6,8 @@ import zlib from 'zlib';
 import { generateGeoJSON } from '@/lib/geojson';
 
 const SERVER = process.env.GREPOLIS_SERVER || 'hu119';
-const BATCH_SIZE = 5000; // Prisma max parameters limit workaround
+const CREATE_BATCH_SIZE = 5000; // Prisma max parameters limit workaround for createMany
+const UPDATE_BATCH_SIZE = 100000; // Large batch size for raw SQL queries to save operations
 
 async function fetchAndDecompress(filename) {
   return new Promise((resolve, reject) => {
@@ -355,14 +356,14 @@ export async function GET(request) {
     };
 
     // Inserts
-    if (newAlliances.length > 0) chunkArray(newAlliances, BATCH_SIZE).forEach(chunk => tx.push(prisma.alliance.createMany({ data: chunk })));
-    if (newPlayers.length > 0) chunkArray(newPlayers, BATCH_SIZE).forEach(chunk => tx.push(prisma.player.createMany({ data: chunk })));
-    if (newTowns.length > 0) chunkArray(newTowns, BATCH_SIZE).forEach(chunk => tx.push(prisma.town.createMany({ data: chunk })));
-    if (newIslands.length > 0) chunkArray(newIslands, BATCH_SIZE).forEach(chunk => tx.push(prisma.island.createMany({ data: chunk })));
+    if (newAlliances.length > 0) chunkArray(newAlliances, CREATE_BATCH_SIZE).forEach(chunk => tx.push(prisma.alliance.createMany({ data: chunk })));
+    if (newPlayers.length > 0) chunkArray(newPlayers, CREATE_BATCH_SIZE).forEach(chunk => tx.push(prisma.player.createMany({ data: chunk })));
+    if (newTowns.length > 0) chunkArray(newTowns, CREATE_BATCH_SIZE).forEach(chunk => tx.push(prisma.town.createMany({ data: chunk })));
+    if (newIslands.length > 0) chunkArray(newIslands, CREATE_BATCH_SIZE).forEach(chunk => tx.push(prisma.island.createMany({ data: chunk })));
 
     // Updates (Optimized with raw SQL bulk updates)
     if (alliancesToUpdate.length > 0) {
-      chunkArray(alliancesToUpdate, BATCH_SIZE).forEach(chunk => {
+      chunkArray(alliancesToUpdate, UPDATE_BATCH_SIZE).forEach(chunk => {
         const values = chunk.map(a => `(${a.id}, '${a.name.replace(/'/g, "''")}', ${a.points}, ${a.towns}, ${a.members}, ${a.rank}, ${a.abp}, ${a.dbp}, ${a.allBp})`).join(',');
         tx.push(prisma.$executeRawUnsafe(`
           UPDATE "Alliance" AS a SET
@@ -374,8 +375,8 @@ export async function GET(request) {
     }
     
     if (playersToUpdate.length > 0) {
-      chunkArray(playersToUpdate, BATCH_SIZE).forEach(chunk => {
-        const values = chunk.map(p => `(${p.id}, '${p.name.replace(/'/g, "''")}', ${p.allianceId || 'NULL'}, ${p.points}, ${p.rank}, ${p.towns}, ${p.abp}, ${p.dbp}, ${p.allBp})`).join(',');
+      chunkArray(playersToUpdate, UPDATE_BATCH_SIZE).forEach(chunk => {
+        const values = chunk.map(p => `(${p.id}, '${p.name.replace(/'/g, "''")}', ${p.allianceId ? p.allianceId : 'NULL::int'}, ${p.points}, ${p.rank}, ${p.towns}, ${p.abp}, ${p.dbp}, ${p.allBp})`).join(',');
         tx.push(prisma.$executeRawUnsafe(`
           UPDATE "Player" AS p SET
             "name" = v."name", "allianceId" = v."allianceId", "points" = v."points", "rank" = v."rank", "towns" = v."towns", "abp" = v."abp", "dbp" = v."dbp", "allBp" = v."allBp"
@@ -386,8 +387,8 @@ export async function GET(request) {
     }
 
     if (townsToUpdate.length > 0) {
-      chunkArray(townsToUpdate, BATCH_SIZE).forEach(chunk => {
-        const values = chunk.map(t => `(${t.id}, ${t.playerId || 'NULL'}, '${t.name.replace(/'/g, "''")}', ${t.islandX}, ${t.islandY}, ${t.islandSlot}, ${t.points})`).join(',');
+      chunkArray(townsToUpdate, UPDATE_BATCH_SIZE).forEach(chunk => {
+        const values = chunk.map(t => `(${t.id}, ${t.playerId ? t.playerId : 'NULL::int'}, '${t.name.replace(/'/g, "''")}', ${t.islandX}, ${t.islandY}, ${t.islandSlot}, ${t.points})`).join(',');
         tx.push(prisma.$executeRawUnsafe(`
           UPDATE "Town" AS t SET
             "playerId" = v."playerId", "name" = v."name", "islandX" = v."islandX", "islandY" = v."islandY", "islandSlot" = v."islandSlot", "points" = v."points"
@@ -398,7 +399,7 @@ export async function GET(request) {
     }
 
     if (islandsToUpdate.length > 0) {
-      chunkArray(islandsToUpdate, BATCH_SIZE).forEach(chunk => {
+      chunkArray(islandsToUpdate, UPDATE_BATCH_SIZE).forEach(chunk => {
         const values = chunk.map(i => `(${i.id}, ${i.availableTowns})`).join(',');
         tx.push(prisma.$executeRawUnsafe(`
           UPDATE "Island" AS i SET "availableTowns" = v."availableTowns"
@@ -409,10 +410,37 @@ export async function GET(request) {
     }
 
     // History & Conquers
-    if (allianceHistory.length > 0) chunkArray(allianceHistory, BATCH_SIZE).forEach(chunk => tx.push(prisma.allianceHistory.createMany({ data: chunk })));
-    if (playerHistory.length > 0) chunkArray(playerHistory, BATCH_SIZE).forEach(chunk => tx.push(prisma.playerHistory.createMany({ data: chunk })));
-    if (townHistory.length > 0) chunkArray(townHistory, BATCH_SIZE).forEach(chunk => tx.push(prisma.townHistory.createMany({ data: chunk })));
-    if (newConquers.length > 0) chunkArray(newConquers, BATCH_SIZE).forEach(chunk => tx.push(prisma.conquest.createMany({ data: chunk })));
+    if (allianceHistory.length > 0) {
+      chunkArray(allianceHistory, UPDATE_BATCH_SIZE).forEach(chunk => {
+        const values = chunk.map(h => `(${h.allianceId}, ${h.oldPoints}, ${h.newPoints}, ${h.abpDelta}, ${h.dbpDelta}, ${h.allBpDelta}, NOW())`).join(',');
+        tx.push(prisma.$executeRawUnsafe(`
+          INSERT INTO "AllianceHistory" ("allianceId", "oldPoints", "newPoints", "abpDelta", "dbpDelta", "allBpDelta", "timestamp")
+          VALUES ${values}
+        `));
+      });
+    }
+    
+    if (playerHistory.length > 0) {
+      chunkArray(playerHistory, UPDATE_BATCH_SIZE).forEach(chunk => {
+        const values = chunk.map(h => `(${h.playerId}, ${h.oldPoints}, ${h.newPoints}, ${h.abpDelta}, ${h.dbpDelta}, ${h.allBpDelta}, NOW())`).join(',');
+        tx.push(prisma.$executeRawUnsafe(`
+          INSERT INTO "PlayerHistory" ("playerId", "oldPoints", "newPoints", "abpDelta", "dbpDelta", "allBpDelta", "timestamp")
+          VALUES ${values}
+        `));
+      });
+    }
+
+    if (townHistory.length > 0) {
+      chunkArray(townHistory, UPDATE_BATCH_SIZE).forEach(chunk => {
+        const values = chunk.map(h => `(${h.townId}, ${h.oldPoints}, ${h.newPoints}, NOW())`).join(',');
+        tx.push(prisma.$executeRawUnsafe(`
+          INSERT INTO "TownHistory" ("townId", "oldPoints", "newPoints", "timestamp")
+          VALUES ${values}
+        `));
+      });
+    }
+
+    if (newConquers.length > 0) chunkArray(newConquers, CREATE_BATCH_SIZE).forEach(chunk => tx.push(prisma.conquest.createMany({ data: chunk })));
 
     await prisma.$transaction(tx);
 
