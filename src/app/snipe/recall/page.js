@@ -147,8 +147,8 @@ export default function RecallSnipePage() {
         const returnTime = gapStart + 1000;
         
         gaps.push({
-          id: \`gap_after_\${cs.id}\`,
-          desc: \`Snipe Siege (After CS from \${cs.attacker})\`,
+          id: `gap_after_${cs.id}`,
+          desc: `Snipe Siege (After CS from ${cs.attacker})`,
           gapStart, gapEnd, returnTime
         });
 
@@ -161,8 +161,8 @@ export default function RecallSnipePage() {
         const returnTime = gapEnd - 1000;
 
         gaps.push({
-          id: \`gap_before_\${cs.id}\`,
-          desc: \`Snipe CS (Before CS from \${cs.attacker})\`,
+          id: `gap_before_${cs.id}`,
+          desc: `Snipe CS (Before CS from ${cs.attacker})`,
           gapStart, gapEnd, returnTime
         });
       }
@@ -207,18 +207,18 @@ export default function RecallSnipePage() {
   const formatCountdown = (ms) => {
     if (ms < 0) return '0s';
     const totalSecs = Math.ceil(ms / 1000);
-    if (totalSecs < 60) return \`\${totalSecs}s\`;
+    if (totalSecs < 60) return `${totalSecs}s`;
     const m = Math.floor(totalSecs / 60);
     const s = totalSecs % 60;
-    if (m < 60) return \`\${m}m \${s.toString().padStart(2, '0')}s\`;
+    if (m < 60) return `${m}m ${s.toString().padStart(2, '0')}s`;
     const h = Math.floor(m / 60);
     const mRem = m % 60;
-    return \`\${h}h \${mRem.toString().padStart(2, '0')}m \${s.toString().padStart(2, '0')}s\`;
+    return `${h}h ${mRem.toString().padStart(2, '0')}m ${s.toString().padStart(2, '0')}s`;
   };
 
   return (
     <div className="grid gap-4" style={{ marginTop: '2rem' }}>
-      <style dangerouslySetInnerHTML={{__html: \`
+      <style dangerouslySetInnerHTML={{__html: `
         @keyframes pulseRed {
           0%, 100% { box-shadow: 0 0 0px 0px rgba(239, 68, 68, 0); }
           50% { box-shadow: 0 0 10px 2px rgba(239, 68, 68, 0.6); }
@@ -238,7 +238,7 @@ export default function RecallSnipePage() {
         .action-done {
           opacity: 0.5;
         }
-      \`}} />
+      `}} />
 
       <div className="glass-panel text-center">
         <h1 className="gradient-text">Army Recall Sniper</h1>
@@ -252,7 +252,7 @@ export default function RecallSnipePage() {
             {groups.map(g => (
               <div 
                 key={g.id} 
-                className={\`p-3 rounded cursor-pointer flex justify-between items-center transition-all \${activeGroupId === g.id ? 'bg-[rgba(255,255,255,0.1)] border-l-4 border-primary' : 'bg-[rgba(0,0,0,0.2)] hover:bg-[rgba(255,255,255,0.05)]'}\`}
+                className={`p-3 rounded cursor-pointer flex justify-between items-center transition-all ${activeGroupId === g.id ? 'bg-[rgba(255,255,255,0.1)] border-l-4 border-primary' : 'bg-[rgba(0,0,0,0.2)] hover:bg-[rgba(255,255,255,0.05)]'}`}
                 onClick={() => setActiveGroupId(g.id)}
               >
                 <div>
@@ -334,7 +334,7 @@ export default function RecallSnipePage() {
                     const isPassed = msUntil < 0;
 
                     return (
-                      <div key={mov.id} className={\`flex justify-between items-center p-3 rounded bg-[rgba(0,0,0,0.2)] border-l-4 \${mov.type === 'cs' ? 'cs-row' : mov.type === 'attack' ? 'border-danger' : 'border-success'} \${isPassed ? 'opacity-50' : ''}\`}>
+                      <div key={mov.id} className={`flex justify-between items-center p-3 rounded bg-[rgba(0,0,0,0.2)] border-l-4 ${mov.type === 'cs' ? 'cs-row' : mov.type === 'attack' ? 'border-danger' : 'border-success'} ${isPassed ? 'opacity-50' : ''}`}>
                         <div className="flex items-center gap-4">
                           <span className="font-mono text-lg">{arrTime.toLocaleTimeString('en-US', { hour12: false })}</span>
                           <div>
@@ -408,7 +408,7 @@ export default function RecallSnipePage() {
                         
                         <div className="grid grid-cols-2 divide-x divide-[rgba(255,255,255,0.05)]">
                           {/* SEND ACTION */}
-                          <div className={\`p-4 \${sendClass}\`}>
+                          <div className={`p-4 ${sendClass}`}>
                             <div className="text-xs uppercase tracking-wider mb-1 flex items-center justify-between">
                               <span className="font-bold">1. Send Troops</span>
                               {!isSendPassed && <span className="font-mono">{formatCountdown(msToSend)}</span>}
@@ -419,7 +419,7 @@ export default function RecallSnipePage() {
                           </div>
 
                           {/* RECALL ACTION */}
-                          <div className={\`p-4 \${recallClass}\`}>
+                          <div className={`p-4 ${recallClass}`}>
                             <div className="text-xs uppercase tracking-wider mb-1 flex items-center justify-between">
                               <span className="font-bold">2. Click Cancel</span>
                               {!isRecallPassed && !isSendPassed && <span className="text-secondary">Waiting to send</span>}
