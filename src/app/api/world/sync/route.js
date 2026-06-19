@@ -47,6 +47,17 @@ export async function GET(request) {
   try {
     const meta = await prisma.syncMetadata.findUnique({ where: { id: 1 } });
     if (meta && !force) {
+      // Throttle: avoid excessive Prisma operations by enforcing a 20-minute cooldown
+      const minutesSinceLastSync = (Date.now() - meta.lastSync.getTime()) / (1000 * 60);
+      if (minutesSinceLastSync < 20) {
+        return NextResponse.json({ 
+          success: true, 
+          message: `Throttled: Sync ran ${Math.round(minutesSinceLastSync)} minutes ago. Waiting for 20 minutes interval.`,
+          skipped: true,
+          lastSync: meta.lastSync
+        });
+      }
+
       // Perform lightweight HEAD requests on all files to check their Last-Modified headers
       const filesToCheck = [
         'players.txt.gz', 'alliances.txt.gz', 'towns.txt.gz', 'islands.txt.gz',

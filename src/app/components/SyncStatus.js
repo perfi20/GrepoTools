@@ -23,9 +23,9 @@ export default function SyncStatus() {
 
   const minutesAgo = Math.floor((now - status) / 1000 / 60);
   
-  // Calculate next 10-minute interval check
+  // Calculate next 20-minute interval check
   const nowMinutes = now.getMinutes();
-  const nextSyncIn = 10 - (nowMinutes % 10);
+  const nextSyncIn = 20 - (nowMinutes % 20);
   
   const timeString = status.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
