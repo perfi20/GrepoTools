@@ -22,8 +22,22 @@ export default function RecallSnipePage() {
 
   // Input states for new movement
   const [movAttacker, setMovAttacker] = useState('');
+  const [movAttackerId, setMovAttackerId] = useState(null);
   const [movType, setMovType] = useState('attack');
   const [movTime, setMovTime] = useState('');
+  const [townSearchResults, setTownSearchResults] = useState([]);
+
+  const searchTowns = async (q) => {
+    if (q.length < 2) {
+      setTownSearchResults([]);
+      return;
+    }
+    try {
+      const res = await fetch(`/api/world/search?q=${encodeURIComponent(q)}`);
+      const data = await res.json();
+      setTownSearchResults(data.towns || []);
+    } catch (e) {}
+  };
 
   // State for custom gap minutes input
   const [customMins, setCustomMins] = useState({});
@@ -32,8 +46,11 @@ export default function RecallSnipePage() {
   const [intelData, setIntelData] = useState({});
   const [intelLoading, setIntelLoading] = useState({});
 
-  const fetchIntel = async (movId, attackerName) => {
-    if (!attackerName || attackerName === 'Unknown') return;
+  const fetchIntel = async (movId, attackerId) => {
+    if (!attackerId) {
+      alert("No town ID associated with this attacker. Please use the dropdown to select a valid town.");
+      return;
+    }
     
     if (intelData[movId]) {
       const newIntel = { ...intelData };
@@ -44,7 +61,7 @@ export default function RecallSnipePage() {
 
     setIntelLoading({ ...intelLoading, [movId]: true });
     try {
-      const res = await fetch(`/api/intel/player?player_name=${encodeURIComponent(attackerName)}`);
+      const res = await fetch(`/api/intel/town?town_id=${attackerId}`);
       const data = await res.json();
       if (data.error) throw new Error(data.error);
       setIntelData({ ...intelData, [movId]: data });
@@ -130,6 +147,7 @@ export default function RecallSnipePage() {
     const newMov = {
       id: Date.now().toString() + Math.random().toString(36).substring(7),
       attacker: movAttacker || 'Unknown',
+      attackerId: movAttackerId,
       type: movType,
       arrivalTime: targetDateStr
     };
@@ -145,6 +163,8 @@ export default function RecallSnipePage() {
     });
     setGroups(updatedGroups);
     setMovAttacker('');
+    setMovAttackerId(null);
+    setTownSearchResults([]);
     setMovTime('');
     setMovType('attack');
   };
@@ -365,9 +385,31 @@ export default function RecallSnipePage() {
               <div className="glass-panel">
                 <h2>Incoming Movements for {activeGroup.name}</h2>
                 <form onSubmit={addMovement} className="grid grid-cols-4 gap-2 mt-4 items-end">
-                  <div>
-                    <label className="text-xs text-secondary">Attacker / Origin</label>
-                    <input type="text" className="input-field" placeholder="e.g. Player A" value={movAttacker} onChange={e => setMovAttacker(e.target.value)} />
+                  <div className="relative">
+                    <label className="text-xs text-secondary">Attacker Town</label>
+                    <input 
+                      type="text" 
+                      className="input-field" 
+                      placeholder="Search Town..." 
+                      value={movAttacker} 
+                      onChange={e => {
+                        setMovAttacker(e.target.value);
+                        searchTowns(e.target.value);
+                      }} 
+                    />
+                    {townSearchResults.length > 0 && (
+                      <div className="absolute top-full left-0 w-full bg-[#1a1a1a] border border-[rgba(255,255,255,0.1)] rounded mt-1 z-10 max-h-48 overflow-y-auto">
+                        {townSearchResults.map(t => (
+                          <div key={t.id} className="p-2 hover:bg-[rgba(255,255,255,0.1)] cursor-pointer text-sm" onClick={() => {
+                            setMovAttacker(t.name);
+                            setMovAttackerId(t.id);
+                            setTownSearchResults([]);
+                          }}>
+                            {t.name} <span className="text-secondary">({t.points} pts)</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   <div>
                     <label className="text-xs text-secondary">Type</label>
@@ -399,7 +441,7 @@ export default function RecallSnipePage() {
                               <div className="font-bold flex items-center gap-2">
                                 {mov.attacker || 'Unknown'}
                                 {mov.attacker && mov.attacker !== 'Unknown' && (
-                                  <button type="button" onClick={() => fetchIntel(mov.id, mov.attacker)} className="text-xs bg-primary px-2 py-0.5 rounded text-white hover:bg-opacity-80">
+                                  <button type="button" onClick={() => fetchIntel(mov.id, mov.attackerId)} className="text-xs bg-primary px-2 py-0.5 rounded text-white hover:bg-opacity-80">
                                     {intelLoading[mov.id] ? 'Loading...' : intelData[mov.id] ? 'Hide Intel' : 'Intel'}
                                   </button>
                                 )}
@@ -415,12 +457,19 @@ export default function RecallSnipePage() {
                         </div>
                         {intelData[mov.id] && (
                           <div className="ml-4 p-3 bg-[rgba(255,255,255,0.05)] rounded text-sm text-secondary border-l border-primary">
-                            <div className="font-bold text-white mb-2">Intel: {intelData[mov.id].info?.player_name}</div>
-                            <div className="grid grid-cols-3 gap-2">
-                              <div><strong>Light Ships:</strong> {intelData[mov.id].fire?.players?.[Object.keys(intelData[mov.id].fire.players)[0]]?.towns?.length || 0} nuke towns</div>
-                              <div><strong>Mythicals:</strong> {intelData[mov.id].myth?.players?.[Object.keys(intelData[mov.id].myth.players)[0]]?.towns?.length || 0} myth towns</div>
-                              <div><strong>Slingers/Hops:</strong> {intelData[mov.id].off?.players?.[Object.keys(intelData[mov.id].off.players)[0]]?.towns?.length || 0} off towns</div>
-                            </div>
+                            <div className="font-bold text-white mb-2">Town Intel</div>
+                            {intelData[mov.id].intel && intelData[mov.id].intel.length > 0 ? (
+                              <div className="flex flex-col gap-2">
+                                {intelData[mov.id].intel.slice(0, 5).map((record, i) => (
+                                  <div key={i} className="flex justify-between border-b border-[rgba(255,255,255,0.05)] pb-1">
+                                    <span>{record.date} - <strong className="text-white">{record.type}</strong></span>
+                                    <span>{record.units.map(u => `${u.count} ${u.name}`).join(', ')}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <div>No intel found for this town.</div>
+                            )}
                           </div>
                         )}
                       </div>

@@ -1,0 +1,1 @@
+const { PrismaClient } = require('@prisma/client'); const prisma = new PrismaClient(); prisma.player.findFirst({where: {name: {equals: 'perfi', mode: 'insensitive'}}}).then(p => console.log('Player:', p)).finally(() => prisma.$disconnect());
