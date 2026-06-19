@@ -11,6 +11,14 @@ export default function RecallSnipePage() {
   // Input states for new group
   const [newGroupName, setNewGroupName] = useState('');
   const [newGroupWorld, setNewGroupWorld] = useState('siege');
+  const [masterPlayer, setMasterPlayer] = useState(null);
+
+  useEffect(() => {
+    fetch('/api/master-player')
+      .then(r => r.json())
+      .then(d => { if(d.player) setMasterPlayer(d.player); })
+      .catch(() => {});
+  }, []);
 
   // Input states for new movement
   const [movAttacker, setMovAttacker] = useState('');
@@ -19,6 +27,33 @@ export default function RecallSnipePage() {
 
   // State for custom gap minutes input
   const [customMins, setCustomMins] = useState({});
+
+  // Intel states
+  const [intelData, setIntelData] = useState({});
+  const [intelLoading, setIntelLoading] = useState({});
+
+  const fetchIntel = async (movId, attackerName) => {
+    if (!attackerName || attackerName === 'Unknown') return;
+    
+    if (intelData[movId]) {
+      const newIntel = { ...intelData };
+      delete newIntel[movId];
+      setIntelData(newIntel);
+      return;
+    }
+
+    setIntelLoading({ ...intelLoading, [movId]: true });
+    try {
+      const res = await fetch(`/api/intel/player?player_name=${encodeURIComponent(attackerName)}`);
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      setIntelData({ ...intelData, [movId]: data });
+    } catch (e) {
+      alert("Failed to fetch intel: " + e.message);
+    } finally {
+      setIntelLoading({ ...intelLoading, [movId]: false });
+    }
+  };
 
   // Load from local storage
   useEffect(() => {
@@ -280,13 +315,26 @@ export default function RecallSnipePage() {
 
           <form onSubmit={createGroup} className="mt-6 border-t border-[rgba(255,255,255,0.1)] pt-4">
             <h3 className="text-sm mb-3">Create New Group</h3>
-            <input 
-              type="text" 
-              placeholder="Target City / Player" 
-              className="input-field mb-2" 
-              value={newGroupName}
-              onChange={e => setNewGroupName(e.target.value)}
-            />
+            {masterPlayer?.townsList?.length > 0 ? (
+              <select 
+                className="input-field mb-2" 
+                value={newGroupName}
+                onChange={e => setNewGroupName(e.target.value)}
+              >
+                <option value="">Select Target City...</option>
+                {masterPlayer.townsList.map(t => (
+                  <option key={t.id} value={t.name}>{t.name} ({t.points} pts)</option>
+                ))}
+              </select>
+            ) : (
+              <input 
+                type="text" 
+                placeholder="Target City / Player" 
+                className="input-field mb-2" 
+                value={newGroupName}
+                onChange={e => setNewGroupName(e.target.value)}
+              />
+            )}
             <select className="input-field mb-2" value={newGroupWorld} onChange={e => setNewGroupWorld(e.target.value)}>
               <option value="siege">Siege / Conquest</option>
               <option value="revolt">Revolt</option>
@@ -343,19 +391,38 @@ export default function RecallSnipePage() {
                     const isPassed = msUntil < 0;
 
                     return (
-                      <div key={mov.id} className={`flex justify-between items-center p-3 rounded bg-[rgba(0,0,0,0.2)] border-l-4 ${mov.type === 'cs' ? 'cs-row' : mov.type === 'attack' ? 'border-danger' : 'border-success'} ${isPassed ? 'opacity-50' : ''}`}>
-                        <div className="flex items-center gap-4">
-                          <span className="font-mono text-lg">{arrTime.toLocaleTimeString('en-US', { hour12: false })}</span>
-                          <div>
-                            <div className="font-bold">{mov.attacker || 'Unknown'}</div>
-                            <div className="text-xs text-secondary uppercase tracking-wider">{mov.type === 'cs' ? 'COLONY SHIP' : mov.type}</div>
+                      <div key={mov.id} className="flex flex-col gap-1">
+                        <div className={`flex justify-between items-center p-3 rounded bg-[rgba(0,0,0,0.2)] border-l-4 ${mov.type === 'cs' ? 'cs-row' : mov.type === 'attack' ? 'border-danger' : 'border-success'} ${isPassed ? 'opacity-50' : ''}`}>
+                          <div className="flex items-center gap-4">
+                            <span className="font-mono text-lg">{arrTime.toLocaleTimeString('en-US', { hour12: false })}</span>
+                            <div>
+                              <div className="font-bold flex items-center gap-2">
+                                {mov.attacker || 'Unknown'}
+                                {mov.attacker && mov.attacker !== 'Unknown' && (
+                                  <button type="button" onClick={() => fetchIntel(mov.id, mov.attacker)} className="text-xs bg-primary px-2 py-0.5 rounded text-white hover:bg-opacity-80">
+                                    {intelLoading[mov.id] ? 'Loading...' : intelData[mov.id] ? 'Hide Intel' : 'Intel'}
+                                  </button>
+                                )}
+                              </div>
+                              <div className="text-xs text-secondary uppercase tracking-wider">{mov.type === 'cs' ? 'COLONY SHIP' : mov.type}</div>
+                            </div>
+                          </div>
+                          <div className="text-right flex items-center gap-4">
+                            {!isPassed && <span className="font-mono text-accent">{formatCountdown(msUntil)}</span>}
+                            {isPassed && <span className="text-secondary text-sm">Landed</span>}
+                            <button onClick={() => deleteMovement(mov.id)} className="text-secondary hover:text-danger" style={{ background: 'transparent', border: 'none' }}><Trash2 size={16}/></button>
                           </div>
                         </div>
-                        <div className="text-right flex items-center gap-4">
-                          {!isPassed && <span className="font-mono text-accent">{formatCountdown(msUntil)}</span>}
-                          {isPassed && <span className="text-secondary text-sm">Landed</span>}
-                          <button onClick={() => deleteMovement(mov.id)} className="text-secondary hover:text-danger" style={{ background: 'transparent', border: 'none' }}><Trash2 size={16}/></button>
-                        </div>
+                        {intelData[mov.id] && (
+                          <div className="ml-4 p-3 bg-[rgba(255,255,255,0.05)] rounded text-sm text-secondary border-l border-primary">
+                            <div className="font-bold text-white mb-2">Intel: {intelData[mov.id].info?.player_name}</div>
+                            <div className="grid grid-cols-3 gap-2">
+                              <div><strong>Light Ships:</strong> {intelData[mov.id].fire?.players?.[Object.keys(intelData[mov.id].fire.players)[0]]?.towns?.length || 0} nuke towns</div>
+                              <div><strong>Mythicals:</strong> {intelData[mov.id].myth?.players?.[Object.keys(intelData[mov.id].myth.players)[0]]?.towns?.length || 0} myth towns</div>
+                              <div><strong>Slingers/Hops:</strong> {intelData[mov.id].off?.players?.[Object.keys(intelData[mov.id].off.players)[0]]?.towns?.length || 0} off towns</div>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     );
                   })}
