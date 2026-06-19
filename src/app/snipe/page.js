@@ -119,6 +119,9 @@ export default function SnipeTimerPage() {
       <div className="glass-panel text-center">
         <h1 className="gradient-text">Operations Queue</h1>
         <p className="text-secondary">Plan your attacks and support timings. Countdowns track the 20-second launch window.</p>
+        <div className="mt-4 flex justify-center gap-4">
+          <a href="/snipe/recall" className="btn btn-primary" style={{ background: 'var(--accent)' }}>Go to Army Recall Sniper</a>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
