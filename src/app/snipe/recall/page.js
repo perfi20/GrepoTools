@@ -17,6 +17,9 @@ export default function RecallSnipePage() {
   const [movType, setMovType] = useState('attack');
   const [movTime, setMovTime] = useState('');
 
+  // State for custom gap minutes input
+  const [customMins, setCustomMins] = useState({});
+
   // Load from local storage
   useEffect(() => {
     const saved = localStorage.getItem('grepo-recall-groups');
@@ -174,6 +177,12 @@ export default function RecallSnipePage() {
   const createPlanFromGap = (gap, minsAway) => {
     const returnTime = gap.returnTime;
     const sendTime = returnTime - (minsAway * 60 * 1000);
+    
+    if (sendTime < serverTime.getTime()) {
+      alert("Cannot create a plan where the Send Time is in the past! Please choose a smaller minute value.");
+      return;
+    }
+
     // Recall time is exactly halfway between send and return
     const recallTime = sendTime + ((returnTime - sendTime) / 2);
 
@@ -262,7 +271,7 @@ export default function RecallSnipePage() {
                     {g.worldType === 'siege' ? 'Siege (Snipe After)' : 'Revolt (Snipe Before)'}
                   </div>
                 </div>
-                <button onClick={(e) => { e.stopPropagation(); deleteGroup(g.id); }} className="text-secondary hover:text-danger">
+                <button onClick={(e) => { e.stopPropagation(); deleteGroup(g.id); }} className="text-secondary hover:text-danger" style={{ background: 'transparent', border: 'none' }}>
                   <Trash2 size={16} />
                 </button>
               </div>
@@ -345,7 +354,7 @@ export default function RecallSnipePage() {
                         <div className="text-right flex items-center gap-4">
                           {!isPassed && <span className="font-mono text-accent">{formatCountdown(msUntil)}</span>}
                           {isPassed && <span className="text-secondary text-sm">Landed</span>}
-                          <button onClick={() => deleteMovement(mov.id)} className="text-secondary hover:text-danger"><Trash2 size={16}/></button>
+                          <button onClick={() => deleteMovement(mov.id)} className="text-secondary hover:text-danger" style={{ background: 'transparent', border: 'none' }}><Trash2 size={16}/></button>
                         </div>
                       </div>
                     );
@@ -370,10 +379,18 @@ export default function RecallSnipePage() {
                             <span>{gap.desc}</span>
                             <span className="font-mono text-sm bg-[rgba(255,255,255,0.1)] px-2 py-0.5 rounded ml-2">Target Return: {new Date(gap.returnTime).toLocaleTimeString('en-US', { hour12: false })}</span>
                           </div>
-                          <div className="flex gap-2">
-                            <button onClick={() => createPlanFromGap(gap, 6)} className="btn btn-sm text-xs bg-[rgba(255,255,255,0.1)] hover:bg-[rgba(255,255,255,0.2)]">+ 6m Send</button>
-                            <button onClick={() => createPlanFromGap(gap, 10)} className="btn btn-sm text-xs bg-[rgba(255,255,255,0.1)] hover:bg-[rgba(255,255,255,0.2)]">+ 10m Send</button>
-                            <button onClick={() => createPlanFromGap(gap, 15)} className="btn btn-sm text-xs bg-[rgba(255,255,255,0.1)] hover:bg-[rgba(255,255,255,0.2)]">+ 15m Send</button>
+                          <div className="flex gap-2 items-center">
+                            <input 
+                              type="number" 
+                              min="1" 
+                              max="20" 
+                              className="input-field text-center" 
+                              style={{ width: '60px', padding: '0.25rem', height: 'auto', minHeight: '30px' }}
+                              value={customMins[gap.id] || 5} 
+                              onChange={e => setCustomMins({...customMins, [gap.id]: Number(e.target.value)})}
+                            />
+                            <span className="text-xs text-secondary mr-2">mins</span>
+                            <button onClick={() => createPlanFromGap(gap, customMins[gap.id] || 5)} className="btn btn-sm text-xs bg-[rgba(255,255,255,0.1)] hover:bg-[rgba(255,255,255,0.2)]">Create Plan</button>
                           </div>
                         </div>
                       ))}
@@ -402,7 +419,7 @@ export default function RecallSnipePage() {
                           <span className="font-bold">{plan.gapDescription}</span>
                           <div className="flex items-center gap-4">
                             <span>Return: <strong className="font-mono">{returnDate.toLocaleTimeString('en-US', { hour12: false })}</strong></span>
-                            <button onClick={() => deletePlan(plan.id)} className="text-secondary hover:text-danger"><Trash2 size={14}/></button>
+                            <button onClick={() => deletePlan(plan.id)} className="text-secondary hover:text-danger" style={{ background: 'transparent', border: 'none' }}><Trash2 size={14}/></button>
                           </div>
                         </div>
                         
