@@ -1,6 +1,7 @@
 'use client';
-import { useState, useEffect } from 'react';
-import { Trash2, Plus, AlertTriangle, Crosshair, Shield, Clock } from 'lucide-react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { Trash2, Plus, AlertTriangle, Crosshair, Shield, Clock, RefreshCw } from 'lucide-react';
+import DummyFinder from '@/components/CommandCenter/DummyFinder';
 
 export default function RecallSnipePage() {
   const [groups, setGroups] = useState([]);
@@ -12,6 +13,31 @@ export default function RecallSnipePage() {
   const [newGroupName, setNewGroupName] = useState('');
   const [newGroupWorld, setNewGroupWorld] = useState('siege');
   const [masterPlayer, setMasterPlayer] = useState(null);
+  
+  // Audio context for chirps
+  const audioCtxRef = useRef(null);
+  const playedChirpsRef = useRef({});
+
+  const playChirp = useCallback((freq = 880, type = 'sine', duration = 0.1, vol = 0.5) => {
+    try {
+      if (!audioCtxRef.current) {
+        audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      const ctx = audioCtxRef.current;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, ctx.currentTime);
+      gain.gain.setValueAtTime(vol, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + duration);
+    } catch (e) {
+      console.warn("Audio not available", e);
+    }
+  }, []);
 
   useEffect(() => {
     fetch('/api/master-player')
@@ -101,12 +127,29 @@ export default function RecallSnipePage() {
 
   const serverTime = new Date(now.getTime() + (serverOffset * 1000));
 
+  const handleSyncTime = async () => {
+    try {
+      const start = Date.now();
+      const res = await fetch('/api/time');
+      const data = await res.json();
+      const end = Date.now();
+      const rtt = end - start;
+      const serverTimeMs = data.serverTime + (rtt / 2);
+      const diffMs = serverTimeMs - end;
+      setServerOffset(Math.round(diffMs / 1000));
+    } catch (e) {
+      console.error("Failed to sync time", e);
+    }
+  };
+
   const createGroup = (e) => {
     e.preventDefault();
     if (!newGroupName) return;
+    const townObj = masterPlayer?.townsList?.find(t => t.name === newGroupName);
     const newGroup = {
       id: Date.now().toString(),
       name: newGroupName,
+      townId: townObj ? townObj.id : null,
       worldType: newGroupWorld,
       movements: [],
       plans: []
@@ -365,7 +408,12 @@ export default function RecallSnipePage() {
           </form>
 
           <div className="mt-8 border-t border-[rgba(255,255,255,0.1)] pt-4">
-            <label className="text-sm text-secondary block mb-2">Server Time Offset (sec)</label>
+            <div className="flex justify-between items-center mb-2">
+              <label className="text-sm text-secondary block">Server Time Offset (sec)</label>
+              <button onClick={handleSyncTime} className="text-xs flex items-center gap-1 text-primary hover:text-accent transition-colors" title="Auto-sync with backend server time">
+                <RefreshCw size={12} /> Sync
+              </button>
+            </div>
             <input 
               type="number" 
               className="input-field" 
@@ -526,8 +574,22 @@ export default function RecallSnipePage() {
                     const isSendPassed = msToSend < 0;
                     const isRecallPassed = msToRecall < 0;
 
-                    let sendClass = isSendPassed ? 'action-done' : (msToSend < 60000 ? 'action-urgent' : 'action-ready');
-                    let recallClass = isRecallPassed ? 'action-done' : (isSendPassed && msToRecall < 60000 ? 'action-urgent' : (isSendPassed ? 'action-ready' : 'opacity-50'));
+                    // Audio indicators
+                    [msToSend, msToRecall].forEach((ms, i) => {
+                      const type = i === 0 ? 'send' : 'recall';
+                      const key = `${plan.id}_${type}`;
+                      if (ms > 0 && ms <= 3000) {
+                        const sec = Math.ceil(ms / 1000);
+                        if (playedChirpsRef.current[key] !== sec) {
+                          playedChirpsRef.current[key] = sec;
+                          if (sec === 1) playChirp(1200, 'square', 0.2, 0.8); // High pitch at 1s
+                          else playChirp(800, 'sine', 0.1, 0.5); // Low pitch at 3s and 2s
+                        }
+                      }
+                    });
+
+                    let sendClass = isSendPassed ? 'action-done' : (msToSend < 10000 ? 'action-urgent' : (msToSend < 60000 ? 'action-ready' : ''));
+                    let recallClass = isRecallPassed ? 'action-done' : (isSendPassed && msToRecall < 10000 ? 'action-urgent' : (isSendPassed && msToRecall < 60000 ? 'action-ready' : (isSendPassed ? 'opacity-100' : 'opacity-50')));
 
                     return (
                       <div key={plan.id} className="border border-[rgba(255,255,255,0.1)] rounded overflow-hidden">
@@ -562,6 +624,13 @@ export default function RecallSnipePage() {
                             <div className="font-mono text-2xl font-bold">{recallDate.toLocaleTimeString('en-US', { hour12: false })}</div>
                             <div className="text-xs text-secondary mt-1">Exact second to cancel movement</div>
                           </div>
+                        </div>
+                        {/* Dummy Target Finder inline */}
+                        <div className="bg-[rgba(0,0,0,0.1)] p-3">
+                           <DummyFinder 
+                             originTownId={activeGroup.townId} 
+                             durationSeconds={(plan.recallTime ? new Date(plan.recallTime).getTime() - sendDate.getTime() : 0) / 1000} 
+                           />
                         </div>
                       </div>
                     );
