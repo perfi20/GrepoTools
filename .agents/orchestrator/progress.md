@@ -1,11 +1,14 @@
 # Progress
 
 ## Current Status
-Last visited: 2026-06-07T17:32:00Z
+Last visited: 2026-06-20T14:31:16Z
 
-- [x] Analyze Functionality, UI, and UX (Explorer b68c0bd3-b70c-40c2-a397-8cc2968d8fd9)
-- [x] Profile Performance (Challenger 45491858-9a49-4b09-ba69-03665ab3009f)
-- [x] Synthesize Final Report
+- [x] Milestone 1: Tactical Feature Research (completed)
+- [x] Milestone 2: Main Dashboard Design (completed)
+- [x] Milestone 3: City Manager Design (completed)
+- [x] Milestone 4: Army Tracker & Sniping Design (completed)
+- [x] Milestone 5: Technical Stack & DB Schema (completed)
+- [x] Milestone 6: Synthesis & Compilation (completed)
 
 ## Iteration Status
 Current iteration: 1 / 32

@@ -132,7 +132,54 @@ model Town {
   points     Int
   player     Player? @relation(fields: [playerId], references: [id])
 
+  // Custom command center fields
+  specialization        String  @default("NONE")
+  bunksResearched       Boolean @default(false)
+  plowResearched        Boolean @default(false)
+  cartographyResearched Boolean @default(false)
+  mathResearched        Boolean @default(false)
+  hasThermalBaths       Boolean @default(false)
+  hasTower              Boolean @default(false)
+  hasLighthouse         Boolean @default(false)
+
+  // Building levels (null represents untracked)
+  mainLevel             Int?
+  farmLevel             Int?
+  barracksLevel         Int?
+  docksLevel            Int?
+  wallLevel             Int?
+  templeLevel           Int?
+  lumberLevel           Int?
+  stonerLevel           Int?
+  ironerLevel           Int?
+  marketLevel           Int?
+  academyLevel          Int?
+
+  // Relations
+  snipeOperations       SnipeOperation[] @relation("TargetTown")
+  snipeOrigins          SnipeOperation[] @relation("OriginTown")
+
   @@index([islandX, islandY])
+}
+
+model SnipeOperation {
+  id                String    @id @default(uuid())
+  label             String
+  type              String    @default("recall")
+  worldType         String    @default("siege")
+  targetTownId      Int
+  originTownId      Int
+  targetReturnTime  DateTime
+  sendTime          DateTime
+  recallTime        DateTime?
+  status            String    @default("PENDING")
+  createdAt         DateTime  @default(now())
+
+  targetTown        Town      @relation("TargetTown", fields: [targetTownId], references: [id])
+  originTown        Town      @relation("OriginTown", fields: [originTownId], references: [id])
+
+  @@index([sendTime])
+  @@index([status])
 }
 
 model TownHistory {

@@ -28,3 +28,35 @@ Run any necessary scripts or profiling tools (if applicable) to objectively asse
 - [ ] At least one concrete performance improvement is suggested for both the client-side and server-side/database, including specific file paths or components.
 - [ ] At least one concrete UI/UX improvement is proposed with a detailed implementation approach.
 - [ ] Solutions provide specific code locations or architectural recommendations rather than generic advice.
+
+## Follow-up — 2026-06-20T14:14:12Z
+
+# Teamwork Project Prompt — Draft
+
+Research and design a comprehensive Command Center for Grepolis, featuring an advanced city manager, manual army tracker, and strategic dashboard. Produce a highly detailed document discussing features, implementation paths, and development strategies informed by advanced Grepolis tactics.
+
+Working directory: d:\Dev\Web\Grepolis\docs\command_center_research
+Integrity mode: benchmark
+
+Reference Material:
+- https://grepolisgrepolis.wordpress.com/grepolis-guides-2/becoming-a-grepo-elite-purely-offensive-tactics/
+- https://grepolisgrepolis.wordpress.com/grepolis-guides-2/cs-sniping-guide/
+- https://grepolis-pro.blogspot.com/
+
+## Requirements
+
+### R1. Deep Feature Research
+Analyze the provided Grepolis tactical guides. Extract advanced strategies for offensive and defensive planning, sniping, and city building. Translate these concepts into specific tracking or helper features.
+
+### R2. Command Center Design
+Propose a comprehensive design for the main dashboard, advanced city manager (with manual inputs), and advanced army tracker.
+
+### R3. Implementation Strategy (Next.js/Prisma Stack)
+Provide specific technical implementation paths tailored strictly to a Next.js, Prisma, and TailwindCSS stack. Define database models and component structures necessary for these advanced features.
+
+## Acceptance Criteria
+
+### Comprehensive Document Verification
+- [ ] A final Markdown document (`command_center_blueprint.md`) is produced in the working directory.
+- [ ] The document includes explicit references to the provided tactical guides and how they influenced the feature designs.
+- [ ] The document contains Next.js/Prisma-specific implementation details (e.g., suggested schema additions, API route structures).
