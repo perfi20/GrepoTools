@@ -13,7 +13,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
-      - grepotools_net
+      - webnet
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-grepo_user} -d ${POSTGRES_DB:-grepotools}"]
       interval: 5s
@@ -41,14 +41,11 @@ services:
       GREPODATA_PASSWORD: ${GREPODATA_PASSWORD:-}
       NODE_ENV: production
     networks:
-      - grepotools_net
-      - caddy_net
+      - webnet
 
 volumes:
   postgres_data:
 
 networks:
-  grepotools_net:
-    driver: bridge
-  caddy_net:
+  webnet:
     external: true
