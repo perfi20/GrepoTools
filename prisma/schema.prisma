@@ -135,7 +135,7 @@ model Player {
   dbp        Int       @default(0)
   allBp      Int       @default(0)
   townsList  Town[]
-  alliance   Alliance? @relation(fields: [allianceId, worldId], references: [id, worldId])
+  alliance   Alliance? @relation(fields: [allianceId, worldId], references: [id, worldId], onDelete: SetNull)
   world      World?    @relation(fields: [worldId], references: [id], onDelete: Cascade)
 
   @@id([id, worldId])
@@ -187,7 +187,7 @@ model Town {
   islandY    Int
   islandSlot Int
   points     Int
-  player     Player? @relation(fields: [playerId, worldId], references: [id, worldId])
+  player     Player? @relation(fields: [playerId, worldId], references: [id, worldId], onDelete: SetNull)
   world      World?  @relation(fields: [worldId], references: [id], onDelete: Cascade)
 
   // Custom command center fields
@@ -238,8 +238,8 @@ model SnipeOperation {
   notes             String?
   createdAt         DateTime  @default(now())
 
-  targetTown        Town      @relation("TargetTown", fields: [targetTownId, worldId], references: [id, worldId])
-  originTown        Town      @relation("OriginTown", fields: [originTownId, worldId], references: [id, worldId])
+  targetTown        Town      @relation("TargetTown", fields: [targetTownId, worldId], references: [id, worldId], onDelete: Cascade)
+  originTown        Town      @relation("OriginTown", fields: [originTownId, worldId], references: [id, worldId], onDelete: Cascade)
   world             World?    @relation(fields: [worldId], references: [id], onDelete: Cascade)
 
   @@index([worldId, sendTime])

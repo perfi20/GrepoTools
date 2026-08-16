@@ -379,6 +379,23 @@ export async function GET(request) {
     const alliancesToRemove = currentAlliances.filter(a => !seenAllianceIds.has(a.id)).map(a => a.id);
     const islandsToRemove = currentIslands.filter(i => !seenIslandIds.has(i.id)).map(i => i.id);
 
+    // 1. Unlink players from alliances that are being deleted
+    if (alliancesToRemove.length > 0) {
+      tx.push(prisma.player.updateMany({
+        where: { worldId, allianceId: { in: alliancesToRemove } },
+        data: { allianceId: null }
+      }));
+    }
+
+    // 2. Unlink towns from players that are being deleted (ghost towns)
+    if (playersToRemove.length > 0) {
+      tx.push(prisma.town.updateMany({
+        where: { worldId, playerId: { in: playersToRemove } },
+        data: { playerId: null }
+      }));
+    }
+
+    // 3. Execute deletions
     if (townsToRemove.length > 0) tx.push(prisma.town.deleteMany({ where: { worldId, id: { in: townsToRemove } } }));
     if (playersToRemove.length > 0) tx.push(prisma.player.deleteMany({ where: { worldId, id: { in: playersToRemove } } }));
     if (alliancesToRemove.length > 0) tx.push(prisma.alliance.deleteMany({ where: { worldId, id: { in: alliancesToRemove } } }));
