@@ -447,7 +447,7 @@ export default function AdminWorldCenter() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {worlds.map(w => {
-            const isCurrentActive = w.id === activeWorldId;
+            const isCurrentActive = w.id.toLowerCase() === activeWorldId.toLowerCase();
             const isSyncing = syncingWorldId === w.id;
             const recentSyncResult = syncResults[w.id];
 

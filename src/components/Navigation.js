@@ -161,7 +161,7 @@ export default function Navigation() {
                           setWorldDropdownOpen(false);
                         }}
                         className={`flex items-center justify-between p-2.5 rounded-lg text-left text-sm transition-colors ${
-                          w.id === activeWorldId 
+                          w.id.toLowerCase() === activeWorldId.toLowerCase()
                             ? 'bg-primary/20 border border-primary/40 text-white' 
                             : 'hover:bg-slate-800 text-slate-300'
                         }`}
@@ -172,7 +172,7 @@ export default function Navigation() {
                             {w.worldType?.toUpperCase()} • {w.speed}x speed • {w.counts?.players || 0} players
                           </div>
                         </div>
-                        {w.id === activeWorldId && <Check size={16} className="text-primary" />}
+                        {w.id.toLowerCase() === activeWorldId.toLowerCase() && <Check size={16} className="text-primary" />}
                       </button>
                     ))}
                   </div>

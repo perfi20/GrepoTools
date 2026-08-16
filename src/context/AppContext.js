@@ -1,30 +1,38 @@
 'use client';
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef } from 'react';
 
 const AppContext = createContext(null);
 
 export function AppContextProvider({ children }) {
   const [worlds, setWorlds] = useState([]);
   const [activeWorldId, setActiveWorldId] = useState('hu119');
-  const [activeWorld, setActiveWorld] = useState(null);
   const [activePlayerName, setActivePlayerName] = useState('');
   const [activePlayer, setActivePlayer] = useState(null);
   const [masterData, setMasterData] = useState(null);
   const [loadingWorlds, setLoadingWorlds] = useState(true);
   const [loadingPlayer, setLoadingPlayer] = useState(true);
 
-  // 1. Initial Load from LocalStorage
+  const activeWorldIdRef = useRef(activeWorldId);
+  activeWorldIdRef.current = activeWorldId;
+
+  // 1. Initial Load from LocalStorage (runs once on mount)
   useEffect(() => {
     try {
       const savedWorld = localStorage.getItem('grepo_active_world');
-      if (savedWorld) setActiveWorldId(savedWorld.toLowerCase());
+      if (savedWorld && savedWorld.trim()) {
+        const cleanWorld = savedWorld.trim().toLowerCase();
+        setActiveWorldId(cleanWorld);
+        activeWorldIdRef.current = cleanWorld;
+      }
 
       const savedPlayer = localStorage.getItem('grepo_active_player');
-      if (savedPlayer) setActivePlayerName(savedPlayer);
+      if (savedPlayer && savedPlayer.trim()) {
+        setActivePlayerName(savedPlayer.trim());
+      }
     } catch (e) {}
   }, []);
 
-  // 2. Fetch Worlds list
+  // 2. Fetch Worlds list (does not recreate on activeWorldId change)
   const refreshWorlds = useCallback(async () => {
     try {
       setLoadingWorlds(true);
@@ -32,11 +40,17 @@ export function AppContextProvider({ children }) {
       const data = await res.json();
       if (data.success && Array.isArray(data.worlds)) {
         setWorlds(data.worlds);
-        // Find or fallback active world
-        const current = data.worlds.find(w => w.id === activeWorldId) || data.worlds[0];
-        if (current) {
-          setActiveWorld(current);
-          setActiveWorldId(current.id);
+        
+        // If current activeWorldId doesn't exist in the worlds list and worlds list is non-empty, default to first world
+        const currentId = activeWorldIdRef.current;
+        const exists = data.worlds.some(w => w.id.toLowerCase() === currentId.toLowerCase());
+        if (!exists && data.worlds.length > 0) {
+          const firstId = data.worlds[0].id.toLowerCase();
+          setActiveWorldId(firstId);
+          activeWorldIdRef.current = firstId;
+          try {
+            localStorage.setItem('grepo_active_world', firstId);
+          } catch (e) {}
         }
       }
     } catch (e) {
@@ -44,25 +58,40 @@ export function AppContextProvider({ children }) {
     } finally {
       setLoadingWorlds(false);
     }
-  }, [activeWorldId]);
+  }, []);
 
   useEffect(() => {
     refreshWorlds();
   }, [refreshWorlds]);
 
-  // 3. Switch World
+  // 3. Compute Active World dynamically without state setter loops
+  const activeWorld = useMemo(() => {
+    if (!worlds || worlds.length === 0) {
+      return { 
+        id: activeWorldId, 
+        name: activeWorldId.toUpperCase(), 
+        server: activeWorldId,
+        speed: 1.0, 
+        unitSpeed: 1.0, 
+        worldType: 'siege', 
+        isActive: true 
+      };
+    }
+    return worlds.find(w => w.id.toLowerCase() === activeWorldId.toLowerCase()) || worlds[0];
+  }, [worlds, activeWorldId]);
+
+  // 4. Switch World
   const switchWorld = useCallback((worldId) => {
-    const cleanId = worldId.toLowerCase();
+    if (!worldId) return;
+    const cleanId = worldId.trim().toLowerCase();
     setActiveWorldId(cleanId);
+    activeWorldIdRef.current = cleanId;
     try {
       localStorage.setItem('grepo_active_world', cleanId);
     } catch (e) {}
+  }, []);
 
-    const found = worlds.find(w => w.id === cleanId);
-    if (found) setActiveWorld(found);
-  }, [worlds]);
-
-  // 4. Fetch Master Player Data
+  // 5. Fetch Master Player Data when activeWorldId or activePlayerName changes
   const refreshActivePlayer = useCallback(async () => {
     if (!activeWorldId) return;
     try {
@@ -93,11 +122,12 @@ export function AppContextProvider({ children }) {
     refreshActivePlayer();
   }, [refreshActivePlayer]);
 
-  // 5. Switch Player
+  // 6. Switch Player
   const switchPlayer = useCallback((name) => {
-    setActivePlayerName(name);
+    const cleanName = name ? name.trim() : '';
+    setActivePlayerName(cleanName);
     try {
-      localStorage.setItem('grepo_active_player', name);
+      localStorage.setItem('grepo_active_player', cleanName);
     } catch (e) {}
   }, []);
 
@@ -105,7 +135,7 @@ export function AppContextProvider({ children }) {
     <AppContext.Provider value={{
       worlds,
       activeWorldId,
-      activeWorld: activeWorld || { id: activeWorldId, name: activeWorldId.toUpperCase(), speed: 1, unitSpeed: 1, worldType: 'siege' },
+      activeWorld,
       switchWorld,
       activePlayerName,
       activePlayer,
