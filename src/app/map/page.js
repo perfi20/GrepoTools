@@ -557,26 +557,6 @@ export default function WorldMap() {
               </div>
             </Popup>
           )}
-
-          {/* Detailed Island Modal */}
-          {selectedIsland && (
-            <IslandModal 
-              islandData={selectedIsland} 
-              onClose={() => setSelectedIsland(null)} 
-              customColors={customColors}
-              worldId={activeWorldId}
-              onTownClick={(town) => setSelectedEntity({ type: 'town', data: town })}
-            />
-          )}
-
-          {/* Deep Dive Modal */}
-          {selectedEntity && (
-            <DeepDiveModal 
-              entity={selectedEntity} 
-              onClose={() => setSelectedEntity(null)} 
-              worldId={activeWorldId}
-            />
-          )}
         </Map>
       </div>
 
@@ -803,6 +783,25 @@ export default function WorldMap() {
         </div>
 
       </div>
+
+      {/* Top-Level Viewport Modals */}
+      {selectedIsland && (
+        <IslandModal 
+          islandData={selectedIsland} 
+          onClose={() => setSelectedIsland(null)} 
+          customColors={customColors}
+          worldId={activeWorldId}
+          onTownClick={(town) => setSelectedEntity({ type: 'town', data: town })}
+        />
+      )}
+
+      {selectedEntity && (
+        <DeepDiveModal 
+          entity={selectedEntity} 
+          onClose={() => setSelectedEntity(null)} 
+          worldId={activeWorldId}
+        />
+      )}
 
     </div>
   );
