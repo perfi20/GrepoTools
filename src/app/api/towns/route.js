@@ -33,7 +33,7 @@ export async function GET(request) {
 export async function PUT(request) {
   try {
     const body = await request.json();
-    const { townId, specialization, bunksResearched, plowResearched, cartographyResearched, mathResearched, hasThermalBaths, hasTower, hasLighthouse, buildingLevels } = body;
+    const { townId, worldId = 'hu119', specialization, bunksResearched, plowResearched, cartographyResearched, mathResearched, hasThermalBaths, hasTower, hasLighthouse, buildingLevels } = body;
 
     if (!townId) {
       return NextResponse.json({ error: 'Missing townId' }, { status: 400 });
@@ -69,7 +69,12 @@ export async function PUT(request) {
     }
 
     const updatedTown = await prisma.town.update({
-      where: { id },
+      where: { 
+        id_worldId: {
+          id,
+          worldId: worldId.toLowerCase()
+        }
+      },
       data: updateData
     });
 

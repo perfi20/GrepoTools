@@ -88,7 +88,7 @@ model Report {
 }
 
 model Island {
-  id             Int    @id
+  id             Int
   worldId        String @default("hu119")
   x              Int
   y              Int
@@ -99,11 +99,32 @@ model Island {
 
   world          World? @relation(fields: [worldId], references: [id], onDelete: Cascade)
 
+  @@id([id, worldId])
   @@index([worldId, x, y])
 }
 
+model Alliance {
+  id      Int
+  worldId String   @default("hu119")
+  name    String
+  points  Int
+  towns   Int
+  members Int
+  rank    Int
+  abp     Int      @default(0)
+  dbp     Int      @default(0)
+  allBp   Int      @default(0)
+  players Player[]
+  world   World?   @relation(fields: [worldId], references: [id], onDelete: Cascade)
+
+  @@id([id, worldId])
+  @@index([worldId, name])
+  @@index([worldId, points])
+  @@index([name])
+}
+
 model Player {
-  id         Int       @id
+  id         Int
   worldId    String    @default("hu119")
   name       String
   allianceId Int?
@@ -114,9 +135,10 @@ model Player {
   dbp        Int       @default(0)
   allBp      Int       @default(0)
   townsList  Town[]
-  alliance   Alliance? @relation(fields: [allianceId], references: [id])
+  alliance   Alliance? @relation(fields: [allianceId, worldId], references: [id, worldId])
   world      World?    @relation(fields: [worldId], references: [id], onDelete: Cascade)
 
+  @@id([id, worldId])
   @@index([worldId, name])
   @@index([worldId, points])
   @@index([name])
@@ -139,25 +161,6 @@ model PlayerHistory {
   @@index([playerId, timestamp])
 }
 
-model Alliance {
-  id      Int      @id
-  worldId String   @default("hu119")
-  name    String
-  points  Int
-  towns   Int
-  members Int
-  rank    Int
-  abp     Int      @default(0)
-  dbp     Int      @default(0)
-  allBp   Int      @default(0)
-  players Player[]
-  world   World?   @relation(fields: [worldId], references: [id], onDelete: Cascade)
-
-  @@index([worldId, name])
-  @@index([worldId, points])
-  @@index([name])
-}
-
 model AllianceHistory {
   id         Int      @id @default(autoincrement())
   worldId    String   @default("hu119")
@@ -176,7 +179,7 @@ model AllianceHistory {
 }
 
 model Town {
-  id         Int     @id
+  id         Int
   worldId    String  @default("hu119")
   playerId   Int?
   name       String
@@ -184,7 +187,7 @@ model Town {
   islandY    Int
   islandSlot Int
   points     Int
-  player     Player? @relation(fields: [playerId], references: [id])
+  player     Player? @relation(fields: [playerId, worldId], references: [id, worldId])
   world      World?  @relation(fields: [worldId], references: [id], onDelete: Cascade)
 
   // Custom command center fields
@@ -214,6 +217,7 @@ model Town {
   snipeOperations       SnipeOperation[] @relation("TargetTown")
   snipeOrigins          SnipeOperation[] @relation("OriginTown")
 
+  @@id([id, worldId])
   @@index([worldId, islandX, islandY])
   @@index([worldId, playerId])
   @@index([islandX, islandY])
@@ -234,8 +238,8 @@ model SnipeOperation {
   notes             String?
   createdAt         DateTime  @default(now())
 
-  targetTown        Town      @relation("TargetTown", fields: [targetTownId], references: [id])
-  originTown        Town      @relation("OriginTown", fields: [originTownId], references: [id])
+  targetTown        Town      @relation("TargetTown", fields: [targetTownId, worldId], references: [id, worldId])
+  originTown        Town      @relation("OriginTown", fields: [originTownId, worldId], references: [id, worldId])
   world             World?    @relation(fields: [worldId], references: [id], onDelete: Cascade)
 
   @@index([worldId, sendTime])

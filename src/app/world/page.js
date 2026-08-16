@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useApp } from '@/context/AppContext';
 import { 
   Globe, Plus, RefreshCw, Trash2, CheckCircle2, AlertTriangle, 
-  Settings, Database, Server, Clock, Zap, ArrowRight, Play 
+  Settings, Database, Server, Clock, Edit3, Lock, Unlock, X, ShieldCheck
 } from 'lucide-react';
 
 export default function AdminWorldCenter() {
@@ -14,6 +14,12 @@ export default function AdminWorldCenter() {
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
 
+  // Admin Authentication State
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [adminPasswordInput, setAdminPasswordInput] = useState('');
+  const [authError, setAuthError] = useState('');
+  const [checkingAuth, setCheckingAuth] = useState(true);
+
   // Add World form states
   const [formOpen, setFormOpen] = useState(false);
   const [newWorldId, setNewWorldId] = useState('');
@@ -23,6 +29,56 @@ export default function AdminWorldCenter() {
   const [newWorldUnitSpeed, setNewWorldUnitSpeed] = useState(3.0);
   const [newWorldType, setNewWorldType] = useState('siege');
   const [syncImmediately, setSyncImmediately] = useState(true);
+
+  // Edit World states
+  const [editingWorld, setEditingWorld] = useState(null);
+  const [editName, setEditName] = useState('');
+  const [editServer, setEditServer] = useState('');
+  const [editSpeed, setEditSpeed] = useState(3.0);
+  const [editUnitSpeed, setEditUnitSpeed] = useState(3.0);
+  const [editType, setEditType] = useState('siege');
+  const [editActive, setEditActive] = useState(true);
+
+  // Check existing session authentication
+  useEffect(() => {
+    try {
+      const savedAuth = sessionStorage.getItem('grepo_admin_auth');
+      if (savedAuth === 'true') {
+        setIsAuthenticated(true);
+      }
+    } catch (e) {}
+    setCheckingAuth(false);
+  }, []);
+
+  const handleAdminLogin = async (e) => {
+    e.preventDefault();
+    setAuthError('');
+    try {
+      const res = await fetch('/api/admin/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: adminPasswordInput })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setIsAuthenticated(true);
+        try {
+          sessionStorage.setItem('grepo_admin_auth', 'true');
+        } catch (e) {}
+      } else {
+        setAuthError(data.error || 'Invalid passcode');
+      }
+    } catch (err) {
+      setAuthError(err.message);
+    }
+  };
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    try {
+      sessionStorage.removeItem('grepo_admin_auth');
+    } catch (e) {}
+  };
 
   const handleAddWorld = async (e) => {
     e.preventDefault();
@@ -73,6 +129,50 @@ export default function AdminWorldCenter() {
     }
   };
 
+  const openEditModal = (world) => {
+    setEditingWorld(world);
+    setEditName(world.name);
+    setEditServer(world.server);
+    setEditSpeed(world.speed);
+    setEditUnitSpeed(world.unitSpeed || world.speed);
+    setEditType(world.worldType || 'siege');
+    setEditActive(world.isActive !== false);
+  };
+
+  const handleSaveEdit = async (e) => {
+    e.preventDefault();
+    if (!editingWorld) return;
+
+    setLoading(true);
+    setError('');
+    try {
+      const res = await fetch('/api/worlds', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: editingWorld.id,
+          name: editName,
+          server: editServer,
+          speed: parseFloat(editSpeed) || 1.0,
+          unitSpeed: parseFloat(editUnitSpeed) || 1.0,
+          worldType: editType,
+          isActive: editActive
+        })
+      });
+
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error || 'Failed to update world');
+
+      setSuccessMessage(`World ${editingWorld.id.toUpperCase()} updated successfully!`);
+      await refreshWorlds();
+      setEditingWorld(null);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSyncWorld = async (worldId) => {
     setSyncingWorldId(worldId);
     setError('');
@@ -114,25 +214,87 @@ export default function AdminWorldCenter() {
     }
   };
 
+  if (checkingAuth) {
+    return (
+      <div className="py-20 text-center text-slate-500 text-sm animate-pulse">
+        Verifying security clearance...
+      </div>
+    );
+  }
+
+  // Security Gate if not authenticated
+  if (!isAuthenticated) {
+    return (
+      <div className="max-w-md mx-auto py-16">
+        <div className="glass-panel p-8 bg-slate-900/95 border border-slate-700/80 rounded-2xl shadow-2xl text-center">
+          <div className="w-12 h-12 bg-primary/20 text-primary border border-primary/40 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <Lock size={24} />
+          </div>
+          <h1 className="text-2xl font-bold text-white tracking-tight">Admin Gate</h1>
+          <p className="text-xs text-slate-400 mt-1 mb-6">
+            Authentication required to modify game worlds, triggers, and server configurations.
+          </p>
+
+          <form onSubmit={handleAdminLogin} className="flex flex-col gap-3">
+            <input
+              type="password"
+              placeholder="Enter Admin Passcode..."
+              value={adminPasswordInput}
+              onChange={e => setAdminPasswordInput(e.target.value)}
+              className="input-field text-center font-mono tracking-widest text-base py-2.5"
+              autoFocus
+              required
+            />
+
+            {authError && (
+              <div className="text-xs text-rose-400 font-mono bg-rose-500/10 p-2 rounded-lg border border-rose-500/20">
+                {authError}
+              </div>
+            )}
+
+            <button type="submit" className="btn btn-primary mt-2 py-2.5">
+              <Unlock size={16} /> Unlock Management Console
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-6 max-w-6xl mx-auto">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-slate-800 pb-5 gap-4">
         <div>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-xs font-mono bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded flex items-center gap-1">
+              <ShieldCheck size={13} /> Admin Mode Authenticated
+            </span>
+          </div>
           <h1 className="text-3xl font-bold text-white tracking-tight flex items-center gap-3">
-            <Globe size={28} className="text-primary" /> Admin World Management
+            <Globe size={28} className="text-primary" /> World Management Center
           </h1>
           <p className="text-slate-400 text-sm mt-1">
-            Configure game worlds, manage database synchronization, and customize server attributes.
+            Configure game worlds, edit server parameters, and trigger database synchronization.
           </p>
         </div>
 
-        <button
-          onClick={() => setFormOpen(!formOpen)}
-          className="btn btn-primary"
-        >
-          <Plus size={16} /> {formOpen ? 'Cancel' : 'Add New World'}
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setFormOpen(!formOpen)}
+            className="btn btn-primary"
+          >
+            <Plus size={16} /> {formOpen ? 'Cancel' : 'Add New World'}
+          </button>
+
+          <button
+            onClick={handleLogout}
+            className="btn bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs py-2 px-3"
+            title="Lock Admin Session"
+          >
+            <Lock size={14} /> Lock
+          </button>
+        </div>
       </div>
 
       {/* Alerts */}
@@ -163,7 +325,7 @@ export default function AdminWorldCenter() {
               </label>
               <input
                 type="text"
-                placeholder="e.g. en143, hu119, de125"
+                placeholder="e.g. en143, hu120, de125"
                 value={newWorldId}
                 onChange={(e) => {
                   setNewWorldId(e.target.value);
@@ -172,7 +334,7 @@ export default function AdminWorldCenter() {
                 className="input-field"
                 required
               />
-              <span className="text-xs text-slate-500 mt-1 block">The subdomain used on Grepolis.</span>
+              <span className="text-xs text-slate-500 mt-1 block">The subdomain prefix used on Grepolis.</span>
             </div>
 
             <div>
@@ -306,6 +468,11 @@ export default function AdminWorldCenter() {
                             Active
                           </span>
                         )}
+                        {!w.isActive && (
+                          <span className="text-xs bg-rose-500/20 text-rose-300 border border-rose-500/30 font-semibold px-2 py-0.5 rounded-full">
+                            Disabled
+                          </span>
+                        )}
                       </div>
                       <div className="text-xs text-slate-400 font-mono mt-0.5">
                         Server: {w.server}.grepolis.com • {w.worldType?.toUpperCase()}
@@ -313,6 +480,13 @@ export default function AdminWorldCenter() {
                     </div>
 
                     <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={() => openEditModal(w)}
+                        className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors"
+                        title="Edit world settings"
+                      >
+                        <Edit3 size={15} />
+                      </button>
                       <button
                         onClick={() => handleSyncWorld(w.id)}
                         disabled={isSyncing}
@@ -331,7 +505,7 @@ export default function AdminWorldCenter() {
                     </div>
                   </div>
 
-                  {/* World Badges / Metrics */}
+                  {/* World Metrics */}
                   <div className="grid grid-cols-4 gap-2 my-4 bg-slate-950/60 p-3 rounded-xl border border-slate-800 text-center">
                     <div>
                       <div className="text-xs text-slate-400">Speed</div>
@@ -375,7 +549,7 @@ export default function AdminWorldCenter() {
                   )}
                 </div>
 
-                {/* Sync Delta Summary if just synced */}
+                {/* Sync Delta Summary */}
                 {recentSyncResult && (
                   <div className="mt-3 p-2.5 bg-emerald-950/40 border border-emerald-800/50 rounded-lg text-xs text-emerald-300 animate-fade-in">
                     Sync finished: +{recentSyncResult.stats?.players} players, +{recentSyncResult.stats?.towns} towns.
@@ -386,6 +560,125 @@ export default function AdminWorldCenter() {
           })}
         </div>
       </div>
+
+      {/* Edit World Modal */}
+      {editingWorld && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4"
+          onClick={(e) => { if (e.target === e.currentTarget) setEditingWorld(null); }}
+        >
+          <div className="glass-panel w-full max-w-lg p-6 bg-slate-900/95 border border-slate-700/80 rounded-2xl shadow-2xl">
+            <div className="flex justify-between items-center mb-4 border-b border-slate-800 pb-3">
+              <div>
+                <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                  <Edit3 size={18} className="text-primary" /> Edit World: {editingWorld.id.toUpperCase()}
+                </h3>
+                <p className="text-xs text-slate-400">Update server attributes and speeds</p>
+              </div>
+              <button 
+                onClick={() => setEditingWorld(null)}
+                className="text-slate-400 hover:text-white p-1"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEdit} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="sm:col-span-2">
+                <label className="text-xs font-semibold text-slate-300 block mb-1">Display Name</label>
+                <input
+                  type="text"
+                  value={editName}
+                  onChange={e => setEditName(e.target.value)}
+                  className="input-field"
+                  required
+                />
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="text-xs font-semibold text-slate-300 block mb-1">Server Host Prefix</label>
+                <input
+                  type="text"
+                  value={editServer}
+                  onChange={e => setEditServer(e.target.value)}
+                  className="input-field"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-slate-300 block mb-1">World Game Speed</label>
+                <input
+                  type="number"
+                  step="0.5"
+                  min="1"
+                  max="10"
+                  value={editSpeed}
+                  onChange={e => setEditSpeed(e.target.value)}
+                  className="input-field"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-slate-300 block mb-1">Unit Speed Multiplier</label>
+                <input
+                  type="number"
+                  step="0.5"
+                  min="1"
+                  max="10"
+                  value={editUnitSpeed}
+                  onChange={e => setEditUnitSpeed(e.target.value)}
+                  className="input-field"
+                  required
+                />
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="text-xs font-semibold text-slate-300 block mb-1">Game Conquest Mode</label>
+                <select
+                  value={editType}
+                  onChange={e => setEditType(e.target.value)}
+                  className="input-field"
+                >
+                  <option value="siege">Siege (Old Conquest)</option>
+                  <option value="revolt">Revolt (New Conquest)</option>
+                </select>
+              </div>
+
+              <div className="sm:col-span-2 flex items-center gap-2 pt-2">
+                <input
+                  type="checkbox"
+                  id="editActiveCheckbox"
+                  checked={editActive}
+                  onChange={e => setEditActive(e.target.checked)}
+                  className="rounded border-slate-700 bg-slate-950 text-primary w-4 h-4"
+                />
+                <label htmlFor="editActiveCheckbox" className="text-sm text-slate-300 cursor-pointer">
+                  World is active and available in world switcher
+                </label>
+              </div>
+
+              <div className="sm:col-span-2 flex justify-end gap-2 pt-4 border-t border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setEditingWorld(null)}
+                  className="btn bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="btn btn-primary text-xs"
+                >
+                  {loading ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

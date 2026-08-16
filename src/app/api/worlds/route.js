@@ -81,6 +81,37 @@ export async function POST(request) {
   }
 }
 
+export async function PUT(request) {
+  try {
+    const body = await request.json();
+    const { id, name, server, speed, unitSpeed, worldType, isActive } = body;
+
+    if (!id) {
+      return NextResponse.json({ success: false, error: 'World ID is required' }, { status: 400 });
+    }
+
+    const worldId = id.trim().toLowerCase();
+    const updateData = {};
+
+    if (name !== undefined) updateData.name = name.trim();
+    if (server !== undefined) updateData.server = server.trim().toLowerCase();
+    if (speed !== undefined) updateData.speed = parseFloat(speed) || 1.0;
+    if (unitSpeed !== undefined) updateData.unitSpeed = parseFloat(unitSpeed) || 1.0;
+    if (worldType !== undefined) updateData.worldType = worldType;
+    if (isActive !== undefined) updateData.isActive = Boolean(isActive);
+
+    const world = await prisma.world.update({
+      where: { id: worldId },
+      data: updateData
+    });
+
+    return NextResponse.json({ success: true, world });
+  } catch (error) {
+    console.error("PUT /api/worlds error:", error);
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  }
+}
+
 export async function DELETE(request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -92,7 +123,7 @@ export async function DELETE(request) {
 
     // Delete world (foreign keys will cascade)
     await prisma.world.delete({
-      where: { id }
+      where: { id: id.trim().toLowerCase() }
     });
 
     return NextResponse.json({ success: true, message: `World ${id} deleted` });
