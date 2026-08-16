@@ -1,13 +1,54 @@
 version: '3.8'
 
 services:
-  grepolis-tools:
+  # Local PostgreSQL Database
+  db:
+    image: postgres:16-alpine
+    container_name: grepotools-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-grepo_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-grepo_secret_password}
+      POSTGRES_DB: ${POSTGRES_DB:-grepotools}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - grepotools_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-grepo_user} -d ${POSTGRES_DB:-grepotools}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # GrepoTools Next.js App
+  app:
     build:
       context: .
       dockerfile: Dockerfile
+    container_name: grepotools-app
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
     ports:
       - "3000:3000"
-    volumes:
-      - ./prisma:/app/prisma
     environment:
-      - DATABASE_URL=file:./dev.db
+      DATABASE_URL: "postgresql://${POSTGRES_USER:-grepo_user}:${POSTGRES_PASSWORD:-grepo_secret_password}@db:5432/${POSTGRES_DB:-grepotools}?schema=public"
+      NEXT_PUBLIC_MASTER_PLAYER_NAME: ${NEXT_PUBLIC_MASTER_PLAYER_NAME:-perfi}
+      NEXT_PUBLIC_MASTER_WORLD: ${NEXT_PUBLIC_MASTER_WORLD:-hu119}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin}
+      GREPODATA_USERNAME: ${GREPODATA_USERNAME:-}
+      GREPODATA_PASSWORD: ${GREPODATA_PASSWORD:-}
+      NODE_ENV: production
+    networks:
+      - grepotools_net
+      - caddy_net
+
+volumes:
+  postgres_data:
+
+networks:
+  grepotools_net:
+    driver: bridge
+  caddy_net:
+    external: true
