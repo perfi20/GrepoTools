@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import Link from 'next/link';
-import { X, Users, Trophy, Shield, Swords, Activity, MapPin, ExternalLink, UserCheck, Crosshair } from 'lucide-react';
+import { X, Users, Trophy, Shield, Swords, Activity, MapPin, ExternalLink, Calendar } from 'lucide-react';
 import { ResponsiveContainer, AreaChart, Area, CartesianGrid, XAxis, YAxis, Tooltip, BarChart, Bar } from 'recharts';
-import { useApp } from '@/context/AppContext';
 
 function formatNumber(num) {
   if (num === undefined || num === null) return "0";
@@ -10,20 +8,9 @@ function formatNumber(num) {
 }
 
 export default function DeepDiveModal({ entity, onClose, worldId = 'hu119' }) {
-  const { switchPlayer } = useApp();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState(null);
   const [viewType, setViewType] = useState('area');
-  const [actionFeedback, setActionFeedback] = useState('');
-
-  // Close on Escape key press
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onClose]);
 
   useEffect(() => {
     async function fetchData() {
@@ -48,96 +35,59 @@ export default function DeepDiveModal({ entity, onClose, worldId = 'hu119' }) {
     fetchData();
   }, [entity, worldId]);
 
-  const handleSetPlayer = (playerName) => {
-    switchPlayer(playerName);
-    setActionFeedback(`Switched active player to ${playerName}!`);
-    setTimeout(() => setActionFeedback(''), 3000);
-  };
-
   const renderIcon = () => {
-    if (entity.type === 'alliance') return <Users size={26} className="text-accent" />;
-    if (entity.type === 'player') return <Trophy size={26} className="text-primary" />;
-    return <MapPin size={26} className="text-emerald-400" />;
+    if (entity.type === 'alliance') return <Users size={28} className="text-accent" />;
+    if (entity.type === 'player') return <Trophy size={28} className="text-primary" />;
+    return <MapPin size={28} className="text-emerald-400" />;
   };
 
   return (
     <div 
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fade-in"
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-4 animate-in fade-in duration-150"
+      onClick={(e) => { if(e.target === e.currentTarget) onClose() }}
     >
-      <div className="glass-panel w-full max-w-4xl max-h-[88vh] overflow-y-auto p-6 bg-slate-900/95 border border-slate-700/80 rounded-2xl shadow-2xl relative flex flex-col">
+      <div className="glass-panel w-full max-w-4xl max-h-[90vh] overflow-y-auto p-6 bg-slate-900/95 border border-slate-700/80 rounded-2xl shadow-2xl relative flex flex-col">
         
         {/* Close Button */}
         <button 
           onClick={onClose} 
-          className="absolute top-4 right-4 p-2 rounded-xl bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 transition-colors"
-          title="Close (Esc)"
+          className="absolute top-4 right-4 p-1.5 rounded-lg bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 transition-colors"
         >
           <X size={18} />
         </button>
 
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 border-b border-slate-800 pb-4 pr-10">
-          <div className="flex items-center gap-4">
-            <div className="p-3.5 rounded-xl bg-slate-800/80 border border-slate-700/80 shrink-0">
-              {renderIcon()}
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-2xl font-bold text-white tracking-tight">{entity.data.name}</h2>
-                <span className="badge badge-primary">
-                  World {worldId.toUpperCase()}
-                </span>
-              </div>
-              {entity.type === 'player' && entity.data.alliance && (
-                <div className="text-sm font-semibold text-accent mt-0.5">
-                  [{entity.data.alliance.name || entity.data.alliance}]
-                </div>
-              )}
-              {entity.type === 'town' && (
-                <div className="text-sm font-medium text-slate-300 mt-0.5">
-                  {entity.data.player} • {entity.data.alliance}
-                </div>
-              )}
-              <div className="text-xs text-slate-400 capitalize mt-0.5">
-                {entity.type} Intelligence Log
-                {entity.type === 'town' && ` • Island (${entity.data.islandX || entity.data.x}, ${entity.data.islandY || entity.data.y})`}
-              </div>
-            </div>
+        <div className="flex items-center gap-4 mb-6 border-b border-slate-800 pb-4">
+          <div className="p-3.5 rounded-xl bg-slate-800/80 border border-slate-700">
+            {renderIcon()}
           </div>
-
-          {/* Quick Actions */}
-          <div className="flex items-center gap-2">
-            {entity.type === 'player' && (
-              <button
-                onClick={() => handleSetPlayer(entity.data.name)}
-                className="btn btn-secondary text-xs py-1.5 px-3 rounded-lg flex items-center gap-1.5"
-                title="Select as your identity in this world"
-              >
-                <UserCheck size={14} className="text-accent" /> Set as Active Player
-              </button>
+          <div>
+            <div className="flex items-center gap-2">
+              <h2 className="text-2xl font-bold text-white tracking-tight">{entity.data.name}</h2>
+              <span className="text-xs font-mono bg-primary/20 text-primary border border-primary/30 px-2 py-0.5 rounded">
+                World {worldId.toUpperCase()}
+              </span>
+            </div>
+            {entity.type === 'player' && entity.data.alliance && (
+              <div className="text-sm font-semibold text-accent mt-0.5">
+                {entity.data.alliance.name || entity.data.alliance}
+              </div>
             )}
-
             {entity.type === 'town' && (
-              <Link
-                href="/snipe/recall"
-                className="btn btn-primary text-xs py-1.5 px-3 rounded-lg flex items-center gap-1.5"
-              >
-                <Crosshair size={14} /> Plan Snipe
-              </Link>
+              <div className="text-sm font-medium text-slate-300 mt-0.5">
+                {entity.data.player} • {entity.data.alliance}
+              </div>
             )}
+            <div className="text-xs text-slate-400 capitalize mt-1">
+              {entity.type} Intelligence
+              {entity.type === 'town' && ` • Coordinates (${entity.data.islandX || entity.data.x}, ${entity.data.islandY || entity.data.y})`}
+            </div>
           </div>
         </div>
 
-        {actionFeedback && (
-          <div className="mb-4 p-2.5 bg-emerald-500/10 border border-emerald-500/40 text-emerald-300 text-xs rounded-xl text-center font-mono animate-fade-in">
-            {actionFeedback}
-          </div>
-        )}
-
         {/* Top KPI Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
-          <div className="bg-slate-950/70 p-4 rounded-xl border border-slate-800 text-center">
+          <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800 text-center">
             <Trophy size={18} className="text-amber-400 mx-auto mb-1" />
             <div className="text-2xl font-mono font-bold text-white">
               {formatNumber(entity.data.points || entity.data.pts)}
@@ -147,31 +97,31 @@ export default function DeepDiveModal({ entity, onClose, worldId = 'hu119' }) {
 
           {(entity.type === 'player' || entity.type === 'alliance') ? (
             <>
-              <div className="bg-slate-950/70 p-4 rounded-xl border border-slate-800 text-center">
+              <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800 text-center">
                 <Swords size={18} className="text-rose-400 mx-auto mb-1" />
-                <div className="text-2xl font-mono font-bold text-rose-400">
+                <div className="text-2xl font-mono font-bold text-white">
                   {formatNumber(entity.data.abp)}
                 </div>
-                <div className="text-xs text-slate-400 mt-0.5">Attack Battle Points</div>
+                <div className="text-xs text-slate-400 mt-0.5">Attack BP</div>
               </div>
-              <div className="bg-slate-950/70 p-4 rounded-xl border border-slate-800 text-center">
+              <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800 text-center">
                 <Shield size={18} className="text-blue-400 mx-auto mb-1" />
-                <div className="text-2xl font-mono font-bold text-blue-400">
+                <div className="text-2xl font-mono font-bold text-white">
                   {formatNumber(entity.data.dbp)}
                 </div>
-                <div className="text-xs text-slate-400 mt-0.5">Defense Battle Points</div>
+                <div className="text-xs text-slate-400 mt-0.5">Defense BP</div>
               </div>
             </>
           ) : (
             <>
-              <div className="bg-slate-950/70 p-4 rounded-xl border border-slate-800 text-center">
+              <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800 text-center">
                 <Activity size={18} className="text-emerald-400 mx-auto mb-1" />
                 <div className="text-2xl font-mono font-bold text-emerald-400">
                   {data?.activity?.pointDelta ? `+${data.activity.pointDelta}` : '0'}
                 </div>
                 <div className="text-xs text-slate-400 mt-0.5">7-Day Growth</div>
               </div>
-              <div className="bg-slate-950/70 p-4 rounded-xl border border-slate-800 text-center">
+              <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800 text-center">
                 <MapPin size={18} className="text-primary mx-auto mb-1" />
                 <div className="text-2xl font-mono font-bold text-white">
                   #{entity.data.islandSlot ?? entity.data.slot ?? '-'}
@@ -183,34 +133,34 @@ export default function DeepDiveModal({ entity, onClose, worldId = 'hu119' }) {
         </div>
 
         {/* 7-Day History Chart */}
-        <div className="mb-6 p-5 bg-slate-950/70 rounded-xl border border-slate-800">
+        <div className="mb-6 p-4 bg-slate-950/60 rounded-xl border border-slate-800">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-sm font-bold text-slate-200 flex items-center gap-2">
               <Activity size={16} className="text-primary" /> 7-Day Progress & Delta History
             </h3>
-            <div className="flex gap-1 bg-slate-900 p-1 rounded-lg border border-slate-800">
+            <div className="flex gap-1.5 bg-slate-900 p-1 rounded-lg border border-slate-800">
               <button 
                 onClick={() => setViewType('area')}
-                className={`text-xs px-3 py-1 rounded font-medium transition-colors ${
+                className={`text-xs px-2.5 py-1 rounded font-medium transition-colors ${
                   viewType === 'area' ? 'bg-primary text-white' : 'text-slate-400 hover:text-white'
                 }`}
               >
-                Curve
+                Total Curve
               </button>
               <button 
                 onClick={() => setViewType('bar')}
-                className={`text-xs px-3 py-1 rounded font-medium transition-colors ${
+                className={`text-xs px-2.5 py-1 rounded font-medium transition-colors ${
                   viewType === 'bar' ? 'bg-primary text-white' : 'text-slate-400 hover:text-white'
                 }`}
               >
-                Daily Bars
+                Daily Gains
               </button>
             </div>
           </div>
 
           {loading ? (
-            <div className="h-56 flex items-center justify-center text-slate-500 text-sm animate-pulse gap-2">
-              <Activity size={16} className="animate-spin text-primary" /> Loading history...
+            <div className="h-56 flex items-center justify-center text-slate-500 text-sm animate-pulse">
+              Loading chart history...
             </div>
           ) : data?.history?.length > 0 ? (
             <div className="h-56 w-full">
@@ -225,9 +175,9 @@ export default function DeepDiveModal({ entity, onClose, worldId = 'hu119' }) {
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
                     <XAxis dataKey="date" stroke="#64748b" fontSize={11} />
-                    <YAxis stroke="#64748b" fontSize={11} domain={['auto', 'auto']} tickFormatter={formatNumber} />
+                    <YAxis stroke="#64748b" fontSize={11} domain={['auto', 'auto']} />
                     <Tooltip 
-                      contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '10px', color: '#fff' }}
+                      contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '8px', color: '#fff' }}
                       formatter={(val) => [formatNumber(val), 'Points']}
                     />
                     <Area type="monotone" dataKey="points" stroke="#3b82f6" strokeWidth={2} fillOpacity={1} fill="url(#deepColor)" />
@@ -236,9 +186,9 @@ export default function DeepDiveModal({ entity, onClose, worldId = 'hu119' }) {
                   <BarChart data={data.history}>
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
                     <XAxis dataKey="date" stroke="#64748b" fontSize={11} />
-                    <YAxis stroke="#64748b" fontSize={11} tickFormatter={formatNumber} />
+                    <YAxis stroke="#64748b" fontSize={11} />
                     <Tooltip 
-                      contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '10px', color: '#fff' }}
+                      contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '8px', color: '#fff' }}
                       formatter={(val) => [formatNumber(val), 'Delta']}
                     />
                     <Bar dataKey="delta" fill="#10b981" radius={[4, 4, 0, 0]} />
@@ -267,10 +217,10 @@ export default function DeepDiveModal({ entity, onClose, worldId = 'hu119' }) {
                 return (
                   <div 
                     key={c.id} 
-                    className="flex justify-between items-center p-3 bg-slate-950/70 border border-slate-800 rounded-xl text-xs"
+                    className="flex justify-between items-center p-3 bg-slate-950/60 border border-slate-800 rounded-xl text-xs"
                   >
                     <div className="flex items-center gap-2">
-                      <span className={`px-2 py-0.5 rounded font-bold ${isGain ? 'badge badge-success' : 'badge badge-danger'}`}>
+                      <span className={`px-2 py-0.5 rounded font-bold ${isGain ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'}`}>
                         {isGain ? 'CONQUERED' : 'LOST'}
                       </span>
                       <span className="text-slate-300">
@@ -285,7 +235,7 @@ export default function DeepDiveModal({ entity, onClose, worldId = 'hu119' }) {
               })}
             </div>
           ) : (
-            <div className="py-6 text-center text-slate-500 text-xs bg-slate-950/40 rounded-xl">
+            <div className="py-6 text-center text-slate-500 text-xs bg-slate-950/30 rounded-xl">
               No conquests recorded for this entity.
             </div>
           )}

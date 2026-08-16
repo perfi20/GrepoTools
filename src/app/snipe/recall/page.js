@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { 
   Trash2, Plus, AlertTriangle, Crosshair, Shield, Clock, RefreshCw, 
-  Target, Volume2, VolumeX, Save, CheckCircle2, ChevronRight, Swords, ArrowRight, Building2, MapPin
+  Target, Volume2, VolumeX, Save, CheckCircle2, ChevronRight, Swords, ArrowRight 
 } from 'lucide-react';
 import DummyFinder from '@/components/CommandCenter/DummyFinder';
 import { useApp } from '@/context/AppContext';
@@ -15,8 +15,6 @@ export default function RecallSnipePage() {
   const [serverOffset, setServerOffset] = useState(0); // in seconds
   const [now, setNow] = useState(new Date());
   const [audioEnabled, setAudioEnabled] = useState(true);
-
-  const loadedWorldRef = useRef(activeWorldId);
 
   // Input states for new group
   const [newGroupName, setNewGroupName] = useState('');
@@ -68,40 +66,26 @@ export default function RecallSnipePage() {
   // Load from local storage for active world
   useEffect(() => {
     if (!activeWorldId) return;
-    loadedWorldRef.current = activeWorldId;
-    try {
-      const saved = localStorage.getItem(`grepo-recall-groups_${activeWorldId.toLowerCase()}`);
-      if (saved) {
+    const saved = localStorage.getItem(`grepo-recall-groups_${activeWorldId}`) || localStorage.getItem('grepo-recall-groups');
+    if (saved) {
+      try {
         const parsed = JSON.parse(saved);
         setGroups(parsed);
         if (parsed.length > 0) setActiveGroupId(parsed[0].id);
-        else setActiveGroupId(null);
-      } else {
-        setGroups([]);
-        setActiveGroupId(null);
+      } catch (e) {
+        console.error("Failed to parse queue", e);
       }
-    } catch (e) {
-      console.error("Failed to parse queue", e);
+    } else {
       setGroups([]);
       setActiveGroupId(null);
     }
   }, [activeWorldId]);
 
-  // Save to local storage only when loadedWorldRef matches
-  const saveGroupsState = (newGroups) => {
-    if (!activeWorldId || loadedWorldRef.current !== activeWorldId) return;
-    try {
-      localStorage.setItem(`grepo-recall-groups_${activeWorldId.toLowerCase()}`, JSON.stringify(newGroups));
-    } catch (e) {}
-  };
-
-  const updateGroups = (updater) => {
-    setGroups(prev => {
-      const next = typeof updater === 'function' ? updater(prev) : updater;
-      saveGroupsState(next);
-      return next;
-    });
-  };
+  // Save to local storage
+  useEffect(() => {
+    if (!activeWorldId) return;
+    localStorage.setItem(`grepo-recall-groups_${activeWorldId}`, JSON.stringify(groups));
+  }, [groups, activeWorldId]);
 
   // Tick every second & play audio chirps
   useEffect(() => {
@@ -138,249 +122,221 @@ export default function RecallSnipePage() {
         });
       }
     }, 1000);
-
     return () => clearInterval(interval);
   }, [groups, activeGroupId, serverOffset, playChirp]);
 
+  const serverTime = new Date(now.getTime() + (serverOffset * 1000));
+
   const handleSyncTime = async () => {
     try {
-      const start = performance.now();
+      const start = Date.now();
       const res = await fetch('/api/time');
       const data = await res.json();
-      const end = performance.now();
-      const latency = (end - start) / 2000; // in seconds
-      
-      const serverDate = new Date(data.serverTime);
-      const localDate = new Date();
-      const diffSecs = Math.round((serverDate.getTime() / 1000) - (localDate.getTime() / 1000) + latency);
-      setServerOffset(diffSecs);
+      const end = Date.now();
+      const rtt = end - start;
+      const serverTimeMs = data.serverTime + (rtt / 2);
+      const diffMs = serverTimeMs - end;
+      setServerOffset(Math.round(diffMs / 1000));
     } catch (e) {
-      console.error("Failed to sync server time:", e);
+      console.error("Failed to sync time", e);
     }
   };
 
-  const serverTime = new Date(now.getTime() + (serverOffset * 1000));
-
-  // Search towns API
-  const searchTowns = async (query) => {
-    if (!query || query.length < 2) {
+  const searchTowns = async (q) => {
+    if (q.length < 2) {
       setTownSearchResults([]);
       return;
     }
     try {
-      const res = await fetch(`/api/world/search?world=${activeWorldId}&q=${encodeURIComponent(query)}`);
+      const res = await fetch(`/api/world/search?world=${activeWorldId}&q=${encodeURIComponent(q)}`);
       const data = await res.json();
       setTownSearchResults(data.towns || []);
-    } catch (e) {
-      console.error("Failed to search towns:", e);
-    }
+    } catch (e) {}
   };
 
   const createGroup = (e) => {
-    if (e) e.preventDefault();
-    if (!newGroupName.trim()) return;
-
+    e.preventDefault();
+    if (!newGroupName) return;
+    const townObj = activePlayer?.townsList?.find(t => t.name === newGroupName);
     const newGroup = {
       id: Date.now().toString(),
-      name: newGroupName.trim(),
-      worldType: newGroupWorld,
+      name: newGroupName,
+      townId: townObj ? townObj.id : null,
+      worldType: newGroupWorld || activeWorld?.worldType || 'siege',
       movements: [],
       plans: []
     };
-
-    updateGroups(prev => [...prev, newGroup]);
+    setGroups([...groups, newGroup]);
     setActiveGroupId(newGroup.id);
     setNewGroupName('');
   };
 
-  const handleQuickAddMyTown = (town) => {
-    if (!town) return;
-    const newGroup = {
-      id: Date.now().toString(),
-      name: `${town.name} (${town.islandX}, ${town.islandY})`,
-      targetTownId: town.id,
-      worldType: activeWorld?.worldType || 'siege',
-      movements: [],
-      plans: []
-    };
-    updateGroups(prev => [...prev, newGroup]);
-    setActiveGroupId(newGroup.id);
-  };
-
   const deleteGroup = (id) => {
-    updateGroups(prev => {
-      const next = prev.filter(g => g.id !== id);
-      if (activeGroupId === id) {
-        setActiveGroupId(next.length > 0 ? next[0].id : null);
-      }
-      return next;
-    });
-  };
-
-  const addMovement = (e) => {
-    e.preventDefault();
-    if (!activeGroupId || !movTime.trim()) return;
-
-    // Parse time
-    const parts = movTime.split(':').map(p => parseInt(p.trim(), 10));
-    if (parts.length < 2 || parts.some(isNaN)) {
-      alert("Please enter a valid time format (HH:MM:SS or HH:MM)");
-      return;
+    const newGroups = groups.filter(g => g.id !== id);
+    setGroups(newGroups);
+    if (activeGroupId === id) {
+      setActiveGroupId(newGroups.length > 0 ? newGroups[0].id : null);
     }
-
-    const targetDate = new Date(serverTime);
-    targetDate.setHours(parts[0], parts[1], parts[2] || 0, 0);
-
-    // If target time is earlier than current server time, assume next day
-    if (targetDate.getTime() <= serverTime.getTime()) {
-      targetDate.setDate(targetDate.getDate() + 1);
-    }
-
-    const movement = {
-      id: Date.now().toString(),
-      attacker: movAttacker.trim() || 'Unknown Movement',
-      attackerId: movAttackerId,
-      type: movType,
-      targetTime: targetDate.toISOString()
-    };
-
-    updateGroups(prev => prev.map(g => {
-      if (g.id === activeGroupId) {
-        const nextMovements = [...g.movements, movement].sort(
-          (a, b) => new Date(a.targetTime).getTime() - new Date(b.targetTime).getTime()
-        );
-        return { ...g, movements: nextMovements };
-      }
-      return g;
-    }));
-
-    setMovAttacker('');
-    setMovAttackerId(null);
-    setMovTime('');
-    setTownSearchResults([]);
-  };
-
-  const deleteMovement = (movementId) => {
-    updateGroups(prev => prev.map(g => {
-      if (g.id === activeGroupId) {
-        return { ...g, movements: g.movements.filter(m => m.id !== movementId) };
-      }
-      return g;
-    }));
   };
 
   const activeGroup = groups.find(g => g.id === activeGroupId);
 
-  // Calculate gaps between incoming attacks and Colony Ship
-  const calculateGaps = () => {
-    if (!activeGroup || activeGroup.movements.length < 2) return [];
+  const getTargetDate = (timeStr) => {
+    const [tH, tM, tS] = timeStr.split(':').map(Number);
+    const targetDate = new Date();
+    targetDate.setHours(tH, tM, tS, 0);
+    if (targetDate.getTime() < new Date().getTime()) {
+      targetDate.setDate(targetDate.getDate() + 1);
+    }
+    return targetDate.toISOString();
+  };
 
-    const movs = activeGroup.movements;
+  const addMovement = (e) => {
+    e.preventDefault();
+    if (!activeGroup || !movTime) return;
+    
+    const targetDateStr = getTargetDate(movTime);
+
+    const newMov = {
+      id: Date.now().toString() + Math.random().toString(36).substring(7),
+      attacker: movAttacker || 'Unknown',
+      attackerId: movAttackerId,
+      type: movType,
+      arrivalTime: targetDateStr
+    };
+
+    const updatedGroups = groups.map(g => {
+      if (g.id === activeGroup.id) {
+        return {
+          ...g,
+          movements: [...g.movements, newMov].sort((a, b) => new Date(a.arrivalTime).getTime() - new Date(b.arrivalTime).getTime())
+        };
+      }
+      return g;
+    });
+    setGroups(updatedGroups);
+    setMovAttacker('');
+    setMovAttackerId(null);
+    setTownSearchResults([]);
+    setMovTime('');
+    setMovType('attack');
+  };
+
+  const deleteMovement = (movId) => {
+    const updatedGroups = groups.map(g => {
+      if (g.id === activeGroup.id) {
+        return { ...g, movements: g.movements.filter(m => m.id !== movId) };
+      }
+      return g;
+    });
+    setGroups(updatedGroups);
+  };
+
+  // Gap Calculations
+  const calculateGaps = () => {
+    if (!activeGroup || activeGroup.movements.length === 0) return [];
+    
+    const csMovements = activeGroup.movements.filter(m => m.type === 'cs');
     const gaps = [];
 
-    for (let i = 0; i < movs.length; i++) {
-      const current = movs[i];
-      if (current.type === 'cs') {
-        // Look for preceding attack
-        for (let j = i - 1; j >= 0; j--) {
-          if (movs[j].type === 'attack') {
-            const tPrev = new Date(movs[j].targetTime).getTime();
-            const tCS = new Date(current.targetTime).getTime();
-            const diffSeconds = Math.round((tCS - tPrev) / 1000);
-            gaps.push({
-              id: `gap_${movs[j].id}_${current.id}`,
-              type: 'pre_cs',
-              label: `Pre-CS Gap (${diffSeconds}s window)`,
-              prevMovement: movs[j],
-              csMovement: current,
-              targetTime: current.targetTime,
-              gapSeconds: diffSeconds
-            });
-            break;
-          }
-        }
+    csMovements.forEach(cs => {
+      const csTime = new Date(cs.arrivalTime).getTime();
+      const beforeAttacks = activeGroup.movements.filter(m => m.type === 'attack' && new Date(m.arrivalTime).getTime() < csTime);
+      const afterSupports = activeGroup.movements.filter(m => m.type !== 'attack' && new Date(m.arrivalTime).getTime() > csTime);
 
-        // Look for subsequent support
-        for (let k = i + 1; k < movs.length; k++) {
-          if (movs[k].type === 'support') {
-            const tCS = new Date(current.targetTime).getTime();
-            const tSupp = new Date(movs[k].targetTime).getTime();
-            const diffSeconds = Math.round((tSupp - tCS) / 1000);
-            gaps.push({
-              id: `gap_${current.id}_${movs[k].id}`,
-              type: 'post_cs',
-              label: `Post-CS Defense Gap (${diffSeconds}s window)`,
-              csMovement: current,
-              nextMovement: movs[k],
-              targetTime: movs[k].targetTime,
-              gapSeconds: diffSeconds
-            });
-            break;
-          }
-        }
+      const lastClear = beforeAttacks.length > 0 ? beforeAttacks[beforeAttacks.length - 1] : null;
+      const firstSupport = afterSupports.length > 0 ? afterSupports[0] : null;
+
+      if (activeGroup.worldType === 'siege') {
+        const gapStart = csTime;
+        const gapEnd = firstSupport ? new Date(firstSupport.arrivalTime).getTime() : csTime + 60000;
+        const returnTime = gapStart + 1000;
+        
+        gaps.push({
+          id: `gap_after_${cs.id}`,
+          desc: `Snipe Siege (Return 1s after CS from ${cs.attacker})`,
+          gapStart, gapEnd, returnTime
+        });
+      } else {
+        const gapEnd = csTime;
+        const gapStart = lastClear ? new Date(lastClear.arrivalTime).getTime() : csTime - 60000;
+        const returnTime = gapEnd - 1000;
+
+        gaps.push({
+          id: `gap_before_${cs.id}`,
+          desc: `Snipe CS (Return 1s before CS from ${cs.attacker})`,
+          gapStart, gapEnd, returnTime
+        });
       }
-    }
+    });
 
     return gaps;
   };
 
-  const handleGeneratePlan = (targetTimeIso, defaultMins = 5) => {
-    if (!activeGroup) return;
+  const createPlanFromGap = (gap, minsAway) => {
+    const returnTime = gap.returnTime;
+    const sendTime = returnTime - (minsAway * 60 * 1000);
+    
+    if (sendTime < serverTime.getTime()) {
+      alert("Cannot create a plan where Send Time is in the past! Choose a smaller minutes offset.");
+      return;
+    }
 
-    const mins = customMins[targetTimeIso] !== undefined ? customMins[targetTimeIso] : defaultMins;
-    const targetDate = new Date(targetTimeIso);
-    const durationSeconds = mins * 60;
+    const { recallTime } = calculateMidpointRecall(sendTime, returnTime);
 
-    const result = calculateMidpointRecall(targetDate, durationSeconds);
-
-    const plan = {
+    const newPlan = {
       id: Date.now().toString(),
-      targetTime: result.targetReturnTime.toISOString(),
-      sendTime: result.sendTime.toISOString(),
-      recallTime: result.recallTime.toISOString(),
-      durationSeconds: result.travelDurationSeconds,
-      worldType: activeGroup.worldType
+      targetReturnTime: new Date(returnTime).toISOString(),
+      sendTime: new Date(sendTime).toISOString(),
+      recallTime: new Date(recallTime).toISOString(),
+      gapDescription: gap.desc
     };
 
-    updateGroups(prev => prev.map(g => {
-      if (g.id === activeGroupId) {
-        return { ...g, plans: [...(g.plans || []), plan] };
+    const updatedGroups = groups.map(g => {
+      if (g.id === activeGroup.id) {
+        return { ...g, plans: [...g.plans, newPlan].sort((a,b) => new Date(a.sendTime).getTime() - new Date(b.sendTime).getTime()) };
       }
       return g;
-    }));
+    });
+    setGroups(updatedGroups);
   };
 
   const deletePlan = (planId) => {
-    updateGroups(prev => prev.map(g => {
-      if (g.id === activeGroupId) {
-        return { ...g, plans: (g.plans || []).filter(p => p.id !== planId) };
+    const updatedGroups = groups.map(g => {
+      if (g.id === activeGroup.id) {
+        return { ...g, plans: g.plans.filter(p => p.id !== planId) };
       }
       return g;
-    }));
+    });
+    setGroups(updatedGroups);
   };
 
-  const handleSaveToOperations = async (plan) => {
+  const savePlanToDatabase = async (plan) => {
+    if (!activeGroup?.townId) {
+      alert("Please ensure this city group has an associated Town ID to persist to the database.");
+      return;
+    }
+
     try {
       const res = await fetch('/api/snipe/operations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           worldId: activeWorldId,
-          label: `Recall Snipe for ${activeGroup.name}`,
+          label: `Recall Snipe: ${activeGroup.name}`,
           type: 'recall',
           worldType: activeGroup.worldType,
-          targetTownId: activeGroup.targetTownId || 1,
-          originTownId: activeGroup.targetTownId || 1,
-          targetReturnTime: plan.targetTime,
+          targetTownId: activeGroup.townId,
+          originTownId: activeGroup.townId,
+          targetReturnTime: plan.targetReturnTime,
           sendTime: plan.sendTime,
           recallTime: plan.recallTime,
-          notes: `Precision midpoint snipe (${Math.round(plan.durationSeconds / 60)}m launch)`
+          notes: plan.gapDescription
         })
       });
 
-      const d = await res.json();
-      if (d.success) {
-        setSavedOpMsg(`Operation saved to database successfully!`);
+      if (res.ok) {
+        setSavedOpMsg('Operation saved to database!');
         setTimeout(() => setSavedOpMsg(''), 3000);
       }
     } catch (e) {
@@ -401,7 +357,6 @@ export default function RecallSnipePage() {
   };
 
   const gaps = calculateGaps();
-  const myTowns = masterData?.player?.townsList || [];
 
   return (
     <div className="flex flex-col gap-6 max-w-6xl mx-auto">
@@ -410,13 +365,13 @@ export default function RecallSnipePage() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-slate-800 pb-5 gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="badge badge-primary">
+            <span className="text-xs font-mono bg-primary/20 text-primary border border-primary/30 px-2 py-0.5 rounded">
               World: {activeWorld?.name || activeWorldId.toUpperCase()} ({activeWorld?.worldType?.toUpperCase()})
             </span>
             <button
               onClick={() => setAudioEnabled(!audioEnabled)}
-              className={`text-xs px-2.5 py-0.5 rounded-lg flex items-center gap-1 border transition-colors ${
-                audioEnabled ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' : 'bg-slate-800 text-slate-400 border-slate-700'
+              className={`text-xs px-2 py-0.5 rounded flex items-center gap-1 border transition-colors ${
+                audioEnabled ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' : 'bg-slate-800 text-slate-400 border-slate-700'
               }`}
             >
               {audioEnabled ? <Volume2 size={13} /> : <VolumeX size={13} />}
@@ -432,7 +387,7 @@ export default function RecallSnipePage() {
         </div>
 
         {/* Live Server Clock & Calibration */}
-        <div className="bg-slate-950/80 p-3.5 rounded-2xl border border-slate-800 flex items-center gap-4">
+        <div className="bg-slate-950/80 p-3.5 rounded-xl border border-slate-800 flex items-center gap-4">
           <div>
             <div className="text-[11px] uppercase tracking-wider text-slate-400 font-medium">Calibrated Server Time</div>
             <div className="text-xl font-mono font-bold text-primary mt-0.5">
@@ -441,7 +396,7 @@ export default function RecallSnipePage() {
           </div>
           <button 
             onClick={handleSyncTime}
-            className="btn btn-secondary text-xs py-1.5 px-3 rounded-lg flex items-center gap-1.5"
+            className="btn text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 py-1.5 px-3 rounded-lg border border-slate-700 flex items-center gap-1.5"
             title="Sync server clock offset"
           >
             <RefreshCw size={13} />
@@ -451,7 +406,7 @@ export default function RecallSnipePage() {
       </div>
 
       {savedOpMsg && (
-        <div className="p-3 bg-emerald-500/10 border border-emerald-500/40 text-emerald-300 text-xs rounded-xl flex items-center gap-2 animate-fade-in font-mono">
+        <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs rounded-xl flex items-center gap-2 animate-fade-in font-mono">
           <CheckCircle2 size={16} /> {savedOpMsg}
         </div>
       )}
@@ -463,80 +418,56 @@ export default function RecallSnipePage() {
             <button
               key={g.id}
               onClick={() => setActiveGroupId(g.id)}
-              className={`px-3.5 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-2 ${
+              className={`px-3.5 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 ${
                 g.id === activeGroupId 
                   ? 'bg-primary text-white shadow-lg' 
                   : 'bg-slate-950/60 hover:bg-slate-800 text-slate-300 border border-slate-800'
               }`}
             >
               <span>{g.name}</span>
-              <span className="text-[11px] opacity-75 font-mono">({g.movements?.length || 0})</span>
+              <span className="text-xs opacity-75 font-mono">({g.movements?.length || 0})</span>
             </button>
           ))}
         </div>
 
-        {/* Add Group Quick Actions */}
-        <div className="flex items-center gap-2">
-          {/* Quick-add from player's own towns if logged in */}
-          {myTowns.length > 0 && (
-            <select
-              onChange={(e) => {
-                const found = myTowns.find(t => t.id.toString() === e.target.value);
-                if (found) handleQuickAddMyTown(found);
-                e.target.value = '';
-              }}
-              defaultValue=""
-              className="text-xs py-1.5 px-2 bg-slate-950/80 border-slate-800 text-slate-200"
-            >
-              <option value="" disabled>+ Add From My Cities...</option>
-              {myTowns.map(t => (
-                <option key={t.id} value={t.id}>{t.name} ({t.islandX}, {t.islandY})</option>
-              ))}
-            </select>
-          )}
-
-          {/* Add custom group form */}
-          <form onSubmit={createGroup} className="flex items-center gap-2">
-            <input
-              type="text"
-              placeholder="Target City Name..."
-              value={newGroupName}
-              onChange={e => setNewGroupName(e.target.value)}
-              className="input-field py-1.5 px-3 text-xs w-40"
-            />
-            <button type="submit" className="btn btn-primary text-xs py-1.5 px-3">
-              <Plus size={14} /> Add City
-            </button>
-          </form>
-        </div>
+        {/* Add Group Form */}
+        <form onSubmit={createGroup} className="flex items-center gap-2">
+          <input
+            type="text"
+            placeholder="Target City Name..."
+            value={newGroupName}
+            onChange={e => setNewGroupName(e.target.value)}
+            className="input-field py-1.5 px-3 text-xs w-44"
+          />
+          <button type="submit" className="btn btn-primary text-xs py-1.5 px-3">
+            <Plus size={14} /> Add City
+          </button>
+        </form>
       </div>
 
-      {/* Active Group Content */}
       {activeGroup ? (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
-          {/* Left Column: Movement Queue & Gap Analyzer */}
-          <div className="lg:col-span-1 space-y-6">
+          {/* Left 2 Cols: Incoming Timeline & Sniper Plans */}
+          <div className="lg:col-span-2 flex flex-col gap-6">
             
-            {/* Movements Input Panel */}
-            <div className="glass-panel p-5 rounded-2xl bg-slate-900/80">
-              <div className="flex justify-between items-center mb-4">
-                <div>
-                  <h2 className="text-base font-bold text-white tracking-tight">{activeGroup.name}</h2>
-                  <p className="text-xs text-slate-400">Incoming attack & support timetable</p>
-                </div>
+            {/* Incoming Attacks & Supports Tracker */}
+            <div className="glass-panel p-5 bg-slate-900/90 rounded-2xl">
+              <div className="flex justify-between items-center mb-4 border-b border-slate-800 pb-3">
+                <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                  <Shield size={18} className="text-amber-400" /> Incoming Attack & Support Queue
+                </h2>
                 <button
                   onClick={() => deleteGroup(activeGroup.id)}
-                  className="p-1.5 text-slate-500 hover:text-rose-400 transition-colors"
-                  title="Delete this city group"
+                  className="text-xs text-rose-400 hover:text-rose-300 flex items-center gap-1"
                 >
-                  <Trash2 size={16} />
+                  <Trash2 size={13} /> Delete City
                 </button>
               </div>
 
-              {/* Add Movement Form */}
-              <form onSubmit={addMovement} className="grid grid-cols-1 gap-2.5 mb-4 bg-slate-950/60 p-3 rounded-xl border border-slate-800">
-                <div className="relative">
+              {/* Add Movement Row */}
+              <form onSubmit={addMovement} className="grid grid-cols-1 sm:grid-cols-4 gap-2 mb-4 bg-slate-950/60 p-3 rounded-xl border border-slate-800">
+                <div>
                   <input
                     type="text"
                     placeholder="Attacker / Origin Town..."
@@ -545,7 +476,7 @@ export default function RecallSnipePage() {
                     className="input-field py-1.5 px-2 text-xs"
                   />
                   {townSearchResults.length > 0 && (
-                    <div className="absolute z-20 bg-slate-900 border border-slate-700 rounded-lg p-1 mt-1 max-h-36 overflow-y-auto w-full shadow-xl">
+                    <div className="absolute z-20 bg-slate-900 border border-slate-700 rounded-lg p-1 mt-1 max-h-36 overflow-y-auto w-64 shadow-xl">
                       {townSearchResults.map(t => (
                         <button
                           key={t.id}
@@ -564,7 +495,7 @@ export default function RecallSnipePage() {
                   )}
                 </div>
 
-                <div className="grid grid-cols-2 gap-2">
+                <div>
                   <select
                     value={movType}
                     onChange={e => setMovType(e.target.value)}
@@ -574,7 +505,9 @@ export default function RecallSnipePage() {
                     <option value="cs">Colony Ship (CS)</option>
                     <option value="support">Support</option>
                   </select>
+                </div>
 
+                <div>
                   <input
                     type="text"
                     placeholder="HH:MM:SS (e.g. 18:30:00)"
@@ -585,90 +518,103 @@ export default function RecallSnipePage() {
                   />
                 </div>
 
-                <button type="submit" className="btn btn-primary text-xs py-1.5 w-full">
-                  <Plus size={14} /> Add Command
-                </button>
+                <div>
+                  <button type="submit" className="btn btn-primary text-xs py-1.5 w-full h-[34px]">
+                    <Plus size={14} /> Add Movement
+                  </button>
+                </div>
               </form>
 
-              {/* Movements List */}
-              <div className="space-y-1.5 max-h-64 overflow-y-auto pr-1">
-                {activeGroup.movements.length === 0 ? (
-                  <div className="py-6 text-center text-xs text-slate-500">
-                    No incoming commands added yet.
-                  </div>
-                ) : (
-                  activeGroup.movements.map((mov) => {
-                    const isCS = mov.type === 'cs';
-                    const isAttack = mov.type === 'attack';
-                    const timeObj = new Date(mov.targetTime);
-                    const formattedTime = timeObj.toLocaleTimeString([], { hour12: false });
+              {/* Movement List */}
+              {activeGroup.movements.length > 0 ? (
+                <div className="flex flex-col gap-2">
+                  {activeGroup.movements.map(m => {
+                    const isCs = m.type === 'cs';
+                    const isSupport = m.type === 'support';
+                    const arrTime = new Date(m.arrivalTime);
+                    const diffMs = arrTime.getTime() - serverTime.getTime();
 
                     return (
-                      <div 
-                        key={mov.id}
-                        className={`flex items-center justify-between p-2 rounded-xl text-xs border transition-all ${
-                          isCS 
-                            ? 'bg-rose-500/15 border-rose-500/40 text-rose-200' 
-                            : isAttack 
-                              ? 'bg-amber-500/10 border-amber-500/30 text-amber-200' 
-                              : 'bg-blue-500/10 border-blue-500/30 text-blue-200'
+                      <div
+                        key={m.id}
+                        className={`flex justify-between items-center p-3 rounded-xl border transition-all ${
+                          isCs 
+                            ? 'bg-rose-950/30 border-rose-600/50 shadow-md' 
+                            : isSupport 
+                            ? 'bg-blue-950/20 border-blue-800/40' 
+                            : 'bg-slate-950/40 border-slate-800'
                         }`}
                       >
-                        <div className="flex items-center gap-2 min-w-0">
-                          <span className={`px-1.5 py-0.5 rounded font-mono font-bold text-[10px] uppercase ${
-                            isCS ? 'badge badge-danger' : isAttack ? 'badge badge-warning' : 'badge badge-primary'
+                        <div className="flex items-center gap-3">
+                          <span className={`text-xs font-bold px-2 py-0.5 rounded uppercase font-mono ${
+                            isCs ? 'bg-rose-500 text-white' : isSupport ? 'bg-blue-500/20 text-blue-300' : 'bg-amber-500/20 text-amber-300'
                           }`}>
-                            {mov.type.toUpperCase()}
+                            {m.type}
                           </span>
-                          <span className="font-medium text-white truncate max-w-[120px]">{mov.attacker}</span>
+                          <div>
+                            <span className="font-bold text-sm text-slate-200">{m.attacker}</span>
+                            <div className="text-xs text-slate-400 font-mono">
+                              Arrival: {arrTime.toLocaleTimeString([], { hour12: false })}
+                            </div>
+                          </div>
                         </div>
 
-                        <div className="flex items-center gap-2 shrink-0">
-                          <span className="font-mono font-bold text-white">{formattedTime}</span>
+                        <div className="flex items-center gap-3">
+                          <span className="text-xs font-mono text-slate-300">
+                            in {formatCountdown(diffMs)}
+                          </span>
                           <button
-                            onClick={() => deleteMovement(mov.id)}
-                            className="text-slate-500 hover:text-rose-400 p-0.5"
+                            onClick={() => deleteMovement(m.id)}
+                            className="text-slate-500 hover:text-rose-400 p-1"
                           >
-                            <Trash2 size={13} />
+                            <Trash2 size={14} />
                           </button>
                         </div>
                       </div>
                     );
-                  })
-                )}
-              </div>
+                  })}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-slate-500 text-xs">
+                  No incoming attacks logged for this city yet. Add movements above.
+                </div>
+              )}
             </div>
 
-            {/* Gap Opportunities Analyzer */}
+            {/* Calculated Snipe Gaps & Plan Generator */}
             {gaps.length > 0 && (
-              <div className="glass-panel p-4 bg-slate-900/80 rounded-2xl border border-primary/40">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-primary mb-3 flex items-center gap-1.5">
-                  <Crosshair size={15} /> Identified Snipe Windows ({gaps.length})
-                </h3>
-
-                <div className="space-y-3">
-                  {gaps.map((gap) => (
-                    <div key={gap.id} className="p-3 bg-slate-950/70 rounded-xl border border-slate-800 text-xs">
-                      <div className="font-bold text-white mb-1">{gap.label}</div>
-                      <div className="text-slate-400 font-mono text-[11px] mb-2">
-                        Target Exact Time: <strong className="text-primary">{new Date(gap.targetTime).toLocaleTimeString([], { hour12: false })}</strong>
+              <div className="glass-panel p-5 bg-slate-900/90 rounded-2xl">
+                <h2 className="text-lg font-bold text-white flex items-center gap-2 mb-3">
+                  <Target size={18} className="text-primary" /> Detected Recall Snipe Gaps
+                </h2>
+                <div className="flex flex-col gap-3">
+                  {gaps.map(gap => (
+                    <div key={gap.id} className="p-4 bg-slate-950/60 rounded-xl border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div>
+                        <div className="font-bold text-slate-200 text-sm">{gap.desc}</div>
+                        <div className="text-xs text-emerald-400 font-mono mt-0.5">
+                          Target Landing Time: {new Date(gap.returnTime).toLocaleTimeString([], { hour12: false })}
+                        </div>
                       </div>
 
-                      <div className="flex items-center gap-2 pt-2 border-t border-slate-800">
-                        <span className="text-slate-400 text-[11px]">Travel (mins):</span>
-                        <input
-                          type="number"
-                          min="1"
-                          max="60"
-                          defaultValue={5}
-                          onChange={(e) => setCustomMins({ ...customMins, [gap.targetTime]: parseInt(e.target.value, 10) || 5 })}
-                          className="w-12 text-center bg-slate-900 border border-slate-700 rounded py-0.5 font-mono text-xs text-white"
-                        />
+                      <div className="flex items-center gap-2">
                         <button
-                          onClick={() => handleGeneratePlan(gap.targetTime)}
-                          className="btn btn-primary text-xs py-1 px-3 ml-auto"
+                          onClick={() => createPlanFromGap(gap, 10)}
+                          className="btn text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 py-1.5 px-3 rounded-lg border border-slate-700"
                         >
-                          Generate Plan
+                          10m Delay
+                        </button>
+                        <button
+                          onClick={() => createPlanFromGap(gap, 5)}
+                          className="btn text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 py-1.5 px-3 rounded-lg border border-slate-700"
+                        >
+                          5m Delay
+                        </button>
+                        <button
+                          onClick={() => createPlanFromGap(gap, 2)}
+                          className="btn text-xs bg-primary/20 hover:bg-primary/30 text-primary py-1.5 px-3 rounded-lg border border-primary/40"
+                        >
+                          2m Delay
                         </button>
                       </div>
                     </div>
@@ -677,136 +623,120 @@ export default function RecallSnipePage() {
               </div>
             )}
 
-          </div>
+            {/* Active Execution Schedule */}
+            {activeGroup.plans.length > 0 && (
+              <div className="glass-panel p-5 bg-slate-900/90 rounded-2xl">
+                <h2 className="text-lg font-bold text-white flex items-center gap-2 mb-4">
+                  <Clock size={18} className="text-emerald-400" /> Active Recall Execution Timers
+                </h2>
 
-          {/* Right Columns: Tactical Execution Dashboard & Countdown */}
-          <div className="lg:col-span-2 space-y-6">
-            
-            <div className="glass-panel p-5 rounded-2xl bg-slate-900/80">
-              <h2 className="text-base font-bold text-white tracking-tight mb-1 flex items-center gap-2">
-                <Target size={18} className="text-primary" /> Active Precision Recall Plans ({activeGroup.plans?.length || 0})
-              </h2>
-              <p className="text-xs text-slate-400 mb-4">
-                Launch an attack to a neutral dummy town, then click Recall at the midpoint to land on the second!
-              </p>
-
-              {(!activeGroup.plans || activeGroup.plans.length === 0) ? (
-                <div className="p-8 text-center bg-slate-950/40 rounded-xl border border-slate-800">
-                  <Clock size={32} className="mx-auto mb-2 text-slate-600" />
-                  <div className="text-sm font-semibold text-slate-300">No active recall plans generated yet</div>
-                  <p className="text-xs text-slate-500 mt-1 max-w-md mx-auto">
-                    Add incoming movements or use the Gap Analyzer on the left to calculate send and recall timestamps.
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-4">
+                <div className="flex flex-col gap-3">
                   {activeGroup.plans.map((plan, idx) => {
-                    const stMs = serverTime.getTime();
-                    const sendDiff = Math.floor((new Date(plan.sendTime).getTime() - stMs) / 1000);
-                    const recallDiff = Math.floor((new Date(plan.recallTime).getTime() - stMs) / 1000);
-                    const isSendImminent = sendDiff >= 0 && sendDiff <= 30;
-                    const isRecallImminent = recallDiff >= 0 && recallDiff <= 30;
+                    const sendDate = new Date(plan.sendTime);
+                    const recallDate = new Date(plan.recallTime);
+                    const returnDate = new Date(plan.targetReturnTime);
+
+                    const sendDiffMs = sendDate.getTime() - serverTime.getTime();
+                    const recallDiffMs = recallDate.getTime() - serverTime.getTime();
+
+                    const isSendUrgent = sendDiffMs >= 0 && sendDiffMs <= 10000;
+                    const isRecallUrgent = recallDiffMs >= 0 && recallDiffMs <= 10000;
 
                     return (
-                      <div 
-                        key={plan.id || idx}
-                        className={`p-4 rounded-2xl border transition-all ${
-                          isRecallImminent 
-                            ? 'bg-rose-950/40 border-rose-500/60 shadow-lg' 
-                            : isSendImminent 
-                              ? 'bg-amber-950/40 border-amber-500/60 shadow-lg' 
-                              : 'bg-slate-950/70 border-slate-800'
+                      <div
+                        key={plan.id}
+                        className={`p-4 rounded-xl border transition-all ${
+                          isSendUrgent || isRecallUrgent 
+                            ? 'bg-rose-950/40 border-rose-500 shadow-xl animate-pulse' 
+                            : 'bg-slate-950/60 border-slate-800'
                         }`}
                       >
-                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-3 border-b border-slate-800/80 gap-2 mb-3">
-                          <div className="flex items-center gap-2">
-                            <span className="badge badge-accent">
-                              Plan #{idx + 1}
-                            </span>
-                            <span className="text-xs font-mono text-slate-300 font-bold">
-                              Land Target: {new Date(plan.targetTime).toLocaleTimeString([], { hour12: false })}
-                            </span>
+                        <div className="flex justify-between items-start mb-3">
+                          <div>
+                            <span className="font-bold text-accent text-sm">Plan #{idx + 1}: {plan.gapDescription}</span>
+                            <div className="text-xs text-slate-400 font-mono mt-0.5">
+                              Landing: {returnDate.toLocaleTimeString([], { hour12: false })}
+                            </div>
                           </div>
 
                           <div className="flex items-center gap-2">
                             <button
-                              onClick={() => handleSaveToOperations(plan)}
-                              className="btn btn-secondary text-xs py-1 px-3"
-                              title="Save to Command Center Operations Queue"
+                              onClick={() => savePlanToDatabase(plan)}
+                              className="btn text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 py-1 px-2.5 rounded-lg border border-slate-700"
+                              title="Save to database"
                             >
-                              <Save size={13} /> Save Op
+                              <Save size={13} />
                             </button>
                             <button
                               onClick={() => deletePlan(plan.id)}
                               className="text-slate-500 hover:text-rose-400 p-1"
-                              title="Delete Plan"
                             >
-                              <Trash2 size={15} />
+                              <Trash2 size={14} />
                             </button>
                           </div>
                         </div>
 
-                        {/* Step Timetable */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-2">
-                          
-                          {/* Step 1: Send */}
-                          <div className={`p-3 rounded-xl border ${isSendImminent ? 'bg-amber-500/20 border-amber-500/40' : 'bg-slate-900/60 border-slate-800'}`}>
-                            <div className="flex justify-between items-center mb-1">
-                              <span className="text-[11px] font-bold uppercase tracking-wider text-amber-400">Step 1: Launch Attack</span>
-                              <span className="font-mono text-xs font-bold text-amber-400">
-                                {sendDiff > 0 ? formatCountdown(sendDiff * 1000) : 'LAUNCHED'}
-                              </span>
+                        {/* Step 1: SEND ATTACK & Step 2: CANCEL ATTACK */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+                          <div className={`p-3 rounded-lg border ${sendDiffMs < 0 ? 'bg-slate-900/40 border-slate-800 opacity-60' : 'bg-slate-900/80 border-slate-700'}`}>
+                            <div className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Step 1: Send Attack</div>
+                            <div className="text-base font-mono font-bold text-amber-400 mt-0.5">
+                              {sendDate.toLocaleTimeString([], { hour12: false })}
                             </div>
-                            <div className="text-lg font-mono font-bold text-white">
-                              {new Date(plan.sendTime).toLocaleTimeString([], { hour12: false })}
-                            </div>
-                            <div className="text-[11px] text-slate-400 mt-1">
-                              Target any dummy city at least {Math.ceil(plan.durationSeconds / 60)} mins away.
+                            <div className="text-xs font-mono text-slate-300 mt-1">
+                              {sendDiffMs < 0 ? '✓ Sent' : `in ${formatCountdown(sendDiffMs)}`}
                             </div>
                           </div>
 
-                          {/* Step 2: Cancel / Recall */}
-                          <div className={`p-3 rounded-xl border ${isRecallImminent ? 'bg-rose-500/20 border-rose-500/40' : 'bg-slate-900/60 border-slate-800'}`}>
-                            <div className="flex justify-between items-center mb-1">
-                              <span className="text-[11px] font-bold uppercase tracking-wider text-rose-400">Step 2: Cancel / Recall</span>
-                              <span className="font-mono text-xs font-bold text-rose-400">
-                                {recallDiff > 0 ? formatCountdown(recallDiff * 1000) : 'RECALLED'}
-                              </span>
+                          <div className={`p-3 rounded-lg border ${recallDiffMs < 0 ? 'bg-slate-900/40 border-slate-800 opacity-60' : 'bg-slate-900/80 border-primary/40'}`}>
+                            <div className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Step 2: CANCEL / RECALL Attack</div>
+                            <div className="text-base font-mono font-bold text-rose-400 mt-0.5">
+                              {recallDate.toLocaleTimeString([], { hour12: false })}
                             </div>
-                            <div className="text-lg font-mono font-bold text-white">
-                              {new Date(plan.recallTime).toLocaleTimeString([], { hour12: false })}
-                            </div>
-                            <div className="text-[11px] text-slate-400 mt-1">
-                              Click the red ✕ cancel button in Grepolis at this exact second!
+                            <div className="text-xs font-mono text-emerald-400 mt-1">
+                              {recallDiffMs < 0 ? '✓ Recalled' : `in ${formatCountdown(recallDiffMs)}`}
                             </div>
                           </div>
-
                         </div>
-
-                        {/* Dummy Target Finder Helper for this plan */}
-                        <DummyFinder 
-                          originTownId={activeGroup.targetTownId}
-                          durationSeconds={plan.durationSeconds}
-                          worldSpeed={activeWorld?.speed || 2}
-                          worldId={activeWorldId}
-                        />
                       </div>
                     );
                   })}
                 </div>
-              )}
-            </div>
+              </div>
+            )}
 
+          </div>
+
+          {/* Right Column: Dummy Target Finder & Guidelines */}
+          <div className="flex flex-col gap-4">
+            <DummyFinder 
+              originTownId={activeGroup.townId} 
+              durationSeconds={600} 
+              worldSpeed={activeWorld?.speed || 2}
+              worldId={activeWorldId}
+            />
+
+            <div className="glass-panel p-4 bg-slate-900/60 rounded-xl text-xs text-slate-400 leading-relaxed">
+              <h3 className="text-sm font-bold text-slate-200 mb-2 flex items-center gap-1.5">
+                <Shield size={14} className="text-primary" /> Why Midpoint Recall Works
+              </h3>
+              <p className="mb-2">
+                When you launch an attack, the Grepolis server applies random anti-timing rule (ATR) variance (±10s).
+              </p>
+              <p className="mb-2">
+                However, when you <strong>cancel</strong> an outbound command, the return travel time is calculated with <strong>zero ATR variance</strong> — the return journey matches the outbound elapsed time to the exact millisecond.
+              </p>
+              <p>
+                By canceling at the precise mathematical midpoint, your troops will return home exactly when you planned, guaranteeing a snipe with sub-second accuracy.
+              </p>
+            </div>
           </div>
 
         </div>
       ) : (
-        <div className="glass-panel p-12 text-center rounded-2xl bg-slate-900/80">
-          <Crosshair size={48} className="mx-auto mb-3 text-slate-600" />
-          <h2 className="text-xl font-bold text-white mb-1">No Target City Selected</h2>
-          <p className="text-sm text-slate-400 mb-5 max-w-md mx-auto">
-            Choose one of your cities from the dropdown above or enter a custom city name to begin calculating precision midpoint snipes.
-          </p>
+        <div className="glass-panel text-center py-12">
+          <p className="text-slate-400 text-sm mb-3">No city groups created yet for this world.</p>
+          <p className="text-xs text-slate-500">Create a city group using the input above to begin tracking incoming attacks.</p>
         </div>
       )}
 

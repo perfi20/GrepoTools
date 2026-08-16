@@ -28,7 +28,7 @@ export default function CommandCenter() {
 
     // Load active recall groups from local storage
     try {
-      const saved = localStorage.getItem(`grepo-recall-groups_${activeWorldId.toLowerCase()}`);
+      const saved = localStorage.getItem(`grepo-recall-groups_${activeWorldId}`) || localStorage.getItem('grepo-recall-groups');
       if (saved) {
         setActiveSnipes(JSON.parse(saved));
       } else {
