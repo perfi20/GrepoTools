@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
+import { Target, Search, ArrowRight, Clock, AlertCircle } from 'lucide-react';
 
-export default function DummyFinder({ originTownId, durationSeconds, worldSpeed = 2 }) {
+export default function DummyFinder({ originTownId, durationSeconds, worldSpeed = 2, worldId = 'hu119' }) {
   const [unitSpeed, setUnitSpeed] = useState(13); // Default light ship speed roughly
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState([]);
@@ -19,7 +20,7 @@ export default function DummyFinder({ originTownId, durationSeconds, worldSpeed 
     setLoading(true);
     setError('');
     try {
-      const res = await fetch(`/api/snipe/dummy-targets?origin_id=${originTownId}&duration=${durationSeconds}&unit_speed=${unitSpeed}&world_speed=${worldSpeed}`);
+      const res = await fetch(`/api/snipe/dummy-targets?world=${worldId}&origin_id=${originTownId}&duration=${durationSeconds}&unit_speed=${unitSpeed}&world_speed=${worldSpeed}`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to fetch dummy targets');
       
@@ -39,66 +40,73 @@ export default function DummyFinder({ originTownId, durationSeconds, worldSpeed 
   };
 
   return (
-    <div className="bg-slate-900/40 p-4 rounded-lg border border-slate-700/50 mt-4">
-      <h3 className="text-sm font-bold text-slate-200 mb-2">Dummy Target Finder</h3>
-      <p className="text-xs text-secondary mb-3">Find a safe target far enough away to execute your {durationSeconds}s cancel delay.</p>
+    <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800 mt-4">
+      <div className="flex items-center justify-between mb-2">
+        <h3 className="text-sm font-bold text-slate-200 flex items-center gap-1.5">
+          <Target size={15} className="text-primary" /> Dummy Target Finder
+        </h3>
+        <span className="text-xs font-mono text-slate-400">Min Travel: {durationSeconds}s</span>
+      </div>
+      <p className="text-xs text-slate-400 mb-3">
+        Find a ghost town or neutral target far enough away to execute your {Math.ceil(durationSeconds / 60)} min recall timer.
+      </p>
       
-      <div className="flex gap-2 mb-3">
-        <div className="flex flex-col">
-          <label className="text-xs text-slate-400">Unit Speed</label>
+      <div className="flex flex-wrap items-end gap-3 mb-3">
+        <div>
+          <label className="text-[11px] font-semibold text-slate-400 block mb-1">Unit Speed</label>
           <input 
             type="number" 
-            className="bg-slate-950 border border-slate-700 text-slate-200 rounded p-1 w-20 text-center"
+            className="input-field py-1 px-2 w-24 text-center font-mono text-xs"
             value={unitSpeed}
             onChange={(e) => setUnitSpeed(parseInt(e.target.value, 10) || 0)}
           />
         </div>
-        <div className="flex flex-col">
-          <label className="text-xs text-slate-400">World Speed</label>
+        <div>
+          <label className="text-[11px] font-semibold text-slate-400 block mb-1">World Speed</label>
           <input 
             type="number" 
             step="0.5"
-            className="bg-slate-950 border border-slate-700 text-slate-200 rounded p-1 w-20 text-center"
+            className="input-field py-1 px-2 w-24 text-center font-mono text-xs"
             value={worldSpeed}
-            readOnly
+            disabled
           />
         </div>
-        <div className="flex flex-col justify-end">
-          <button 
-            onClick={handleSearch}
-            disabled={loading}
-            className="bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold py-1.5 px-3 rounded"
-          >
-            {loading ? 'Searching...' : 'Search'}
-          </button>
-        </div>
+        <button 
+          onClick={handleSearch}
+          disabled={loading}
+          className="btn btn-primary text-xs py-1 px-4 h-[30px]"
+        >
+          <Search size={13} /> {loading ? 'Searching...' : 'Find Safe Targets'}
+        </button>
       </div>
 
-      {error && <div className="text-xs text-red-400 mb-2">{error}</div>}
-
-      {results.length > 0 && (
-        <div className="max-h-48 overflow-y-auto pr-1 text-sm">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="border-b border-slate-700">
-                <th className="py-1 text-slate-400 font-normal">Town</th>
-                <th className="py-1 text-slate-400 font-normal text-right">Travel Time</th>
-              </tr>
-            </thead>
-            <tbody>
-              {results.map(r => (
-                <tr key={r.id} className="border-b border-slate-800/50 hover:bg-slate-800/50">
-                  <td className="py-1.5">{r.name} <span className="text-xs text-slate-500">[{r.islandX},{r.islandY}]</span></td>
-                  <td className="py-1.5 text-right font-mono text-accent">{formatTime(r.travelTime)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      {error && (
+        <div className="p-2.5 mb-3 bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs rounded-lg flex items-center gap-2">
+          <AlertCircle size={14} className="shrink-0" />
+          <span>{error}</span>
         </div>
       )}
-      
-      {!loading && results.length === 0 && !error && (
-        <div className="text-xs text-slate-500 italic">Click search to find dummy targets.</div>
+
+      {results.length > 0 && (
+        <div className="flex flex-col gap-1.5 max-h-48 overflow-y-auto">
+          {results.map((target) => (
+            <div 
+              key={target.id} 
+              className="flex justify-between items-center bg-slate-900/80 p-2 rounded-lg border border-slate-800 text-xs hover:border-slate-700"
+            >
+              <div>
+                <span className="font-bold text-slate-200">{target.name}</span>
+                <span className="text-slate-400 font-mono ml-2">
+                  ({target.islandX}, {target.islandY}) • {target.playerName}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 font-mono text-emerald-400 font-semibold">
+                <Clock size={12} />
+                <span>{formatTime(target.travelTime)}</span>
+              </div>
+            </div>
+          ))}
+        </div>
       )}
     </div>
   );

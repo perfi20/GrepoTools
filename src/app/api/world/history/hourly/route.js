@@ -17,29 +17,26 @@ const getBaselineTime = () => {
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
-    const id = parseInt(searchParams.get('id'));
+    const id = parseInt(searchParams.get('id'), 10);
     const type = searchParams.get('type');
+    const worldId = (searchParams.get('world') || 'hu119').toLowerCase();
 
     if (!id || !type || (type !== 'player' && type !== 'alliance')) {
       return NextResponse.json({ error: 'Missing or invalid parameters' }, { status: 400 });
     }
 
-    const epoch = await getCachedSyncEpoch();
-    console.log(`[API /history/hourly] Executing Prisma Query with cache-buster epoch: ${epoch}`);
-
+    const epoch = await getCachedSyncEpoch(worldId);
     const baseline = getBaselineTime();
 
     let history;
     if (type === 'player') {
       history = await prisma.playerHistory.findMany({
-        cacheStrategy: { ttl: 3600, swr: 3600 },
-        where: { playerId: id, timestamp: { gte: baseline }, id: { not: -epoch } },
+        where: { worldId, playerId: id, timestamp: { gte: baseline }, id: { not: -epoch } },
         orderBy: { timestamp: 'asc' }
       });
     } else {
       history = await prisma.allianceHistory.findMany({
-        cacheStrategy: { ttl: 3600, swr: 3600 },
-        where: { allianceId: id, timestamp: { gte: baseline }, id: { not: -epoch } },
+        where: { worldId, allianceId: id, timestamp: { gte: baseline }, id: { not: -epoch } },
         orderBy: { timestamp: 'asc' }
       });
     }
@@ -69,7 +66,7 @@ export async function GET(request) {
       };
     });
 
-    return NextResponse.json({ history: formattedHistory });
+    return NextResponse.json({ worldId, history: formattedHistory });
   } catch (error) {
     console.error("Hourly History API Error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });

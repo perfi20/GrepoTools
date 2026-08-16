@@ -7,36 +7,25 @@ const PALETTE = [
   "#ec4899", "#eab308", "#06b6d4", "#84cc16", "#14b8a6"
 ];
 
-export const dynamic = 'force-static';
-
-export async function generateStaticParams() {
-  const oceans = [];
-  for (let x = 2; x <= 7; x++) {
-    for (let y = 2; y <= 7; y++) {
-      oceans.push({ id: `${x}${y}` });
-    }
-  }
-  return oceans;
-}
+export const dynamic = 'force-dynamic';
 
 export async function GET(request, props) {
   try {
     const params = await props.params;
     const oceanId = params.id;
+    const { searchParams } = new URL(request.url);
+    const worldId = (searchParams.get('world') || 'hu119').toLowerCase();
     
     if (!oceanId || oceanId.length !== 2) {
       return NextResponse.json({ error: "Invalid ocean ID" }, { status: 400 });
     }
 
-    const epoch = await getCachedSyncEpoch();
-    console.log(`[API /ocean/${oceanId}] Executing Prisma Query with cache-buster epoch: ${epoch}`);
-
+    const epoch = await getCachedSyncEpoch(worldId);
     const oceanIds = [parseInt(oceanId, 10)];
 
     // Fetch Top 10 Alliances for coloring
     const dbAlliances = await prisma.alliance.findMany({
-      cacheStrategy: { ttl: 3600, swr: 3600 },
-      where: { id: { not: -epoch } },
+      where: { worldId, id: { not: -epoch } },
       orderBy: { towns: 'desc' },
       take: 10,
       select: { name: true }
@@ -62,8 +51,7 @@ export async function GET(request, props) {
     const worldRadiusSq = Math.pow(250, 2);
 
     const islands = await prisma.island.findMany({
-      cacheStrategy: { ttl: 3600, swr: 3600 },
-      where: { OR: orConditions, id: { not: -epoch } },
+      where: { worldId, OR: orConditions, id: { not: -epoch } },
       select: { id: true, x: true, y: true, availableTowns: true, resourcePlus: true, resourceMinus: true }
     });
 
@@ -78,8 +66,7 @@ export async function GET(request, props) {
     });
 
     const towns = await prisma.town.findMany({
-      cacheStrategy: { ttl: 3600, swr: 3600 },
-      where: { OR: townOrConditions, id: { not: -epoch } },
+      where: { worldId, OR: townOrConditions, id: { not: -epoch } },
       select: {
         id: true, name: true, points: true, islandX: true, islandY: true, islandSlot: true,
         player: {
@@ -97,7 +84,6 @@ export async function GET(request, props) {
     }
 
     for (const island of islands) {
-      // Check if island is strictly inside circular world border
       const distSq = Math.pow(island.x - 500, 2) + Math.pow(island.y - 500, 2);
       if (distSq > worldRadiusSq) continue;
 
@@ -118,10 +104,10 @@ export async function GET(request, props) {
       }
 
       const totalCapacity = island.availableTowns + islandTowns.length;
-      if (totalCapacity === 0) continue; // purely decorative
+      if (totalCapacity === 0) continue;
 
       const isRock = totalCapacity <= 13;
-      let islandColor = "#1e293b"; // Default
+      let islandColor = "#1e293b";
       if (islandTowns.length > 0) {
         islandColor = "#e2e8f0"; 
         if (dominantAlliance && allianceColors[dominantAlliance]) {
@@ -155,6 +141,7 @@ export async function GET(request, props) {
 
     return NextResponse.json({
       type: 'RawMapData',
+      worldId,
       islands: outputIslands,
       towns: outputTowns
     }, {

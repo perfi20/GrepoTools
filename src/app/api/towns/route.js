@@ -1,10 +1,13 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
     const playerIdStr = searchParams.get('playerId');
+    const worldId = (searchParams.get('world') || 'hu119').toLowerCase();
 
     if (!playerIdStr) {
       return NextResponse.json({ error: 'Missing playerId parameter' }, { status: 400 });
@@ -16,7 +19,8 @@ export async function GET(request) {
     }
 
     const towns = await prisma.town.findMany({
-      where: { playerId }
+      where: { worldId, playerId },
+      orderBy: { points: 'desc' }
     });
 
     return NextResponse.json(towns);

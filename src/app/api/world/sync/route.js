@@ -1,17 +1,15 @@
 import { NextResponse } from 'next/server';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { prisma } from '@/lib/prisma';
 import https from 'https';
 import zlib from 'zlib';
-import { generateGeoJSON } from '@/lib/geojson';
 
-const SERVER = process.env.GREPOLIS_SERVER || 'hu119';
-const CREATE_BATCH_SIZE = 5000; // Prisma max parameters limit workaround for createMany
-const UPDATE_BATCH_SIZE = 100000; // Large batch size for raw SQL queries to save operations
+const CREATE_BATCH_SIZE = 5000;
+const UPDATE_BATCH_SIZE = 50000;
 
-async function fetchAndDecompress(filename) {
+async function fetchAndDecompress(server, filename) {
   return new Promise((resolve, reject) => {
-    const url = `https://${SERVER}.grepolis.com/data/${filename}`;
+    const url = `https://${server}.grepolis.com/data/${filename}`;
     
     https.get(url, (res) => {
       if (res.statusCode !== 200) {
@@ -38,27 +36,45 @@ async function fetchAndDecompress(filename) {
 }
 
 export const dynamic = 'force-dynamic';
+export const maxDuration = 120; // 2 minutes for full sync
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
+  const worldId = (searchParams.get('world') || 'hu119').toLowerCase();
   const force = searchParams.get('force') === 'true';
 
-  // We can add a secret key check here later for Vercel Cron
   try {
-    const meta = await prisma.syncMetadata.findUnique({ where: { id: 1 } });
-    if (meta && !force) {
-      // Throttle: avoid excessive Prisma operations by enforcing a 20-minute cooldown
-      const minutesSinceLastSync = (Date.now() - meta.lastSync.getTime()) / (1000 * 60);
+    // Ensure World entry exists in DB
+    let world = await prisma.world.findUnique({ where: { id: worldId } });
+    if (!world) {
+      world = await prisma.world.create({
+        data: {
+          id: worldId,
+          name: worldId.toUpperCase(),
+          server: worldId,
+          speed: 1.0,
+          unitSpeed: 1.0,
+          worldType: 'siege',
+          isActive: true
+        }
+      });
+    }
+
+    const server = world.server || worldId;
+
+    if (world.lastSync && !force) {
+      const minutesSinceLastSync = (Date.now() - world.lastSync.getTime()) / (1000 * 60);
       if (minutesSinceLastSync < 20) {
         return NextResponse.json({ 
           success: true, 
-          message: `Throttled: Sync ran ${Math.round(minutesSinceLastSync)} minutes ago. Waiting for 20 minutes interval.`,
+          message: `Throttled: World ${worldId} sync ran ${Math.round(minutesSinceLastSync)} minutes ago. Waiting for 20 minutes interval.`,
           skipped: true,
-          lastSync: meta.lastSync
+          worldId,
+          lastSync: world.lastSync
         });
       }
 
-      // Perform lightweight HEAD requests on all files to check their Last-Modified headers
+      // Check Last-Modified headers
       const filesToCheck = [
         'players.txt.gz', 'alliances.txt.gz', 'towns.txt.gz', 'islands.txt.gz',
         'player_kills_att.txt.gz', 'player_kills_def.txt.gz', 'player_kills_all.txt.gz',
@@ -67,50 +83,48 @@ export async function GET(request) {
       ];
       
       const headRequests = filesToCheck.map(filename => 
-        fetch(`https://${SERVER}.grepolis.com/data/${filename}`, { method: 'HEAD' })
+        fetch(`https://${server}.grepolis.com/data/${filename}`, { method: 'HEAD' })
           .then(res => res.headers.get('last-modified'))
           .catch(() => null)
       );
       
       const lastModifiedHeaders = await Promise.all(headRequests);
-      
-      // Find the most recent modified date among all files
       let latestModifiedDate = new Date(0);
       for (const headerStr of lastModifiedHeaders) {
         if (headerStr) {
           const modDate = new Date(headerStr);
-          if (modDate > latestModifiedDate) {
-            latestModifiedDate = modDate;
-          }
+          if (modDate > latestModifiedDate) latestModifiedDate = modDate;
         }
       }
 
-      // If the most recent file update is older or exactly equal to our last sync, we skip
-      if (latestModifiedDate.getTime() > 0 && meta.lastSync >= latestModifiedDate) {
+      if (latestModifiedDate.getTime() > 0 && world.lastSync >= latestModifiedDate) {
         return NextResponse.json({ 
           success: true, 
-          message: `Data is fresh. Grepolis latest update: ${latestModifiedDate.toISOString()}. Our last sync: ${meta.lastSync.toISOString()}.`,
+          message: `Data is fresh. Latest server update: ${latestModifiedDate.toISOString()}. Last sync: ${world.lastSync.toISOString()}.`,
           skipped: true,
-          lastSync: meta.lastSync
+          worldId,
+          lastSync: world.lastSync
         });
       }
     }
+
+    // Fetch and decompress all files
     const [
       playersRaw, alliancesRaw, townsRaw, islandsRaw,
       pAttRaw, pDefRaw, pAllRaw,
       aAttRaw, aDefRaw, aAllRaw, conquersRaw
     ] = await Promise.all([
-      fetchAndDecompress('players.txt.gz'),
-      fetchAndDecompress('alliances.txt.gz'),
-      fetchAndDecompress('towns.txt.gz'),
-      fetchAndDecompress('islands.txt.gz'),
-      fetchAndDecompress('player_kills_att.txt.gz'),
-      fetchAndDecompress('player_kills_def.txt.gz'),
-      fetchAndDecompress('player_kills_all.txt.gz'),
-      fetchAndDecompress('alliance_kills_att.txt.gz'),
-      fetchAndDecompress('alliance_kills_def.txt.gz'),
-      fetchAndDecompress('alliance_kills_all.txt.gz'),
-      fetchAndDecompress('conquers.txt.gz')
+      fetchAndDecompress(server, 'players.txt.gz'),
+      fetchAndDecompress(server, 'alliances.txt.gz'),
+      fetchAndDecompress(server, 'towns.txt.gz'),
+      fetchAndDecompress(server, 'islands.txt.gz'),
+      fetchAndDecompress(server, 'player_kills_att.txt.gz'),
+      fetchAndDecompress(server, 'player_kills_def.txt.gz'),
+      fetchAndDecompress(server, 'player_kills_all.txt.gz'),
+      fetchAndDecompress(server, 'alliance_kills_att.txt.gz'),
+      fetchAndDecompress(server, 'alliance_kills_def.txt.gz'),
+      fetchAndDecompress(server, 'alliance_kills_all.txt.gz'),
+      fetchAndDecompress(server, 'conquers.txt.gz')
     ]);
 
     // Map Kills
@@ -125,27 +139,28 @@ export async function GET(request) {
     const newAlliances = [];
     const alliancesToUpdate = [];
     const allianceHistory = [];
-    const currentAlliances = await prisma.alliance.findMany();
+    const currentAlliances = await prisma.alliance.findMany({ where: { worldId } });
     const allianceMap = new Map(currentAlliances.map(a => [a.id, a]));
     const seenAllianceIds = new Set();
 
     for (const row of alliancesRaw) {
       const [idStr, name, pointsStr, townsStr, membersStr, rankStr] = row;
       const id = parseInt(idStr);
+      if (isNaN(id)) continue;
       
       if (seenAllianceIds.has(id)) continue;
       seenAllianceIds.add(id);
 
-      const points = parseInt(pointsStr);
+      const points = parseInt(pointsStr) || 0;
       const abp = aAttMap.get(id) || 0;
       const dbp = aDefMap.get(id) || 0;
       const allBp = aAllMap.get(id) || 0;
       
       const newData = {
-        id, name, points, 
-        towns: parseInt(townsStr), 
-        members: parseInt(membersStr), 
-        rank: parseInt(rankStr),
+        id, worldId, name, points, 
+        towns: parseInt(townsStr) || 0, 
+        members: parseInt(membersStr) || 0, 
+        rank: parseInt(rankStr) || 0,
         abp, dbp, allBp
       };
 
@@ -156,6 +171,7 @@ export async function GET(request) {
         let changed = false;
         if (existing.points !== points || existing.abp !== abp || existing.dbp !== dbp) {
           allianceHistory.push({
+            worldId,
             allianceId: id,
             oldPoints: existing.points,
             newPoints: points,
@@ -175,7 +191,7 @@ export async function GET(request) {
     const newPlayers = [];
     const playersToUpdate = [];
     const playerHistory = [];
-    const currentPlayers = await prisma.player.findMany();
+    const currentPlayers = await prisma.player.findMany({ where: { worldId } });
     const playerMap = new Map(currentPlayers.map(p => [p.id, p]));
 
     const validAllianceIds = new Set(seenAllianceIds);
@@ -184,25 +200,23 @@ export async function GET(request) {
     for (const row of playersRaw) {
       const [idStr, name, allianceIdStr, pointsStr, rankStr, townsStr] = row;
       const id = parseInt(idStr);
+      if (isNaN(id)) continue;
       
       if (seenPlayerIds.has(id)) continue;
       seenPlayerIds.add(id);
 
-      const points = parseInt(pointsStr);
+      const points = parseInt(pointsStr) || 0;
       let allianceId = allianceIdStr ? parseInt(allianceIdStr) : null;
-      
-      if (allianceId && !validAllianceIds.has(allianceId)) {
-          allianceId = null;
-      }
+      if (allianceId && !validAllianceIds.has(allianceId)) allianceId = null;
 
       const abp = pAttMap.get(id) || 0;
       const dbp = pDefMap.get(id) || 0;
       const allBp = pAllMap.get(id) || 0;
 
       const newData = {
-        id, name, allianceId, points, 
-        rank: parseInt(rankStr), 
-        towns: parseInt(townsStr),
+        id, worldId, name, allianceId, points, 
+        rank: parseInt(rankStr) || 0, 
+        towns: parseInt(townsStr) || 0,
         abp, dbp, allBp
       };
 
@@ -213,6 +227,7 @@ export async function GET(request) {
         let changed = false;
         if (existing.points !== points || existing.abp !== abp || existing.dbp !== dbp) {
           playerHistory.push({
+            worldId,
             playerId: id,
             oldPoints: existing.points,
             newPoints: points,
@@ -232,7 +247,10 @@ export async function GET(request) {
     const newTowns = [];
     const townsToUpdate = [];
     const townHistory = [];
-    const currentTowns = await prisma.town.findMany({ select: { id: true, points: true, playerId: true, name: true, islandX: true, islandY: true } });
+    const currentTowns = await prisma.town.findMany({ 
+      where: { worldId },
+      select: { id: true, points: true, playerId: true, name: true, islandX: true, islandY: true } 
+    });
     const townMap = new Map(currentTowns.map(t => [t.id, t]));
 
     const validPlayerIds = new Set(seenPlayerIds);
@@ -241,25 +259,23 @@ export async function GET(request) {
     for (const row of townsRaw) {
       const [idStr, playerIdStr, name, xStr, yStr, slotStr, pointsStr] = row;
       const id = parseInt(idStr);
+      if (isNaN(id)) continue;
       
       if (seenTownIds.has(id)) continue;
       seenTownIds.add(id);
 
-      const points = parseInt(pointsStr);
+      const points = parseInt(pointsStr) || 0;
       let playerId = playerIdStr ? parseInt(playerIdStr) : null;
-      
-      // Ensure referential integrity
-      if (playerId && !validPlayerIds.has(playerId)) {
-          playerId = null;
-      }
+      if (playerId && !validPlayerIds.has(playerId)) playerId = null;
 
       const newData = {
         id,
+        worldId,
         playerId,
         name,
-        islandX: parseInt(xStr),
-        islandY: parseInt(yStr),
-        islandSlot: parseInt(slotStr),
+        islandX: parseInt(xStr) || 0,
+        islandY: parseInt(yStr) || 0,
+        islandSlot: parseInt(slotStr) || 0,
         points
       };
 
@@ -270,6 +286,7 @@ export async function GET(request) {
         let changed = false;
         if (existing.points !== points) {
           townHistory.push({
+            worldId,
             townId: id,
             oldPoints: existing.points,
             newPoints: points
@@ -284,59 +301,66 @@ export async function GET(request) {
     
     // 4. Process Islands
     const populatedSet = new Set();
-    // Reconstruct populated towns from seenTowns
     const townList = [...newTowns, ...townsToUpdate, ...currentTowns.filter(t => seenTownIds.has(t.id) && !townsToUpdate.some(u => u.id === t.id))];
     for (const t of townList) {
       if (t.islandX && t.islandY) populatedSet.add(`${t.islandX},${t.islandY}`);
     }
 
-    const currentIslands = await prisma.island.findMany({ select: { id: true, availableTowns: true } });
+    const currentIslands = await prisma.island.findMany({ where: { worldId }, select: { id: true, availableTowns: true } });
     const islandMap = new Map(currentIslands.map(i => [i.id, i]));
     const newIslands = [];
     const islandsToUpdate = [];
     const seenIslandIds = new Set();
 
     for (const row of islandsRaw) {
-        const [idStr, xStr, yStr, type, towns, rPlus, rMinus] = row;
-        const id = parseInt(idStr);
-        const x = parseInt(xStr);
-        const y = parseInt(yStr);
+      const [idStr, xStr, yStr, type, towns, rPlus, rMinus] = row;
+      const id = parseInt(idStr);
+      if (isNaN(id)) continue;
 
-        const distSq = Math.pow(x - 500, 2) + Math.pow(y - 500, 2);
-        if (distSq > 250 * 250) continue;
+      const x = parseInt(xStr);
+      const y = parseInt(yStr);
 
-        const availableTowns = parseInt(towns);
-        if (availableTowns === 0 && !populatedSet.has(`${x},${y}`)) continue;
+      const distSq = Math.pow(x - 500, 2) + Math.pow(y - 500, 2);
+      if (distSq > 250 * 250) continue;
 
-        seenIslandIds.add(id);
-        const newData = {
-            id, x, y,
-            type: parseInt(type), availableTowns,
-            resourcePlus: rPlus, resourceMinus: rMinus
-        };
+      const availableTowns = parseInt(towns) || 0;
+      if (availableTowns === 0 && !populatedSet.has(`${x},${y}`)) continue;
 
-        const existing = islandMap.get(id);
-        if (!existing) {
-            newIslands.push(newData);
-        } else if (existing.availableTowns !== availableTowns) {
-            islandsToUpdate.push(newData);
-        }
+      seenIslandIds.add(id);
+      const newData = {
+        id, worldId, x, y,
+        type: parseInt(type) || 0, 
+        availableTowns,
+        resourcePlus: rPlus || '', 
+        resourceMinus: rMinus || ''
+      };
+
+      const existing = islandMap.get(id);
+      if (!existing) {
+        newIslands.push(newData);
+      } else if (existing.availableTowns !== availableTowns) {
+        islandsToUpdate.push(newData);
+      }
     }
 
     // 5. Process Conquers
     const newConquers = [];
-    const latestDbConquest = await prisma.conquest.findFirst({ orderBy: { timestamp: 'desc' } });
+    const latestDbConquest = await prisma.conquest.findFirst({ 
+      where: { worldId },
+      orderBy: { timestamp: 'desc' } 
+    });
     const lastConquestEpoch = latestDbConquest ? Math.floor(latestDbConquest.timestamp.getTime() / 1000) : 0;
     
     for (const row of conquersRaw) {
       const [townIdStr, tsStr, newPStr, oldPStr, newAStr, oldAStr, pointsStr] = row;
       const timestampSec = parseInt(tsStr);
+      if (isNaN(timestampSec)) continue;
       
-      // Fix: Compare against the actual latest conquest in the database to prevent gaps
       if (timestampSec > lastConquestEpoch) {
         newConquers.push({
-          townId: parseInt(townIdStr),
-          townPoints: parseInt(pointsStr),
+          worldId,
+          townId: parseInt(townIdStr) || 0,
+          townPoints: parseInt(pointsStr) || 0,
           oldPlayerId: oldPStr && oldPStr !== '' ? parseInt(oldPStr) : null,
           newPlayerId: newPStr && newPStr !== '' ? parseInt(newPStr) : null,
           oldAllianceId: oldAStr && oldAStr !== '' ? parseInt(oldAStr) : null,
@@ -349,16 +373,16 @@ export async function GET(request) {
     // Execute Database Transactions
     const tx = [];
 
-    // Removals (Towns -> Players -> Alliances -> Islands) to respect foreign keys
+    // Removals for this world only
     const townsToRemove = currentTowns.filter(t => !seenTownIds.has(t.id)).map(t => t.id);
     const playersToRemove = currentPlayers.filter(p => !seenPlayerIds.has(p.id)).map(p => p.id);
     const alliancesToRemove = currentAlliances.filter(a => !seenAllianceIds.has(a.id)).map(a => a.id);
     const islandsToRemove = currentIslands.filter(i => !seenIslandIds.has(i.id)).map(i => i.id);
 
-    if (townsToRemove.length > 0) tx.push(prisma.town.deleteMany({ where: { id: { in: townsToRemove } } }));
-    if (playersToRemove.length > 0) tx.push(prisma.player.deleteMany({ where: { id: { in: playersToRemove } } }));
-    if (alliancesToRemove.length > 0) tx.push(prisma.alliance.deleteMany({ where: { id: { in: alliancesToRemove } } }));
-    if (islandsToRemove.length > 0) tx.push(prisma.island.deleteMany({ where: { id: { in: islandsToRemove } } }));
+    if (townsToRemove.length > 0) tx.push(prisma.town.deleteMany({ where: { worldId, id: { in: townsToRemove } } }));
+    if (playersToRemove.length > 0) tx.push(prisma.player.deleteMany({ where: { worldId, id: { in: playersToRemove } } }));
+    if (alliancesToRemove.length > 0) tx.push(prisma.alliance.deleteMany({ where: { worldId, id: { in: alliancesToRemove } } }));
+    if (islandsToRemove.length > 0) tx.push(prisma.island.deleteMany({ where: { worldId, id: { in: islandsToRemove } } }));
 
     const chunkArray = (arr, size) => {
       const chunks = [];
@@ -372,50 +396,50 @@ export async function GET(request) {
     if (newTowns.length > 0) chunkArray(newTowns, CREATE_BATCH_SIZE).forEach(chunk => tx.push(prisma.town.createMany({ data: chunk })));
     if (newIslands.length > 0) chunkArray(newIslands, CREATE_BATCH_SIZE).forEach(chunk => tx.push(prisma.island.createMany({ data: chunk })));
 
-    // Updates (Optimized with raw SQL bulk updates)
+    // Updates
     if (alliancesToUpdate.length > 0) {
       chunkArray(alliancesToUpdate, UPDATE_BATCH_SIZE).forEach(chunk => {
-        const values = chunk.map(a => `(${a.id}, '${a.name.replace(/'/g, "''")}', ${a.points}, ${a.towns}, ${a.members}, ${a.rank}, ${a.abp}, ${a.dbp}, ${a.allBp})`).join(',');
+        const values = chunk.map(a => `(${a.id}, '${worldId}', '${a.name.replace(/'/g, "''")}', ${a.points}, ${a.towns}, ${a.members}, ${a.rank}, ${a.abp}, ${a.dbp}, ${a.allBp})`).join(',');
         tx.push(prisma.$executeRawUnsafe(`
           UPDATE "Alliance" AS a SET
             "name" = v."name", "points" = v."points", "towns" = v."towns", "members" = v."members", "rank" = v."rank", "abp" = v."abp", "dbp" = v."dbp", "allBp" = v."allBp"
-          FROM (VALUES ${values}) AS v("id", "name", "points", "towns", "members", "rank", "abp", "dbp", "allBp")
-          WHERE a."id" = v."id"
+          FROM (VALUES ${values}) AS v("id", "worldId", "name", "points", "towns", "members", "rank", "abp", "dbp", "allBp")
+          WHERE a."id" = v."id" AND a."worldId" = v."worldId"
         `));
       });
     }
     
     if (playersToUpdate.length > 0) {
       chunkArray(playersToUpdate, UPDATE_BATCH_SIZE).forEach(chunk => {
-        const values = chunk.map(p => `(${p.id}, '${p.name.replace(/'/g, "''")}', ${p.allianceId ? p.allianceId : 'NULL::int'}, ${p.points}, ${p.rank}, ${p.towns}, ${p.abp}, ${p.dbp}, ${p.allBp})`).join(',');
+        const values = chunk.map(p => `(${p.id}, '${worldId}', '${p.name.replace(/'/g, "''")}', ${p.allianceId ? p.allianceId : 'NULL::int'}, ${p.points}, ${p.rank}, ${p.towns}, ${p.abp}, ${p.dbp}, ${p.allBp})`).join(',');
         tx.push(prisma.$executeRawUnsafe(`
           UPDATE "Player" AS p SET
             "name" = v."name", "allianceId" = v."allianceId", "points" = v."points", "rank" = v."rank", "towns" = v."towns", "abp" = v."abp", "dbp" = v."dbp", "allBp" = v."allBp"
-          FROM (VALUES ${values}) AS v("id", "name", "allianceId", "points", "rank", "towns", "abp", "dbp", "allBp")
-          WHERE p."id" = v."id"
+          FROM (VALUES ${values}) AS v("id", "worldId", "name", "allianceId", "points", "rank", "towns", "abp", "dbp", "allBp")
+          WHERE p."id" = v."id" AND p."worldId" = v."worldId"
         `));
       });
     }
 
     if (townsToUpdate.length > 0) {
       chunkArray(townsToUpdate, UPDATE_BATCH_SIZE).forEach(chunk => {
-        const values = chunk.map(t => `(${t.id}, ${t.playerId ? t.playerId : 'NULL::int'}, '${t.name.replace(/'/g, "''")}', ${t.islandX}, ${t.islandY}, ${t.islandSlot}, ${t.points})`).join(',');
+        const values = chunk.map(t => `(${t.id}, '${worldId}', ${t.playerId ? t.playerId : 'NULL::int'}, '${t.name.replace(/'/g, "''")}', ${t.islandX}, ${t.islandY}, ${t.islandSlot}, ${t.points})`).join(',');
         tx.push(prisma.$executeRawUnsafe(`
           UPDATE "Town" AS t SET
             "playerId" = v."playerId", "name" = v."name", "islandX" = v."islandX", "islandY" = v."islandY", "islandSlot" = v."islandSlot", "points" = v."points"
-          FROM (VALUES ${values}) AS v("id", "playerId", "name", "islandX", "islandY", "islandSlot", "points")
-          WHERE t."id" = v."id"
+          FROM (VALUES ${values}) AS v("id", "worldId", "playerId", "name", "islandX", "islandY", "islandSlot", "points")
+          WHERE t."id" = v."id" AND t."worldId" = v."worldId"
         `));
       });
     }
 
     if (islandsToUpdate.length > 0) {
       chunkArray(islandsToUpdate, UPDATE_BATCH_SIZE).forEach(chunk => {
-        const values = chunk.map(i => `(${i.id}, ${i.availableTowns})`).join(',');
+        const values = chunk.map(i => `(${i.id}, '${worldId}', ${i.availableTowns})`).join(',');
         tx.push(prisma.$executeRawUnsafe(`
           UPDATE "Island" AS i SET "availableTowns" = v."availableTowns"
-          FROM (VALUES ${values}) AS v("id", "availableTowns")
-          WHERE i."id" = v."id"
+          FROM (VALUES ${values}) AS v("id", "worldId", "availableTowns")
+          WHERE i."id" = v."id" AND i."worldId" = v."worldId"
         `));
       });
     }
@@ -423,9 +447,9 @@ export async function GET(request) {
     // History & Conquers
     if (allianceHistory.length > 0) {
       chunkArray(allianceHistory, UPDATE_BATCH_SIZE).forEach(chunk => {
-        const values = chunk.map(h => `(${h.allianceId}, ${h.oldPoints}, ${h.newPoints}, ${h.abpDelta}, ${h.dbpDelta}, ${h.allBpDelta}, NOW())`).join(',');
+        const values = chunk.map(h => `(${h.allianceId}, '${worldId}', ${h.oldPoints}, ${h.newPoints}, ${h.abpDelta}, ${h.dbpDelta}, ${h.allBpDelta}, NOW())`).join(',');
         tx.push(prisma.$executeRawUnsafe(`
-          INSERT INTO "AllianceHistory" ("allianceId", "oldPoints", "newPoints", "abpDelta", "dbpDelta", "allBpDelta", "timestamp")
+          INSERT INTO "AllianceHistory" ("allianceId", "worldId", "oldPoints", "newPoints", "abpDelta", "dbpDelta", "allBpDelta", "timestamp")
           VALUES ${values}
         `));
       });
@@ -433,9 +457,9 @@ export async function GET(request) {
     
     if (playerHistory.length > 0) {
       chunkArray(playerHistory, UPDATE_BATCH_SIZE).forEach(chunk => {
-        const values = chunk.map(h => `(${h.playerId}, ${h.oldPoints}, ${h.newPoints}, ${h.abpDelta}, ${h.dbpDelta}, ${h.allBpDelta}, NOW())`).join(',');
+        const values = chunk.map(h => `(${h.playerId}, '${worldId}', ${h.oldPoints}, ${h.newPoints}, ${h.abpDelta}, ${h.dbpDelta}, ${h.allBpDelta}, NOW())`).join(',');
         tx.push(prisma.$executeRawUnsafe(`
-          INSERT INTO "PlayerHistory" ("playerId", "oldPoints", "newPoints", "abpDelta", "dbpDelta", "allBpDelta", "timestamp")
+          INSERT INTO "PlayerHistory" ("playerId", "worldId", "oldPoints", "newPoints", "abpDelta", "dbpDelta", "allBpDelta", "timestamp")
           VALUES ${values}
         `));
       });
@@ -443,9 +467,9 @@ export async function GET(request) {
 
     if (townHistory.length > 0) {
       chunkArray(townHistory, UPDATE_BATCH_SIZE).forEach(chunk => {
-        const values = chunk.map(h => `(${h.townId}, ${h.oldPoints}, ${h.newPoints}, NOW())`).join(',');
+        const values = chunk.map(h => `(${h.townId}, '${worldId}', ${h.oldPoints}, ${h.newPoints}, NOW())`).join(',');
         tx.push(prisma.$executeRawUnsafe(`
-          INSERT INTO "TownHistory" ("townId", "oldPoints", "newPoints", "timestamp")
+          INSERT INTO "TownHistory" ("townId", "worldId", "oldPoints", "newPoints", "timestamp")
           VALUES ${values}
         `));
       });
@@ -455,53 +479,48 @@ export async function GET(request) {
 
     await prisma.$transaction(tx);
 
-    // 5. Trigger Async Cache Generation and Purge
+    // Update World lastSync
+    const syncTime = new Date();
+    await prisma.world.update({
+      where: { id: worldId },
+      data: { lastSync: syncTime }
+    });
+
+    // Revalidate Caches
     try {
-      // We don't await this fetch so it runs independently in the background
-      const baseUrl = request.headers.get('origin') || process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : new URL(request.url).origin;
-      const cacheUrl = `${baseUrl}/api/world/sync-cache`;
+      revalidatePath('/api/world');
+      revalidateTag('sync-meta');
       
-      console.log(`Triggering background cache generation at: ${cacheUrl}`);
-      
-      fetch(cacheUrl, { 
+      // Async trigger sync-cache
+      const baseUrl = request.headers.get('origin') || (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : new URL(request.url).origin);
+      fetch(`${baseUrl}/api/world/sync-cache?world=${worldId}`, { 
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ trigger: 'sync', force: true })
-      }).catch(err => console.error("Failed to trigger cache sync:", err));
-
-      // Just update lastSync immediately so frontend knows DB is fresh
-      await prisma.syncMetadata.upsert({
-        where: { id: 1 },
-        update: { lastSync: new Date() },
-        create: { id: 1, lastSync: new Date() }
-      });
-      
-      const { revalidatePath, revalidateTag } = require('next/cache');
-      revalidatePath('/api/world', 'layout');
-      revalidateTag('sync-meta');
-      console.log("Database sync finished and edge cache purged!");
+        body: JSON.stringify({ world: worldId, trigger: 'sync', force: true })
+      }).catch(() => {});
     } catch (e) {
-      console.error("Failed to update metadata or purge cache:", e);
+      console.warn("Revalidation warning:", e);
     }
 
     return NextResponse.json({ 
       success: true,
-      lastSync: new Date(),
+      worldId,
+      lastSync: syncTime,
       stats: {
-          alliances: newAlliances.length,
-          players: newPlayers.length,
-          towns: newTowns.length,
-          islands: newIslands.length,
-          deltas: {
-              alliances: allianceHistory.length,
-              players: playerHistory.length,
-              towns: townHistory.length
-          }
+        alliances: newAlliances.length,
+        players: newPlayers.length,
+        towns: newTowns.length,
+        islands: newIslands.length,
+        deltas: {
+          alliances: allianceHistory.length,
+          players: playerHistory.length,
+          towns: townHistory.length
+        }
       }
     });
 
   } catch (error) {
     console.error("World Sync Error:", error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, worldId, error: error.message }, { status: 500 });
   }
 }

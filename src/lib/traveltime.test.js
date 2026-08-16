@@ -1,5 +1,5 @@
 import { expect, test, describe } from 'vitest';
-import { calculateTravelTime, calculateRecallTiming } from './traveltime.js';
+import { calculateTravelTime, calculateRecallTiming, calculateMidpointRecall, formatDuration, parseDuration } from './traveltime.js';
 
 describe('Travel Time Engine', () => {
   test('returns base delay when coordinates are identical', () => {
@@ -13,17 +13,12 @@ describe('Travel Time Engine', () => {
       cartographyResearched: true,
       hasLighthouse: true
     });
-    // Expected logic: dx=3, dy=4 -> dist=5
-    // speedMultiplier = 1.0 + 0.10 + 0.15 = 1.25
-    // delay = 300 + (5 * 500) / (13 * 2 * 1.25)
-    // delay = 300 + 2500 / 32.5 = 300 + 76.923...
-    // rounded = 377
     expect(time).toBe(377);
   });
 });
 
 describe('Recall Timer Midpoint Logic', () => {
-  test('calculates exact send and recall times', () => {
+  test('calculates exact send and recall times from planned delay', () => {
     const target = new Date("2026-06-20T12:00:00.000Z");
     const cancelDelay = 240; // 4 minutes cancel delay
     const timings = calculateRecallTiming(target, cancelDelay);
@@ -33,8 +28,37 @@ describe('Recall Timer Midpoint Logic', () => {
     expect(timings.totalElapsedSeconds).toBe(480);
   });
 
+  test('calculates exact midpoint recall from actual launch epoch', () => {
+    const target = new Date("2026-06-20T12:00:00.000Z");
+    const launch = new Date("2026-06-20T11:50:00.000Z"); // 10 minutes total gap -> 5 min cancel delay
+    const timings = calculateMidpointRecall(target, launch);
+    
+    expect(timings.cancelDelaySeconds).toBe(300);
+    expect(timings.recallTime.toISOString()).toBe("2026-06-20T11:55:00.000Z");
+    expect(timings.totalElapsedSeconds).toBe(600);
+  });
+
   test('throws error if cancel delay is greater than 600', () => {
     const target = new Date("2026-06-20T12:00:00.000Z");
     expect(() => calculateRecallTiming(target, 601)).toThrow(/10 minutes/);
+  });
+
+  test('throws error in midpoint recall if launch is after target', () => {
+    const target = new Date("2026-06-20T12:00:00.000Z");
+    const launch = new Date("2026-06-20T12:01:00.000Z");
+    expect(() => calculateMidpointRecall(target, launch)).toThrow(/before target/);
+  });
+});
+
+describe('Duration Helpers', () => {
+  test('formats seconds to HH:MM:SS', () => {
+    expect(formatDuration(3665)).toBe("01:01:05");
+    expect(formatDuration(45)).toBe("00:00:45");
+  });
+
+  test('parses HH:MM:SS to seconds', () => {
+    expect(parseDuration("01:01:05")).toBe(3665);
+    expect(parseDuration("00:00:45")).toBe(45);
+    expect(parseDuration("10:00")).toBe(600);
   });
 });

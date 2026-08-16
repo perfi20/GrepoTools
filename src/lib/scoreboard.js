@@ -10,9 +10,9 @@ const getBaselineTime = () => {
   return baseline;
 };
 
-export async function generateScoreboardData() {
-  const meta = await prisma.syncMetadata.findUnique({ where: { id: 1 } });
-  const baselineSyncTime = meta ? meta.lastSync : new Date();
+export async function generateScoreboardData(worldId = 'hu119') {
+  const world = await prisma.world.findUnique({ where: { id: worldId } });
+  const baselineSyncTime = world?.lastSync || new Date();
   
   const baseline = getBaselineTime();
   const windowBStart = new Date(baseline.getTime() - 24 * 60 * 60 * 1000);
@@ -20,7 +20,6 @@ export async function generateScoreboardData() {
   
   // Lock the rolling window to the exact time of the last successful data update
   const recentStart = new Date(baselineSyncTime.getTime() - 65 * 60 * 1000);
-  
   const queryStart = new Date(Math.min(windowBStart.getTime(), recentStart.getTime()));
 
   const [
@@ -31,22 +30,23 @@ export async function generateScoreboardData() {
     allAllianceHistory
   ] = await Promise.all([
     prisma.player.findMany({
+      where: { worldId },
       select: { id: true, name: true, points: true, abp: true, dbp: true, allBp: true, alliance: { select: { name: true } } }
     }),
     prisma.alliance.findMany({
+      where: { worldId },
       select: { id: true, name: true, points: true, abp: true, dbp: true, allBp: true }
     }),
     prisma.conquest.findMany({
-      where: { timestamp: { gte: windowBStart } }, // Fetch conquests since Window B start to be safe, or just baseline? Baseline is enough for daily conquests. Let's do baseline.
+      where: { worldId, timestamp: { gte: windowBStart } },
       orderBy: { timestamp: 'desc' },
       take: 50
     }),
-    // Fetch all history since queryStart to combine queries and save operations
-    prisma.playerHistory.findMany({ where: { timestamp: { gte: queryStart } } }),
-    prisma.allianceHistory.findMany({ where: { timestamp: { gte: queryStart } } })
+    prisma.playerHistory.findMany({ where: { worldId, timestamp: { gte: queryStart } } }),
+    prisma.allianceHistory.findMany({ where: { worldId, timestamp: { gte: queryStart } } })
   ]);
 
-  // Filter history in memory to save Prisma operations
+  // Filter history in memory
   const playerHistoryA = allPlayerHistory.filter(h => h.timestamp >= baseline);
   const playerHistoryB = allPlayerHistory.filter(h => h.timestamp >= windowBStart && h.timestamp < windowBEnd);
   const recentPlayerHistory = allPlayerHistory.filter(h => h.timestamp >= recentStart);
@@ -64,10 +64,10 @@ export async function generateScoreboardData() {
 
   // Fetch Towns for Conquests
   const townIds = conquests.map(c => c.townId);
-  const towns = await prisma.town.findMany({
-    where: { id: { in: townIds } },
+  const towns = townIds.length > 0 ? await prisma.town.findMany({
+    where: { worldId, id: { in: townIds } },
     select: { id: true, name: true, islandX: true, islandY: true }
-  });
+  }) : [];
   const townMap = new Map(towns.map(t => [t.id, t]));
 
   // Enrich Conquests & Count
@@ -176,6 +176,7 @@ export async function generateScoreboardData() {
   };
 
   return {
+    worldId,
     players: {
       pts: attachTrendsAndGetTop(gpMap, playerGainsA, playerGainsB, 'points'),
       abp: attachTrendsAndGetTop(gpMap, playerGainsA, playerGainsB, 'abp'),

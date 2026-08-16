@@ -1,16 +1,21 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
-export async function GET(request, { params }) {
+export const dynamic = 'force-dynamic';
+
+export async function GET(request, props) {
+  const params = await props.params;
   const townId = parseInt(params.id, 10);
+  const { searchParams } = new URL(request.url);
+  const worldId = (searchParams.get('world') || 'hu119').toLowerCase();
 
   if (isNaN(townId)) {
     return NextResponse.json({ error: 'Invalid town ID' }, { status: 400 });
   }
 
   try {
-    const town = await prisma.town.findUnique({
-      where: { id: townId },
+    const town = await prisma.town.findFirst({
+      where: { worldId, id: townId },
       include: {
         player: { include: { alliance: true } }
       }
@@ -23,6 +28,7 @@ export async function GET(request, { params }) {
     // 1. Fetch 7-day points history
     const historyDb = await prisma.townHistory.findMany({
       where: {
+        worldId,
         townId,
         timestamp: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) }
       },
@@ -49,16 +55,10 @@ export async function GET(request, { params }) {
 
     // 2. Fetch Conquest history
     const conquestsDb = await prisma.conquest.findMany({
-      where: { townId },
+      where: { worldId, townId },
       orderBy: { timestamp: 'desc' }
     });
 
-    // We need to resolve player/alliance names for conquests, but let's query the minimal info
-    // For now we assume conquest object might not have names saved.
-    // Wait, the new conquest sync logic doesn't save names inside the Conquest table! 
-    // It only saves oldPlayerId, newPlayerId, etc. We must resolve them here.
-    
-    // Collect unique IDs to resolve
     const pIds = new Set();
     const aIds = new Set();
     conquestsDb.forEach(c => {
@@ -68,8 +68,8 @@ export async function GET(request, { params }) {
       if (c.newAllianceId) aIds.add(c.newAllianceId);
     });
 
-    const players = await prisma.player.findMany({ where: { id: { in: Array.from(pIds) } }, select: { id: true, name: true }});
-    const alliances = await prisma.alliance.findMany({ where: { id: { in: Array.from(aIds) } }, select: { id: true, name: true }});
+    const players = pIds.size > 0 ? await prisma.player.findMany({ where: { worldId, id: { in: Array.from(pIds) } }, select: { id: true, name: true }}) : [];
+    const alliances = aIds.size > 0 ? await prisma.alliance.findMany({ where: { worldId, id: { in: Array.from(aIds) } }, select: { id: true, name: true }}) : [];
     
     const pMap = new Map(players.map(p => [p.id, p]));
     const aMap = new Map(alliances.map(a => [a.id, a]));

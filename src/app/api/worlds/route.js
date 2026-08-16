@@ -1,0 +1,103 @@
+import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
+
+export const dynamic = 'force-dynamic';
+
+export async function GET() {
+  try {
+    const worlds = await prisma.world.findMany({
+      orderBy: { createdAt: 'asc' },
+      include: {
+        _count: {
+          select: {
+            players: true,
+            towns: true,
+            alliances: true,
+            islands: true
+          }
+        }
+      }
+    });
+
+    return NextResponse.json({
+      success: true,
+      worlds: worlds.map(w => ({
+        id: w.id,
+        name: w.name,
+        server: w.server,
+        speed: w.speed,
+        unitSpeed: w.unitSpeed,
+        worldType: w.worldType,
+        isActive: w.isActive,
+        lastSync: w.lastSync,
+        counts: w._count,
+        createdAt: w.createdAt
+      }))
+    });
+  } catch (error) {
+    console.error("GET /api/worlds error:", error);
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  }
+}
+
+export async function POST(request) {
+  try {
+    const body = await request.json();
+    const { id, name, server, speed, unitSpeed, worldType, isActive } = body;
+
+    if (!id || !server) {
+      return NextResponse.json({ success: false, error: 'World ID and Server are required' }, { status: 400 });
+    }
+
+    const worldId = id.trim().toLowerCase();
+    const serverName = server.trim().toLowerCase();
+    const displayName = name ? name.trim() : `${worldId.toUpperCase()} (${serverName})`;
+
+    const world = await prisma.world.upsert({
+      where: { id: worldId },
+      update: {
+        name: displayName,
+        server: serverName,
+        speed: parseFloat(speed) || 1.0,
+        unitSpeed: parseFloat(unitSpeed) || 1.0,
+        worldType: worldType || 'siege',
+        isActive: isActive !== undefined ? Boolean(isActive) : true
+      },
+      create: {
+        id: worldId,
+        name: displayName,
+        server: serverName,
+        speed: parseFloat(speed) || 1.0,
+        unitSpeed: parseFloat(unitSpeed) || 1.0,
+        worldType: worldType || 'siege',
+        isActive: isActive !== undefined ? Boolean(isActive) : true
+      }
+    });
+
+    return NextResponse.json({ success: true, world });
+  } catch (error) {
+    console.error("POST /api/worlds error:", error);
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  }
+}
+
+export async function DELETE(request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+
+    if (!id) {
+      return NextResponse.json({ success: false, error: 'Missing world ID' }, { status: 400 });
+    }
+
+    // Delete world (foreign keys will cascade)
+    await prisma.world.delete({
+      where: { id }
+    });
+
+    return NextResponse.json({ success: true, message: `World ${id} deleted` });
+  } catch (error) {
+    console.error("DELETE /api/worlds error:", error);
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  }
+}

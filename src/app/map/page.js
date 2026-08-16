@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import IslandModal from "@/components/IslandModal";
 import DeepDiveModal from "@/components/DeepDiveModal";
+import { useApp } from "@/context/AppContext";
 
 // Direct binary fetch, no geographic calculations needed on client!
 
@@ -79,6 +80,7 @@ function generateOceanGrid() {
 }
 
 export default function WorldMap() {
+  const { activeWorldId, activeWorld } = useApp();
   const [data, setData] = useState(null);
   const [topAlliances, setTopAlliances] = useState([]);
   const [topPlayers, setTopPlayers] = useState([]);
@@ -100,6 +102,7 @@ export default function WorldMap() {
   const [selectedEntity, setSelectedEntity] = useState(null);
   const mapRef = useRef();
   const oceanGrid = useMemo(() => generateOceanGrid(), []);
+  
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearch(searchQuery);
@@ -109,10 +112,12 @@ export default function WorldMap() {
 
   useEffect(() => {
     async function loadData() {
+      if (!activeWorldId) return;
+      setLoading(true);
       try {
         const [metaRes, geoRes] = await Promise.all([
-          fetch('/api/world/meta'),
-          fetch('/api/world/geojson')
+          fetch(`/api/world/meta?world=${activeWorldId}`),
+          fetch(`/api/world/geojson?world=${activeWorldId}`)
         ]);
         
         const meta = await metaRes.json();
@@ -133,7 +138,7 @@ export default function WorldMap() {
     }
 
     loadData();
-  }, []);
+  }, [activeWorldId]);
 
   const islandsData = useMemo(() => {
     if (!data || !data.features) return null;
@@ -559,13 +564,18 @@ export default function WorldMap() {
               islandData={selectedIsland} 
               onClose={() => setSelectedIsland(null)} 
               customColors={customColors}
+              worldId={activeWorldId}
               onTownClick={(town) => setSelectedEntity({ type: 'town', data: town })}
             />
           )}
 
           {/* Deep Dive Modal */}
           {selectedEntity && (
-            <DeepDiveModal entity={selectedEntity} onClose={() => setSelectedEntity(null)} />
+            <DeepDiveModal 
+              entity={selectedEntity} 
+              onClose={() => setSelectedEntity(null)} 
+              worldId={activeWorldId}
+            />
           )}
         </Map>
       </div>

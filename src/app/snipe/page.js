@@ -1,23 +1,27 @@
 'use client';
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { Crosshair, Plus, Trash2, Clock, Swords, Shield, RefreshCw, ArrowRight } from 'lucide-react';
+import { useApp } from '@/context/AppContext';
 
 export default function SnipeTimerPage() {
+  const { activeWorldId, activeWorld } = useApp();
   const [targetTime, setTargetTime] = useState('');
   const [travelTime, setTravelTime] = useState('');
   const [label, setLabel] = useState('');
   const [type, setType] = useState('attack');
-  const [serverOffset, setServerOffset] = useState(0); // in seconds
+  const [serverOffset, setServerOffset] = useState(0);
   
   const [queue, setQueue] = useState([]);
   const [now, setNow] = useState(new Date());
 
-  // Load from local storage on mount
+  // Load from local storage for active world
   useEffect(() => {
-    const saved = localStorage.getItem('grepo-operations-queue');
+    if (!activeWorldId) return;
+    const saved = localStorage.getItem(`grepo-operations-queue_${activeWorldId}`) || localStorage.getItem('grepo-operations-queue');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        // Revive date objects
         const revived = parsed.map(op => ({
           ...op,
           windowStart: new Date(op.windowStart),
@@ -28,13 +32,16 @@ export default function SnipeTimerPage() {
       } catch (e) {
         console.error("Failed to parse queue", e);
       }
+    } else {
+      setQueue([]);
     }
-  }, []);
+  }, [activeWorldId]);
 
-  // Save to local storage on change
+  // Save to local storage
   useEffect(() => {
-    localStorage.setItem('grepo-operations-queue', JSON.stringify(queue));
-  }, [queue]);
+    if (!activeWorldId) return;
+    localStorage.setItem(`grepo-operations-queue_${activeWorldId}`, JSON.stringify(queue));
+  }, [queue, activeWorldId]);
 
   // Tick every second
   useEffect(() => {
@@ -54,7 +61,6 @@ export default function SnipeTimerPage() {
     const targetDate = new Date();
     targetDate.setHours(tH, tM, tS, 0);
     
-    // If target is in the past (e.g. earlier today), assume tomorrow
     if (targetDate.getTime() < new Date().getTime()) {
       targetDate.setDate(targetDate.getDate() + 1);
     }
@@ -76,7 +82,6 @@ export default function SnipeTimerPage() {
 
     setQueue([...queue, newOp].sort((a, b) => a.windowStart.getTime() - b.windowStart.getTime()));
     
-    // Clear the form fields after successful submit so the user knows they need to enter new data
     setLabel('');
     setTargetTime('');
     setTravelTime('');
@@ -104,164 +109,160 @@ export default function SnipeTimerPage() {
   };
 
   return (
-    <div className="grid gap-4" style={{ marginTop: '2rem' }}>
-      {/* CSS for flashing animations */}
-      <style dangerouslySetInnerHTML={{__html: `
-        @keyframes flashWarning {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.5; color: var(--danger); }
-        }
-        .flashing {
-          animation: flashWarning 1s infinite;
-        }
-      `}} />
-
-      <div className="glass-panel text-center">
-        <h1 className="gradient-text">Operations Queue</h1>
-        <p className="text-secondary">Plan your attacks and support timings. Countdowns track the 20-second launch window.</p>
-        <div className="mt-4 flex justify-center gap-4">
-          <a href="/snipe/recall" className="btn btn-primary" style={{ background: 'var(--accent)' }}>Go to Army Recall Sniper</a>
+    <div className="flex flex-col gap-6 max-w-5xl mx-auto">
+      {/* Header Banner */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-slate-800 pb-5 gap-4">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-xs font-mono bg-primary/20 text-primary border border-primary/30 px-2 py-0.5 rounded">
+              World: {activeWorld?.name || activeWorldId.toUpperCase()}
+            </span>
+          </div>
+          <h1 className="text-3xl font-bold text-white tracking-tight flex items-center gap-2">
+            <Crosshair size={28} className="text-primary" /> Operations Launch Queue
+          </h1>
+          <p className="text-slate-400 text-sm mt-1">
+            Track outbound attack and support launch windows with real-time ±10s ATR indicators.
+          </p>
         </div>
+
+        <Link href="/snipe/recall" className="btn btn-primary text-xs">
+          Open Midpoint Recall Sniper →
+        </Link>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="glass-panel">
-          <h2>Add Operation</h2>
-          <form onSubmit={addToQueue} className="grid gap-4 mt-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        
+        {/* Add Operation Form */}
+        <div className="glass-panel p-6 bg-slate-900/90 rounded-2xl">
+          <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+            <Plus size={18} className="text-primary" /> Schedule Operation
+          </h2>
+          <form onSubmit={addToQueue} className="flex flex-col gap-4">
             <div>
-              <label className="text-sm text-secondary block mb-2">Operation Label</label>
+              <label className="text-xs font-semibold text-slate-300 block mb-1.5">Operation Label</label>
               <input 
                 type="text" 
-                placeholder="e.g. CS Nuke to City A"
+                placeholder="e.g. CS Nuke to Island 44"
                 className="input-field" 
                 value={label}
                 onChange={e => setLabel(e.target.value)}
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+
+            <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-sm text-secondary block mb-2">Target Time (HH:MM:SS)</label>
+                <label className="text-xs font-semibold text-slate-300 block mb-1.5">Target Landing Time</label>
                 <input 
-                  type="time" 
-                  step="1"
-                  className="input-field" 
+                  type="text" 
+                  placeholder="HH:MM:SS"
+                  className="input-field font-mono text-center" 
                   value={targetTime}
                   onChange={e => setTargetTime(e.target.value)}
                   required
                 />
               </div>
               <div>
-                <label className="text-sm text-secondary block mb-2">Travel Time (HH:MM:SS)</label>
+                <label className="text-xs font-semibold text-slate-300 block mb-1.5">Travel Duration</label>
                 <input 
                   type="text" 
-                  pattern="^\d+:\d{2}:\d{2}$"
-                  placeholder="e.g. 45:15:00"
-                  className="input-field"
+                  placeholder="HH:MM:SS"
+                  className="input-field font-mono text-center" 
                   value={travelTime}
                   onChange={e => setTravelTime(e.target.value)}
                   required
                 />
               </div>
             </div>
+
             <div>
-              <label className="text-sm text-secondary block mb-2">Operation Type</label>
-              <select className="input-field" value={type} onChange={e => setType(e.target.value)}>
-                <option value="attack">Attack</option>
-                <option value="support">Support</option>
+              <label className="text-xs font-semibold text-slate-300 block mb-1.5">Movement Type</label>
+              <select 
+                className="input-field font-semibold"
+                value={type}
+                onChange={e => setType(e.target.value)}
+              >
+                <option value="attack">Attack (Offensive)</option>
+                <option value="support">Support (Defensive)</option>
+                <option value="cs">Colony Ship (CS)</option>
               </select>
             </div>
-            <button type="submit" className="btn btn-primary mt-2">Add to Queue</button>
+
+            <button type="submit" className="btn btn-primary text-xs py-2 mt-2">
+              <Plus size={15} /> Add to Queue
+            </button>
           </form>
         </div>
 
-        <div className="glass-panel">
-          <h2>Settings</h2>
-          <div className="mt-4">
-            <label className="text-sm text-secondary block mb-2">Server Time Offset (seconds)</label>
-            <input 
-              type="number" 
-              className="input-field mb-2" 
-              value={serverOffset}
-              onChange={e => setServerOffset(Number(e.target.value))}
-            />
-            <p className="text-xs text-secondary">
-              If the game server clock is 3 seconds ahead of your PC clock, enter 3. 
-            </p>
-          </div>
-          
-          <div className="mt-4 p-4 text-center" style={{ background: 'rgba(0,0,0,0.2)', borderRadius: '8px' }}>
-            <div className="text-sm text-secondary">Current Adjusted Server Time</div>
-            <div style={{ fontSize: '2rem', fontWeight: 'bold', fontVariantNumeric: 'tabular-nums' }}>
-              {serverTime.toLocaleTimeString('en-US', { hour12: false })}
+        {/* Queue List */}
+        <div className="glass-panel p-6 bg-slate-900/90 rounded-2xl flex flex-col justify-between">
+          <div>
+            <div className="flex justify-between items-center mb-4 border-b border-slate-800 pb-3">
+              <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                <Clock size={18} className="text-accent" /> Active Launch Queue ({queue.length})
+              </h2>
+              {queue.length > 0 && (
+                <button onClick={clearQueue} className="text-xs text-rose-400 hover:underline">
+                  Clear All
+                </button>
+              )}
             </div>
-          </div>
-        </div>
-      </div>
 
-      <div className="glass-panel mt-4">
-        <div className="flex justify-between items-center">
-          <h2>Active Queue</h2>
-          {queue.length > 0 && (
-            <button onClick={clearQueue} className="btn" style={{ background: 'rgba(239, 68, 68, 0.2)', color: 'var(--danger)' }}>Clear Queue</button>
-          )}
-        </div>
-        
-        {queue.length === 0 ? (
-          <p className="text-secondary mt-4">No operations planned. Add one above.</p>
-        ) : (
-          <div className="grid gap-4 mt-4">
-            {queue.map(op => {
-              const msUntilStart = op.windowStart.getTime() - serverTime.getTime();
-              const msUntilEnd = op.windowEnd.getTime() - serverTime.getTime();
-              
-              let status = '';
-              let statusColor = '';
-              let countdown = '';
-              let isFlashing = false;
+            {queue.length === 0 ? (
+              <div className="text-center py-12 text-slate-500 text-sm">
+                No active operations scheduled.
+              </div>
+            ) : (
+              <div className="flex flex-col gap-3 max-h-96 overflow-y-auto pr-1">
+                {queue.map(op => {
+                  const msUntilStart = op.windowStart.getTime() - serverTime.getTime();
+                  const msUntilEnd = op.windowEnd.getTime() - serverTime.getTime();
+                  const inWindow = msUntilStart <= 0 && msUntilEnd >= 0;
+                  const passed = msUntilEnd < 0;
 
-              if (msUntilStart > 60000) {
-                status = 'WAITING';
-                statusColor = 'var(--text-secondary)';
-                countdown = `Window opens in ${formatCountdown(msUntilStart)}`;
-              } else if (msUntilStart > 10000) {
-                status = 'READY (1 MINUTE)';
-                statusColor = 'var(--accent)';
-                countdown = `Window opens in ${formatCountdown(msUntilStart)}`;
-              } else if (msUntilStart > 0) {
-                status = 'GET READY!';
-                statusColor = 'var(--accent)';
-                countdown = `Window opens in ${formatCountdown(msUntilStart)}`;
-                isFlashing = true;
-              } else if (msUntilEnd > 0) {
-                status = 'ACTION WINDOW';
-                statusColor = 'var(--success)';
-                countdown = `${formatCountdown(msUntilEnd)} remaining to launch!`;
-                isFlashing = true;
-              } else {
-                status = 'PASSED';
-                statusColor = 'var(--danger)';
-                countdown = 'Window closed.';
-              }
+                  return (
+                    <div 
+                      key={op.id} 
+                      className={`p-3.5 rounded-xl border transition-all ${
+                        inWindow 
+                          ? 'bg-rose-950/40 border-rose-500 shadow-xl animate-pulse' 
+                          : passed 
+                          ? 'bg-slate-950/30 border-slate-900 opacity-50' 
+                          : 'bg-slate-950/60 border-slate-800'
+                      }`}
+                    >
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <div className="font-bold text-slate-200 text-sm">{op.label}</div>
+                          <div className="text-xs text-slate-400 font-mono mt-0.5">
+                            Target: {op.targetDate.toLocaleTimeString([], { hour12: false })}
+                          </div>
+                        </div>
 
-              return (
-                <div key={op.id} className="p-4 flex items-center justify-between" style={{ background: 'rgba(15, 23, 42, 0.4)', borderRadius: '8px', borderLeft: `4px solid ${op.type === 'attack' ? 'var(--danger)' : 'var(--primary)'}` }}>
-                  <div>
-                    <h3 style={{ margin: 0 }}>{op.label}</h3>
-                    <div className="flex gap-4 mt-2 text-sm text-secondary" style={{ fontVariantNumeric: 'tabular-nums' }}>
-                      <span>Target: <strong style={{ color: 'var(--text-primary)' }}>{op.targetDate.toLocaleTimeString('en-US', { hour12: false })}</strong></span>
-                      <span>Window: <strong style={{ color: 'var(--text-primary)' }}>{op.windowStart.toLocaleTimeString('en-US', { hour12: false })}</strong> - <strong style={{ color: 'var(--text-primary)' }}>{op.windowEnd.toLocaleTimeString('en-US', { hour12: false })}</strong></span>
+                        <button 
+                          onClick={() => removeOp(op.id)}
+                          className="text-slate-500 hover:text-rose-400 p-1"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+
+                      <div className="mt-2.5 pt-2 border-t border-slate-800/80 flex items-center justify-between text-xs">
+                        <span className={`font-mono font-bold ${inWindow ? 'text-rose-400' : 'text-primary'}`}>
+                          {inWindow ? '🚨 LAUNCH WINDOW ACTIVE' : passed ? 'Passed' : `Send in ${formatCountdown(msUntilStart)}`}
+                        </span>
+                        <span className="text-[11px] text-slate-400 font-mono">
+                          Window: {op.windowStart.toLocaleTimeString([], { hour12: false })} - {op.windowEnd.toLocaleTimeString([], { hour12: false })}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                  <div className="text-right" style={{ width: '220px' }}>
-                    <div className={isFlashing ? 'flashing' : ''} style={{ color: statusColor, fontWeight: 'bold', fontSize: '1.2rem', transition: 'color 0.2s' }}>{status}</div>
-                    <div className="text-sm mt-1" style={{ fontVariantNumeric: 'tabular-nums' }}>{countdown}</div>
-                    <button onClick={() => removeOp(op.id)} className="text-xs text-secondary mt-2" style={{ background: 'transparent', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>Remove</button>
-                  </div>
-                </div>
-              );
-            })}
+                  );
+                })}
+              </div>
+            )}
           </div>
-        )}
+        </div>
+
       </div>
     </div>
   );

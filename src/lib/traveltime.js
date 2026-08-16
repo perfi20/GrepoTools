@@ -32,7 +32,7 @@ export function calculateTravelTime(x1, y1, x2, y2, unitSpeed, worldSpeed, modif
 }
 
 /**
- * Calculates the launch and recall timings.
+ * Calculates the launch and recall timings for planned cancel delay D.
  * @param {Date} targetReturnTime - The target time to land (e.g. CS arrival +/- 1s)
  * @param {number} cancelDelaySeconds - Outward travel duration before recall (D)
  * @returns {object} Timing details
@@ -59,4 +59,66 @@ export function calculateRecallTiming(targetReturnTime, cancelDelaySeconds) {
     cancelDelaySeconds: D,
     totalElapsedSeconds: 2 * D
   };
+}
+
+/**
+ * Calculates the exact recall time given an actual launch time and target landing time.
+ * Formula: RecallTime = LaunchTime + (TargetTime - LaunchTime) / 2
+ * @param {Date} targetReturnTime 
+ * @param {Date} actualLaunchTime 
+ * @returns {object} Timing details
+ */
+export function calculateMidpointRecall(targetReturnTime, actualLaunchTime) {
+  const tReturn = targetReturnTime.getTime();
+  const tLaunch = actualLaunchTime.getTime();
+  
+  const diffMs = tReturn - tLaunch;
+  if (diffMs <= 0) {
+    throw new Error("Actual launch time must be before target return time.");
+  }
+
+  const halfDiffMs = Math.round(diffMs / 2);
+  const cancelDelaySeconds = Math.round(halfDiffMs / 1000);
+
+  if (cancelDelaySeconds > 600) {
+    throw new Error(`Cancel delay of ${cancelDelaySeconds}s exceeds Grepolis 10-minute (600s) cancel window.`);
+  }
+
+  const recallTime = new Date(tLaunch + halfDiffMs);
+
+  return {
+    sendTime: actualLaunchTime,
+    recallTime,
+    cancelDelaySeconds,
+    totalElapsedSeconds: cancelDelaySeconds * 2
+  };
+}
+
+/**
+ * Formats duration in seconds to standard HH:MM:SS format.
+ * @param {number} seconds 
+ * @returns {string} Formatted string
+ */
+export function formatDuration(seconds) {
+  if (isNaN(seconds) || seconds < 0) return "00:00:00";
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = Math.floor(seconds % 60);
+  return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+}
+
+/**
+ * Parses HH:MM:SS string to total seconds.
+ * @param {string} str 
+ * @returns {number} Seconds
+ */
+export function parseDuration(str) {
+  if (!str) return 0;
+  const parts = str.split(':').map(Number);
+  if (parts.length === 3) {
+    return parts[0] * 3600 + parts[1] * 60 + parts[2];
+  } else if (parts.length === 2) {
+    return parts[0] * 60 + parts[1];
+  }
+  return Number(str) || 0;
 }

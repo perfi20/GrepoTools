@@ -5,17 +5,19 @@ import { generateScoreboardData } from '@/lib/scoreboard';
 export const dynamic = 'force-dynamic';
 
 export async function GET(request) {
+  const { searchParams } = new URL(request.url);
+  const worldId = (searchParams.get('world') || 'hu119').toLowerCase();
+
   try {
-    const meta = await prisma.syncMetadata.findUnique({ where: { id: 1 } });
+    const world = await prisma.world.findUnique({ where: { id: worldId } });
     
-    if (meta && meta.scoreboardCache) {
-      const etag = `W/"${meta.lastSync.getTime()}"`;
+    if (world && world.scoreboardCache && world.lastSync) {
+      const etag = `W/"${world.id}-${world.lastSync.getTime()}"`;
       if (request.headers.get('if-none-match') === etag) {
         return new NextResponse(null, { status: 304 });
       }
 
-      // Decode Base64 from Postgres back into a raw binary GZIP buffer
-      const gzipBuffer = Buffer.from(meta.scoreboardCache, 'base64');
+      const gzipBuffer = Buffer.from(world.scoreboardCache, 'base64');
       const uint8Array = new Uint8Array(gzipBuffer);
       
       return new NextResponse(uint8Array, {
@@ -24,19 +26,18 @@ export async function GET(request) {
           'Content-Encoding': 'gzip',
           'Cache-Control': 'public, s-maxage=31536000, stale-while-revalidate=86400',
           'ETag': etag,
-          'X-Last-Sync': meta.lastSync.toISOString(),
+          'X-Last-Sync': world.lastSync.toISOString(),
         },
       });
     }
 
-    // Fallback if cache is not ready yet
-    const data = await generateScoreboardData();
+    const data = await generateScoreboardData(worldId);
 
     return NextResponse.json(data, {
       headers: {
         'Cache-Control': 'public, s-maxage=31536000, stale-while-revalidate=86400',
-        'ETag': meta ? `W/"${meta.lastSync.getTime()}"` : `W/"${Date.now()}"`,
-        'X-Last-Sync': meta ? meta.lastSync.toISOString() : new Date().toISOString(),
+        'ETag': world?.lastSync ? `W/"${world.id}-${world.lastSync.getTime()}"` : `W/"${Date.now()}"`,
+        'X-Last-Sync': world?.lastSync ? world.lastSync.toISOString() : new Date().toISOString(),
       },
     });
   } catch (error) {

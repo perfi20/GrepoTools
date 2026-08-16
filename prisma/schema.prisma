@@ -7,6 +7,33 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model World {
+  id              String    @id // e.g. "hu119", "en143"
+  name            String
+  server          String    // e.g. "hu119"
+  speed           Float     @default(1.0)
+  unitSpeed       Float     @default(1.0)
+  worldType       String    @default("siege") // "siege" or "revolt"
+  isActive        Boolean   @default(true)
+  lastSync        DateTime?
+  geoJsonCache    String?   @db.Text
+  scoreboardCache String?   @db.Text
+  createdAt       DateTime  @default(now())
+
+  players         Player[]
+  alliances       Alliance[]
+  towns           Town[]
+  islands         Island[]
+  conquests       Conquest[]
+  playerHistories PlayerHistory[]
+  allianceHistories AllianceHistory[]
+  townHistories   TownHistory[]
+  snipeOperations SnipeOperation[]
+  reports         Report[]
+
+  @@index([isActive])
+}
+
 model Unit {
   id               String   @id
   name             String
@@ -37,6 +64,7 @@ model Unit {
 
 model Report {
   id           String   @id @default(uuid())
+  worldId      String   @default("hu119")
   originalId   String? // The GRCT report ID if applicable
   attacker     String
   attackerTown String?
@@ -48,8 +76,12 @@ model Report {
   lootedWood   Int      @default(0)
   lootedStone  Int      @default(0)
   lootedIron   Int      @default(0)
+  rawText      String?  @db.Text
   createdAt    DateTime @default(now())
 
+  world        World?   @relation(fields: [worldId], references: [id], onDelete: Cascade)
+
+  @@index([worldId])
   @@index([attackerTown])
   @@index([defenderTown])
   @@index([date])
@@ -57,16 +89,22 @@ model Report {
 
 model Island {
   id             Int    @id
+  worldId        String @default("hu119")
   x              Int
   y              Int
   type           Int
   availableTowns Int
   resourcePlus   String
   resourceMinus  String
+
+  world          World? @relation(fields: [worldId], references: [id], onDelete: Cascade)
+
+  @@index([worldId, x, y])
 }
 
 model Player {
   id         Int       @id
+  worldId    String    @default("hu119")
   name       String
   allianceId Int?
   points     Int
@@ -77,25 +115,33 @@ model Player {
   allBp      Int       @default(0)
   townsList  Town[]
   alliance   Alliance? @relation(fields: [allianceId], references: [id])
+  world      World?    @relation(fields: [worldId], references: [id], onDelete: Cascade)
 
+  @@index([worldId, name])
+  @@index([worldId, points])
   @@index([name])
 }
 
 model PlayerHistory {
-  id        Int      @id @default(autoincrement())
-  playerId  Int
-  oldPoints Int
-  newPoints Int
-  abpDelta  Int      @default(0)
-  dbpDelta  Int      @default(0)
-  allBpDelta Int     @default(0)
-  timestamp DateTime @default(now())
+  id         Int      @id @default(autoincrement())
+  worldId    String   @default("hu119")
+  playerId   Int
+  oldPoints  Int
+  newPoints  Int
+  abpDelta   Int      @default(0)
+  dbpDelta   Int      @default(0)
+  allBpDelta Int      @default(0)
+  timestamp  DateTime @default(now())
 
+  world      World?   @relation(fields: [worldId], references: [id], onDelete: Cascade)
+
+  @@index([worldId, playerId, timestamp])
   @@index([playerId, timestamp])
 }
 
 model Alliance {
   id      Int      @id
+  worldId String   @default("hu119")
   name    String
   points  Int
   towns   Int
@@ -105,12 +151,16 @@ model Alliance {
   dbp     Int      @default(0)
   allBp   Int      @default(0)
   players Player[]
+  world   World?   @relation(fields: [worldId], references: [id], onDelete: Cascade)
 
+  @@index([worldId, name])
+  @@index([worldId, points])
   @@index([name])
 }
 
 model AllianceHistory {
   id         Int      @id @default(autoincrement())
+  worldId    String   @default("hu119")
   allianceId Int
   oldPoints  Int
   newPoints  Int
@@ -119,11 +169,15 @@ model AllianceHistory {
   allBpDelta Int      @default(0)
   timestamp  DateTime @default(now())
 
+  world      World?   @relation(fields: [worldId], references: [id], onDelete: Cascade)
+
+  @@index([worldId, allianceId, timestamp])
   @@index([allianceId, timestamp])
 }
 
 model Town {
   id         Int     @id
+  worldId    String  @default("hu119")
   playerId   Int?
   name       String
   islandX    Int
@@ -131,6 +185,7 @@ model Town {
   islandSlot Int
   points     Int
   player     Player? @relation(fields: [playerId], references: [id])
+  world      World?  @relation(fields: [worldId], references: [id], onDelete: Cascade)
 
   // Custom command center fields
   specialization        String  @default("NONE")
@@ -159,11 +214,14 @@ model Town {
   snipeOperations       SnipeOperation[] @relation("TargetTown")
   snipeOrigins          SnipeOperation[] @relation("OriginTown")
 
+  @@index([worldId, islandX, islandY])
+  @@index([worldId, playerId])
   @@index([islandX, islandY])
 }
 
 model SnipeOperation {
   id                String    @id @default(uuid())
+  worldId           String    @default("hu119")
   label             String
   type              String    @default("recall")
   worldType         String    @default("siege")
@@ -173,27 +231,35 @@ model SnipeOperation {
   sendTime          DateTime
   recallTime        DateTime?
   status            String    @default("PENDING")
+  notes             String?
   createdAt         DateTime  @default(now())
 
   targetTown        Town      @relation("TargetTown", fields: [targetTownId], references: [id])
   originTown        Town      @relation("OriginTown", fields: [originTownId], references: [id])
+  world             World?    @relation(fields: [worldId], references: [id], onDelete: Cascade)
 
+  @@index([worldId, sendTime])
   @@index([sendTime])
   @@index([status])
 }
 
 model TownHistory {
   id        Int      @id @default(autoincrement())
+  worldId   String   @default("hu119")
   townId    Int
   oldPoints Int
   newPoints Int
   timestamp DateTime @default(now())
 
+  world     World?   @relation(fields: [worldId], references: [id], onDelete: Cascade)
+
+  @@index([worldId, townId, timestamp])
   @@index([townId, timestamp])
 }
 
 model Conquest {
   id            Int      @id @default(autoincrement())
+  worldId       String   @default("hu119")
   townId        Int
   townPoints    Int
   oldPlayerId   Int?
@@ -201,10 +267,16 @@ model Conquest {
   oldAllianceId Int?
   newAllianceId Int?
   timestamp     DateTime
+
+  world         World?   @relation(fields: [worldId], references: [id], onDelete: Cascade)
+
+  @@index([worldId, timestamp])
+  @@index([townId])
 }
 
 model SyncMetadata {
   id              Int      @id @default(1)
+  worldId         String   @default("hu119")
   lastSync        DateTime @default(now())
   geoJsonCache    String?  @db.Text
   scoreboardCache String?  @db.Text

@@ -4,12 +4,14 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Trophy, Swords, Shield, TrendingUp, Clock,
   Activity, ArrowRight, Search, Zap, Crosshair, Users, Target, X, Pin, Loader2,
-  ArrowUpRight, ArrowDownRight, Minus, Skull, HelpCircle, MapPin, ChevronDown, Filter
+  ArrowUpRight, ArrowDownRight, Minus, Skull, HelpCircle, MapPin, ChevronDown, Filter, Globe
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, LabelList, AreaChart, Area } from 'recharts';
 import DeepDiveModal from '@/components/DeepDiveModal';
+import { useApp } from '@/context/AppContext';
 
 export default function ScoreboardDashboard() {
+  const { activeWorldId, activeWorld } = useApp();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   
@@ -52,73 +54,81 @@ export default function ScoreboardDashboard() {
   });
 
   useEffect(() => {
+    if (!activeWorldId) return;
+    setLoading(true);
     try {
-      const p = localStorage.getItem('grepoPinnedPlayers');
-      const a = localStorage.getItem('grepoPinnedAlliances');
+      const p = localStorage.getItem(`grepoPinnedPlayers_${activeWorldId}`) || localStorage.getItem('grepoPinnedPlayers');
+      const a = localStorage.getItem(`grepoPinnedAlliances_${activeWorldId}`) || localStorage.getItem('grepoPinnedAlliances');
       if (p) setPinnedPlayers(JSON.parse(p));
+      else setPinnedPlayers([]);
       if (a) setPinnedAlliances(JSON.parse(a));
+      else setPinnedAlliances([]);
     } catch(e) {}
 
-    fetch('/api/world/scoreboard')
+    fetch(`/api/world/scoreboard?world=${activeWorldId}`)
       .then(res => res.json())
       .then(d => {
         setData(d);
         setLoading(false);
       })
-      .catch(console.error);
-  }, []);
+      .catch(err => {
+        console.error(err);
+        setLoading(false);
+      });
+  }, [activeWorldId]);
 
   useEffect(() => {
-    localStorage.setItem('grepoPinnedPlayers', JSON.stringify(pinnedPlayers));
-    localStorage.setItem('grepoPinnedAlliances', JSON.stringify(pinnedAlliances));
-  }, [pinnedPlayers, pinnedAlliances]);
+    if (!activeWorldId) return;
+    localStorage.setItem(`grepoPinnedPlayers_${activeWorldId}`, JSON.stringify(pinnedPlayers));
+    localStorage.setItem(`grepoPinnedAlliances_${activeWorldId}`, JSON.stringify(pinnedAlliances));
+  }, [pinnedPlayers, pinnedAlliances, activeWorldId]);
 
   // Sidebar Search API (Alliances)
   useEffect(() => {
-    if (allianceSearch.length >= 2) {
+    if (allianceSearch.length >= 2 && activeWorldId) {
       setAllianceIsSearching(true);
       const timer = setTimeout(() => {
-        fetch(`/api/world/search?q=${encodeURIComponent(allianceSearch)}`)
+        fetch(`/api/world/search?world=${activeWorldId}&q=${encodeURIComponent(allianceSearch)}`)
           .then(res => res.json())
           .then(d => { setAllianceSearchResults(d.alliances || []); setAllianceIsSearching(false); })
           .catch(() => setAllianceIsSearching(false));
-      }, 400);
+      }, 300);
       return () => clearTimeout(timer);
     } else {
       setAllianceSearchResults([]);
       setAllianceIsSearching(false);
     }
-  }, [allianceSearch]);
+  }, [allianceSearch, activeWorldId]);
 
   // Sidebar Search API (Players)
   useEffect(() => {
-    if (playerSearch.length >= 2) {
+    if (playerSearch.length >= 2 && activeWorldId) {
       setPlayerIsSearching(true);
       const timer = setTimeout(() => {
-        fetch(`/api/world/search?q=${encodeURIComponent(playerSearch)}`)
+        fetch(`/api/world/search?world=${activeWorldId}&q=${encodeURIComponent(playerSearch)}`)
           .then(res => res.json())
           .then(d => { setPlayerSearchResults(d.players || []); setPlayerIsSearching(false); })
           .catch(() => setPlayerIsSearching(false));
-      }, 400);
+      }, 300);
       return () => clearTimeout(timer);
     } else {
       setPlayerSearchResults([]);
       setPlayerIsSearching(false);
     }
-  }, [playerSearch]);
+  }, [playerSearch, activeWorldId]);
 
   // Fetch missing trends for pinned items dynamically
   useEffect(() => {
+    if (!activeWorldId) return;
     const fetchMissingTrends = async (items, type, setList) => {
       const missing = items.filter(i => !i._isFresh && !i._isFetchingTrend);
       if (missing.length === 0) return;
 
-      // Mark as fetching to avoid infinite loops
       setList(prev => prev.map(p => missing.find(m => m.id === p.id) ? { ...p, _isFetchingTrend: true } : p));
 
       await Promise.all(missing.map(async (item) => {
         try {
-          const res = await fetch(`/api/world/momentum?q=${encodeURIComponent(item.name)}&type=${type}`);
+          const res = await fetch(`/api/world/momentum?world=${activeWorldId}&q=${encodeURIComponent(item.name)}&type=${type}`);
           const d = await res.json();
           const match = (d.results || []).find(r => r.id === item.id);
           if (match) {
@@ -134,26 +144,25 @@ export default function ScoreboardDashboard() {
 
     fetchMissingTrends(pinnedPlayers, 'player', setPinnedPlayers);
     fetchMissingTrends(pinnedAlliances, 'alliance', setPinnedAlliances);
-  }, [pinnedPlayers, pinnedAlliances]);
+  }, [pinnedPlayers, pinnedAlliances, activeWorldId]);
 
   // Helper to handle Chart specific searches
   const handleChartSearch = (chartKey, query, type) => {
     setChartSearches(prev => ({ ...prev, [chartKey]: query }));
     
-    if (query.length >= 2) {
+    if (query.length >= 2 && activeWorldId) {
       setChartIsSearching(prev => ({ ...prev, [chartKey]: true }));
-      // We debounce manually here by attaching the timeout to the window to avoid complex ref tracking
       if (window[`timer_${chartKey}`]) clearTimeout(window[`timer_${chartKey}`]);
       
       window[`timer_${chartKey}`] = setTimeout(() => {
-        fetch(`/api/world/momentum?q=${encodeURIComponent(query)}&type=${type}`)
+        fetch(`/api/world/momentum?world=${activeWorldId}&q=${encodeURIComponent(query)}&type=${type}`)
           .then(res => res.json())
           .then(d => {
             setChartSearchResults(prev => ({ ...prev, [chartKey]: d.results || [] }));
             setChartIsSearching(prev => ({ ...prev, [chartKey]: false }));
           })
           .catch(() => setChartIsSearching(prev => ({ ...prev, [chartKey]: false })));
-      }, 400);
+      }, 300);
     } else {
       setChartSearchResults(prev => ({ ...prev, [chartKey]: [] }));
       setChartIsSearching(prev => ({ ...prev, [chartKey]: false }));
@@ -462,7 +471,7 @@ export default function ScoreboardDashboard() {
     const type = entityGroup === 'alliances' ? 'alliance' : 'player';
     setSelectedHourlyEntity({ ...dataPoint, type, metricKey, colorHex });
     setHourlyLoading(true);
-    fetch(`/api/world/history/hourly?id=${dataPoint.id}&type=${type}`)
+    fetch(`/api/world/history/hourly?world=${activeWorldId}&id=${dataPoint.id}&type=${type}`)
       .then(res => res.json())
       .then(d => {
          setHourlyData(d.history || []);
@@ -772,7 +781,11 @@ export default function ScoreboardDashboard() {
 
       {/* DEEP DIVE MODAL */}
       {selectedEntity && (
-        <DeepDiveModal entity={selectedEntity} onClose={() => setSelectedEntity(null)} />
+        <DeepDiveModal 
+          entity={selectedEntity} 
+          onClose={() => setSelectedEntity(null)} 
+          worldId={activeWorldId}
+        />
       )}
 
       {/* HOURLY VELOCITY MODAL */}

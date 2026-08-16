@@ -5,39 +5,39 @@ import { generateGeoJSON } from '@/lib/geojson';
 export const dynamic = 'force-dynamic';
 
 export async function GET(request) {
+  const { searchParams } = new URL(request.url);
+  const worldId = (searchParams.get('world') || 'hu119').toLowerCase();
+
   try {
-    const meta = await prisma.syncMetadata.findUnique({ where: { id: 1 } });
+    const world = await prisma.world.findUnique({ where: { id: worldId } });
     
-    if (meta && meta.geoJsonCache) {
-      const etag = `W/"${meta.lastSync.getTime()}"`;
+    if (world && world.geoJsonCache && world.lastSync) {
+      const etag = `W/"${world.id}-${world.lastSync.getTime()}"`;
       if (request.headers.get('if-none-match') === etag) {
         return new NextResponse(null, { status: 304 });
       }
 
-      // Decode Base64 from Postgres back into a raw binary GZIP buffer
-      const gzipBuffer = Buffer.from(meta.geoJsonCache, 'base64');
+      const gzipBuffer = Buffer.from(world.geoJsonCache, 'base64');
       const uint8Array = new Uint8Array(gzipBuffer);
       
-      // Serve the compressed binary buffer instantly!
-      // The browser natively unzips it because we specify Content-Encoding: gzip
       return new NextResponse(uint8Array, {
         headers: {
           'Content-Type': 'application/json',
           'Content-Encoding': 'gzip',
           'Cache-Control': 'public, s-maxage=31536000, stale-while-revalidate=86400',
           'ETag': etag,
-          'X-Last-Sync': meta.lastSync.toISOString(),
+          'X-Last-Sync': world.lastSync.toISOString(),
         },
       });
     }
 
-    const geojson = await generateGeoJSON();
+    const geojson = await generateGeoJSON(worldId);
 
     return NextResponse.json(geojson, {
       headers: {
         'Cache-Control': 'public, s-maxage=31536000, stale-while-revalidate=86400',
-        'ETag': meta ? `W/"${meta.lastSync.getTime()}"` : `W/"${Date.now()}"`,
-        'X-Last-Sync': meta ? meta.lastSync.toISOString() : new Date().toISOString(),
+        'ETag': world?.lastSync ? `W/"${world.id}-${world.lastSync.getTime()}"` : `W/"${Date.now()}"`,
+        'X-Last-Sync': world?.lastSync ? world.lastSync.toISOString() : new Date().toISOString(),
       },
     });
   } catch (error) {

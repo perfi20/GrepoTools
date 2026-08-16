@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
 import { getPlayerIntel } from '@/lib/grepodata';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 
-const prisma = new PrismaClient();
+export const dynamic = 'force-dynamic';
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
-  const world = searchParams.get('world') || process.env.NEXT_PUBLIC_MASTER_WORLD || 'en143';
+  const world = (searchParams.get('world') || process.env.NEXT_PUBLIC_MASTER_WORLD || 'hu119').toLowerCase();
   let playerId = searchParams.get('player_id');
   const playerName = searchParams.get('player_name');
 
@@ -17,7 +17,7 @@ export async function GET(request) {
   try {
     if (!playerId && playerName) {
       const player = await prisma.player.findFirst({
-        where: { name: { equals: playerName, mode: 'insensitive' } }
+        where: { worldId: world, name: { equals: playerName, mode: 'insensitive' } }
       });
       if (player) {
         playerId = player.id;

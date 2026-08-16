@@ -11,11 +11,13 @@ function getOrbitPoint(centerLng, centerLat, radiusDeg, angle) {
   return [lng, lat];
 }
 
-// This function now returns a compiled GeoJSON FeatureCollection to shift load off the client.
-export async function generateGeoJSON() {
-  console.time("GeoJSON Generation");
-  // Fetch towns with only required fields to dramatically reduce memory payload
+// Generates compiled GeoJSON FeatureCollection for a specific world.
+export async function generateGeoJSON(worldId = 'hu119') {
+  console.time(`GeoJSON Generation [${worldId}]`);
+  
+  // Fetch towns for this world
   const towns = await prisma.town.findMany({
+    where: { worldId },
     select: {
       id: true, name: true, points: true, islandX: true, islandY: true, islandSlot: true,
       player: {
@@ -27,8 +29,9 @@ export async function generateGeoJSON() {
     }
   });
 
-  // Fetch Top 10 Alliances directly from the alliance table
+  // Fetch Top 10 Alliances directly from the alliance table for this world
   const dbAlliances = await prisma.alliance.findMany({
+    where: { worldId },
     orderBy: { towns: 'desc' },
     take: 10,
     select: { name: true }
@@ -62,11 +65,10 @@ export async function generateGeoJSON() {
     townLookup[key].push(t);
   }
 
-  // Hardcode world border radius to 250 (spans from 250 to 750)
+  // World border radius 250 (coordinates 250 to 750)
   const worldRadius = 250;
   const worldRadiusSq = Math.pow(worldRadius, 2);
   
-  // Fetch all islands within the bounding box of the world radius for fast DB query
   const minX = 500 - worldRadius;
   const maxX = 500 + worldRadius;
   const minY = 500 - worldRadius;
@@ -74,6 +76,7 @@ export async function generateGeoJSON() {
 
   const allIslandsInBox = await prisma.island.findMany({
     where: {
+      worldId,
       x: { gte: minX, lte: maxX },
       y: { gte: minY, lte: maxY }
     },
@@ -82,7 +85,7 @@ export async function generateGeoJSON() {
     }
   });
 
-  // Filter exactly to the circular world border
+  // Filter to the circular world border
   const islands = allIslandsInBox.filter(i => {
     const distSq = Math.pow(i.x - 500, 2) + Math.pow(i.y - 500, 2);
     return distSq <= worldRadiusSq;
@@ -108,16 +111,13 @@ export async function generateGeoJSON() {
     }
 
     const totalCapacity = island.availableTowns + islandTowns.length;
-    
-    if (totalCapacity === 0) continue; // Skip purely decorative rocks that cannot be colonized
+    if (totalCapacity === 0) continue; // Skip purely decorative rocks
 
     const isRock = totalCapacity <= 13;
 
     let islandColor = "#1e293b"; // Default empty island color
     if (islandTowns.length > 0) {
-      // Populated but not top 10 alliance
       islandColor = "#e2e8f0"; 
-      
       if (dominantAlliance && allianceColors[dominantAlliance]) {
         islandColor = allianceColors[dominantAlliance];
       }
@@ -214,7 +214,7 @@ export async function generateGeoJSON() {
     }
   }
 
-  console.timeEnd("GeoJSON Generation");
+  console.timeEnd(`GeoJSON Generation [${worldId}]`);
   
   return { 
     type: 'FeatureCollection', 
@@ -223,9 +223,9 @@ export async function generateGeoJSON() {
 }
 
 export const getCachedGeoJSON = unstable_cache(
-  async () => {
-    return await generateGeoJSON();
+  async (worldId = 'hu119') => {
+    return await generateGeoJSON(worldId);
   },
-  ['world-geojson'],
+  ['world-geojson-by-world'],
   { tags: ['world-geojson'] }
 );

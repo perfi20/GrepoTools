@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { X, Users, Trophy, Shield, Swords, Activity, MapPin } from 'lucide-react';
+import { X, Users, Trophy, Shield, Swords, Activity, MapPin, ExternalLink, Calendar } from 'lucide-react';
 import { ResponsiveContainer, AreaChart, Area, CartesianGrid, XAxis, YAxis, Tooltip, BarChart, Bar } from 'recharts';
 
 function formatNumber(num) {
@@ -7,30 +7,24 @@ function formatNumber(num) {
   return num.toLocaleString();
 }
 
-export default function DeepDiveModal({ entity, onClose }) {
+export default function DeepDiveModal({ entity, onClose, worldId = 'hu119' }) {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState(null);
-  const [viewType, setViewType] = useState('area'); // 'area' or 'bar'
+  const [viewType, setViewType] = useState('area');
 
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
       try {
         if (entity.type === 'town') {
-          const res = await fetch(`/api/world/town/${entity.data.id}`);
-          if (res.ok) {
-            setData(await res.json());
-          }
+          const res = await fetch(`/api/world/town/${entity.data.id}?world=${worldId}`);
+          if (res.ok) setData(await res.json());
         } else if (entity.type === 'player') {
-          const res = await fetch(`/api/world/player/${entity.data.id}`);
-          if (res.ok) {
-            setData(await res.json());
-          }
+          const res = await fetch(`/api/world/player/${entity.data.id}?world=${worldId}`);
+          if (res.ok) setData(await res.json());
         } else if (entity.type === 'alliance') {
-          const res = await fetch(`/api/world/alliance/${entity.data.id}`);
-          if (res.ok) {
-            setData(await res.json());
-          }
+          const res = await fetch(`/api/world/alliance/${entity.data.id}?world=${worldId}`);
+          if (res.ok) setData(await res.json());
         }
       } catch (err) {
         console.error("DeepDiveModal error:", err);
@@ -39,185 +33,214 @@ export default function DeepDiveModal({ entity, onClose }) {
       }
     }
     fetchData();
-  }, [entity]);
+  }, [entity, worldId]);
 
   const renderIcon = () => {
-    if (entity.type === 'alliance') return <Users size={32} color="#a855f7" />;
-    if (entity.type === 'player') return <Trophy size={32} color="#3b82f6" />;
-    return <MapPin size={32} color="#10b981" />;
-  };
-
-  const getBackgroundColor = () => {
-    if (entity.type === 'alliance') return 'rgba(139, 92, 246, 0.2)';
-    if (entity.type === 'player') return 'rgba(59, 130, 246, 0.2)';
-    return 'rgba(16, 185, 129, 0.2)';
+    if (entity.type === 'alliance') return <Users size={28} className="text-accent" />;
+    if (entity.type === 'player') return <Trophy size={28} className="text-primary" />;
+    return <MapPin size={28} className="text-emerald-400" />;
   };
 
   return (
     <div 
-      style={{ position: 'fixed', inset: 0, zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(11, 16, 30, 0.8)', backdropFilter: 'blur(8px)' }}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-4 animate-in fade-in duration-150"
       onClick={(e) => { if(e.target === e.currentTarget) onClose() }}
     >
-      <div className="glass-panel" style={{ width: '800px', maxWidth: '95vw', maxHeight: '90vh', overflowY: 'auto', position: 'relative' }}>
-        <button onClick={onClose} style={{ position: 'absolute', top: '16px', right: '16px', background: 'transparent', border: 'none', cursor: 'pointer', color: '#94a3b8' }}><X size={24} /></button>
+      <div className="glass-panel w-full max-w-4xl max-h-[90vh] overflow-y-auto p-6 bg-slate-900/95 border border-slate-700/80 rounded-2xl shadow-2xl relative flex flex-col">
         
+        {/* Close Button */}
+        <button 
+          onClick={onClose} 
+          className="absolute top-4 right-4 p-1.5 rounded-lg bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 transition-colors"
+        >
+          <X size={18} />
+        </button>
+
         {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
-          <div className="glass-panel" style={{ padding: '16px', background: getBackgroundColor() }}>
+        <div className="flex items-center gap-4 mb-6 border-b border-slate-800 pb-4">
+          <div className="p-3.5 rounded-xl bg-slate-800/80 border border-slate-700">
             {renderIcon()}
           </div>
           <div>
-            <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: 'white', margin: '0 0 4px 0' }}>{entity.data.name}</h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-2xl font-bold text-white tracking-tight">{entity.data.name}</h2>
+              <span className="text-xs font-mono bg-primary/20 text-primary border border-primary/30 px-2 py-0.5 rounded">
+                World {worldId.toUpperCase()}
+              </span>
+            </div>
             {entity.type === 'player' && entity.data.alliance && (
-              <div className="gradient-text" style={{ fontSize: '14px', fontWeight: '600' }}>{entity.data.alliance.name || entity.data.alliance}</div>
+              <div className="text-sm font-semibold text-accent mt-0.5">
+                {entity.data.alliance.name || entity.data.alliance}
+              </div>
             )}
             {entity.type === 'town' && (
-              <div className="gradient-text" style={{ fontSize: '14px', fontWeight: '600' }}>
+              <div className="text-sm font-medium text-slate-300 mt-0.5">
                 {entity.data.player} • {entity.data.alliance}
               </div>
             )}
-            <div style={{ color: '#94a3b8', fontSize: '14px', textTransform: 'capitalize', marginTop: '4px' }}>
+            <div className="text-xs text-slate-400 capitalize mt-1">
               {entity.type} Intelligence
-              {entity.type === 'town' && ` • Island (${entity.data.islandX || entity.data.x}, ${entity.data.islandY || entity.data.y})`}
+              {entity.type === 'town' && ` • Coordinates (${entity.data.islandX || entity.data.x}, ${entity.data.islandY || entity.data.y})`}
             </div>
           </div>
         </div>
 
-        {/* Top Stats Cards */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '32px' }}>
-          <div className="glass-panel" style={{ padding: '16px', textAlign: 'center', background: 'rgba(0,0,0,0.2)' }}>
-            <Trophy size={20} color="#eab308" style={{ margin: '0 auto 8px auto' }} />
-            <div style={{ fontSize: '24px', fontWeight: 'bold', color: 'white' }}>{formatNumber(entity.data.points || entity.data.pts)}</div>
-            <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '4px' }}>Total Points</div>
+        {/* Top KPI Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+          <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800 text-center">
+            <Trophy size={18} className="text-amber-400 mx-auto mb-1" />
+            <div className="text-2xl font-mono font-bold text-white">
+              {formatNumber(entity.data.points || entity.data.pts)}
+            </div>
+            <div className="text-xs text-slate-400 mt-0.5">Total Points</div>
           </div>
+
           {(entity.type === 'player' || entity.type === 'alliance') ? (
             <>
-              <div className="glass-panel" style={{ padding: '16px', textAlign: 'center', background: 'rgba(0,0,0,0.2)' }}>
-                <Swords size={20} color="#ef4444" style={{ margin: '0 auto 8px auto' }} />
-                <div style={{ fontSize: '24px', fontWeight: 'bold', color: 'white' }}>{formatNumber(entity.data.abp)}</div>
-                <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '4px' }}>Attack BP</div>
+              <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800 text-center">
+                <Swords size={18} className="text-rose-400 mx-auto mb-1" />
+                <div className="text-2xl font-mono font-bold text-white">
+                  {formatNumber(entity.data.abp)}
+                </div>
+                <div className="text-xs text-slate-400 mt-0.5">Attack BP</div>
               </div>
-              <div className="glass-panel" style={{ padding: '16px', textAlign: 'center', background: 'rgba(0,0,0,0.2)' }}>
-                <Shield size={20} color="#3b82f6" style={{ margin: '0 auto 8px auto' }} />
-                <div style={{ fontSize: '24px', fontWeight: 'bold', color: 'white' }}>{formatNumber(entity.data.dbp)}</div>
-                <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '4px' }}>Defense BP</div>
+              <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800 text-center">
+                <Shield size={18} className="text-blue-400 mx-auto mb-1" />
+                <div className="text-2xl font-mono font-bold text-white">
+                  {formatNumber(entity.data.dbp)}
+                </div>
+                <div className="text-xs text-slate-400 mt-0.5">Defense BP</div>
               </div>
             </>
           ) : (
-            // For Towns, show rank or slot if available
             <>
-               <div className="glass-panel" style={{ padding: '16px', textAlign: 'center', background: 'rgba(0,0,0,0.2)' }}>
-                <MapPin size={20} color="#10b981" style={{ margin: '0 auto 8px auto' }} />
-                <div style={{ fontSize: '24px', fontWeight: 'bold', color: 'white' }}>Slot #{entity.data.islandSlot || entity.data.slot || '?'}</div>
-                <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '4px' }}>Island Position</div>
-              </div>
-              <div className="glass-panel" style={{ padding: '16px', textAlign: 'center', background: 'rgba(0,0,0,0.2)' }}>
-                <Activity size={20} color="#8b5cf6" style={{ margin: '0 auto 8px auto' }} />
-                <div style={{ fontSize: '24px', fontWeight: 'bold', color: 'white' }}>
-                  {data && data.activity ? (data.activity.pointDelta > 0 ? '+' : '') + formatNumber(data.activity.pointDelta) : '0'}
+              <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800 text-center">
+                <Activity size={18} className="text-emerald-400 mx-auto mb-1" />
+                <div className="text-2xl font-mono font-bold text-emerald-400">
+                  {data?.activity?.pointDelta ? `+${data.activity.pointDelta}` : '0'}
                 </div>
-                <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '4px' }}>7-Day Growth</div>
+                <div className="text-xs text-slate-400 mt-0.5">7-Day Growth</div>
+              </div>
+              <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800 text-center">
+                <MapPin size={18} className="text-primary mx-auto mb-1" />
+                <div className="text-2xl font-mono font-bold text-white">
+                  #{entity.data.islandSlot ?? entity.data.slot ?? '-'}
+                </div>
+                <div className="text-xs text-slate-400 mt-0.5">Island Slot</div>
               </div>
             </>
           )}
         </div>
 
-        {/* Main Content Area */}
-        {loading ? (
-          <div style={{ height: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8' }}>
-            Fetching deep intelligence...
-          </div>
-        ) : (
-          <div style={{ display: 'flex', gap: '24px', flexDirection: entity.type === 'town' ? 'row' : 'column' }}>
-            
-            {/* Chart Area */}
-            <div style={{ flex: 2 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: 'white', margin: 0 }}>Points History (7 Days)</h3>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <button onClick={() => setViewType('area')} style={{ padding: '4px 12px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.1)', background: viewType === 'area' ? 'rgba(59, 130, 246, 0.2)' : 'transparent', color: viewType === 'area' ? 'white' : '#94a3b8', cursor: 'pointer', fontSize: '12px' }}>Area</button>
-                  <button onClick={() => setViewType('bar')} style={{ padding: '4px 12px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.1)', background: viewType === 'bar' ? 'rgba(59, 130, 246, 0.2)' : 'transparent', color: viewType === 'bar' ? 'white' : '#94a3b8', cursor: 'pointer', fontSize: '12px' }}>Bar</button>
-                </div>
-              </div>
-
-              <div style={{ height: '250px', width: '100%', background: 'rgba(0,0,0,0.3)', borderRadius: '12px', padding: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                {data?.history && data.history.length > 0 ? (
-                  <ResponsiveContainer width="100%" height="100%">
-                    {viewType === 'area' ? (
-                      <AreaChart data={data.history} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                        <defs>
-                          <linearGradient id="chartColor" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#10b981" stopOpacity={0.5}/>
-                            <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
-                          </linearGradient>
-                        </defs>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
-                        <XAxis dataKey="date" stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} />
-                        <YAxis stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} tickFormatter={formatNumber} domain={['auto', 'auto']} />
-                        <Tooltip 
-                          contentStyle={{ backgroundColor: 'rgba(15, 23, 42, 0.95)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: 'white' }}
-                          itemStyle={{ color: '#10b981', fontWeight: 'bold' }}
-                          labelStyle={{ color: '#94a3b8', marginBottom: '4px' }}
-                        />
-                        <Area type="stepAfter" dataKey="points" stroke="#10b981" strokeWidth={3} fill="url(#chartColor)" isAnimationActive={false} />
-                      </AreaChart>
-                    ) : (
-                      <BarChart data={data.history} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
-                        <XAxis dataKey="date" stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} />
-                        <YAxis stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} tickFormatter={formatNumber} />
-                        <Tooltip 
-                          contentStyle={{ backgroundColor: 'rgba(15, 23, 42, 0.95)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: 'white' }}
-                          itemStyle={{ color: '#10b981', fontWeight: 'bold' }}
-                          labelStyle={{ color: '#94a3b8', marginBottom: '4px' }}
-                        />
-                        <Bar dataKey="delta" fill="#10b981" radius={[4, 4, 0, 0]} isAnimationActive={false} />
-                      </BarChart>
-                    )}
-                  </ResponsiveContainer>
-                ) : (
-                  <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', flexDirection: 'column', gap: '8px' }}>
-                    <Activity size={32} color="#3b82f6" style={{ opacity: 0.5 }} />
-                    <span style={{ fontWeight: '600', color: '#94a3b8' }}>Historical data assembling...</span>
-                  </div>
-                )}
-              </div>
+        {/* 7-Day History Chart */}
+        <div className="mb-6 p-4 bg-slate-950/60 rounded-xl border border-slate-800">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-sm font-bold text-slate-200 flex items-center gap-2">
+              <Activity size={16} className="text-primary" /> 7-Day Progress & Delta History
+            </h3>
+            <div className="flex gap-1.5 bg-slate-900 p-1 rounded-lg border border-slate-800">
+              <button 
+                onClick={() => setViewType('area')}
+                className={`text-xs px-2.5 py-1 rounded font-medium transition-colors ${
+                  viewType === 'area' ? 'bg-primary text-white' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                Total Curve
+              </button>
+              <button 
+                onClick={() => setViewType('bar')}
+                className={`text-xs px-2.5 py-1 rounded font-medium transition-colors ${
+                  viewType === 'bar' ? 'bg-primary text-white' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                Daily Gains
+              </button>
             </div>
-
-            {/* Conquest Timeline (Available for Town, Player, Alliance) */}
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-              <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: 'white', margin: '0 0 16px 0' }}>Conquest History</h3>
-              <div style={{ flex: 1, background: 'rgba(0,0,0,0.3)', borderRadius: '12px', padding: '16px', border: '1px solid rgba(255,255,255,0.05)', overflowY: 'auto' }}>
-                {data?.conquests && data.conquests.length > 0 ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                    {data.conquests.map((c, i) => (
-                      <div key={i} style={{ display: 'flex', gap: '12px', position: 'relative' }}>
-                        <div style={{ width: '2px', background: 'rgba(255,255,255,0.1)', position: 'absolute', left: '15px', top: '30px', bottom: '-16px', display: i === data.conquests.length - 1 ? 'none' : 'block' }}></div>
-                        <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(239, 68, 68, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1, flexShrink: 0 }}>
-                          <Swords size={16} color="#ef4444" />
-                        </div>
-                        <div>
-                          <div style={{ color: '#94a3b8', fontSize: '12px' }}>{new Date(c.timestamp).toLocaleString()}</div>
-                          <div style={{ fontSize: '14px', marginTop: '2px', lineHeight: '1.4' }}>
-                            <span style={{ color: '#ef4444', fontWeight: 'bold' }}>{c.newPlayerObj?.name || 'Ghost'}</span> conquered from <span style={{ color: '#3b82f6' }}>{c.oldPlayerObj?.name || 'Ghost'}</span>
-                          </div>
-                          <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>
-                            Points: {formatNumber(c.townPoints)}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', fontStyle: 'italic', textAlign: 'center' }}>
-                    No conquests recorded.
-                  </div>
-                )}
-              </div>
-            </div>
-            
           </div>
-        )}
+
+          {loading ? (
+            <div className="h-56 flex items-center justify-center text-slate-500 text-sm animate-pulse">
+              Loading chart history...
+            </div>
+          ) : data?.history?.length > 0 ? (
+            <div className="h-56 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                {viewType === 'area' ? (
+                  <AreaChart data={data.history}>
+                    <defs>
+                      <linearGradient id="deepColor" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.4}/>
+                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                    <XAxis dataKey="date" stroke="#64748b" fontSize={11} />
+                    <YAxis stroke="#64748b" fontSize={11} domain={['auto', 'auto']} />
+                    <Tooltip 
+                      contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '8px', color: '#fff' }}
+                      formatter={(val) => [formatNumber(val), 'Points']}
+                    />
+                    <Area type="monotone" dataKey="points" stroke="#3b82f6" strokeWidth={2} fillOpacity={1} fill="url(#deepColor)" />
+                  </AreaChart>
+                ) : (
+                  <BarChart data={data.history}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                    <XAxis dataKey="date" stroke="#64748b" fontSize={11} />
+                    <YAxis stroke="#64748b" fontSize={11} />
+                    <Tooltip 
+                      contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '8px', color: '#fff' }}
+                      formatter={(val) => [formatNumber(val), 'Delta']}
+                    />
+                    <Bar dataKey="delta" fill="#10b981" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                )}
+              </ResponsiveContainer>
+            </div>
+          ) : (
+            <div className="h-44 flex items-center justify-center text-slate-500 text-xs">
+              No historical data points logged yet for this entity.
+            </div>
+          )}
+        </div>
+
+        {/* Conquests History */}
+        <div>
+          <h3 className="text-sm font-bold text-slate-200 mb-3 flex items-center gap-2">
+            <Swords size={16} className="text-rose-400" /> Conquest History & Log
+          </h3>
+          {loading ? (
+            <div className="py-6 text-center text-slate-500 text-sm animate-pulse">Loading conquest log...</div>
+          ) : data?.conquests?.length > 0 ? (
+            <div className="flex flex-col gap-2 max-h-48 overflow-y-auto pr-1">
+              {data.conquests.map((c) => {
+                const isGain = c.newPlayerId === entity.data.id || c.newAllianceId === entity.data.id;
+                return (
+                  <div 
+                    key={c.id} 
+                    className="flex justify-between items-center p-3 bg-slate-950/60 border border-slate-800 rounded-xl text-xs"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className={`px-2 py-0.5 rounded font-bold ${isGain ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'}`}>
+                        {isGain ? 'CONQUERED' : 'LOST'}
+                      </span>
+                      <span className="text-slate-300">
+                        Town #{c.townId} ({formatNumber(c.townPoints)} pts)
+                      </span>
+                    </div>
+                    <div className="text-slate-400 font-mono">
+                      {new Date(c.timestamp).toLocaleDateString()} {new Date(c.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="py-6 text-center text-slate-500 text-xs bg-slate-950/30 rounded-xl">
+              No conquests recorded for this entity.
+            </div>
+          )}
+        </div>
+
       </div>
     </div>
   );

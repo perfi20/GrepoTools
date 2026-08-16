@@ -6,36 +6,47 @@ import { generateGeoJSON } from '@/lib/geojson';
 import { generateScoreboardData } from '@/lib/scoreboard';
 
 export const dynamic = 'force-dynamic';
-export const maxDuration = 60; // Allow 60s for cache generation on Vercel
+export const maxDuration = 60;
 
 export async function POST(request) {
   try {
-    console.log("Generating scoreboard and geoJson caches asynchronously...");
+    const { searchParams } = new URL(request.url);
+    let worldId = searchParams.get('world');
     
-    // We run both generators in parallel for speed
+    if (!worldId) {
+      try {
+        const body = await request.json();
+        if (body.world) worldId = body.world;
+      } catch (e) {}
+    }
+    worldId = (worldId || 'hu119').toLowerCase();
+
+    console.log(`Generating scoreboard and geoJson caches for world [${worldId}]...`);
+    
     const [scoreboardData, geoJsonData] = await Promise.all([
-      generateScoreboardData(),
-      generateGeoJSON()
+      generateScoreboardData(worldId),
+      generateGeoJSON(worldId)
     ]);
     
     const scoreboardGzip = zlib.gzipSync(JSON.stringify(scoreboardData)).toString('base64');
     const geoJsonGzip = zlib.gzipSync(JSON.stringify(geoJsonData)).toString('base64');
     
-    // Update sync metadata with the new cache payloads
+    await prisma.world.update({
+      where: { id: worldId },
+      data: { scoreboardCache: scoreboardGzip, geoJsonCache: geoJsonGzip }
+    });
+
     await prisma.syncMetadata.upsert({
       where: { id: 1 },
-      update: { scoreboardCache: scoreboardGzip, geoJsonCache: geoJsonGzip },
-      create: { id: 1, scoreboardCache: scoreboardGzip, geoJsonCache: geoJsonGzip }
+      update: { worldId, scoreboardCache: scoreboardGzip, geoJsonCache: geoJsonGzip, lastSync: new Date() },
+      create: { id: 1, worldId, scoreboardCache: scoreboardGzip, geoJsonCache: geoJsonGzip, lastSync: new Date() }
     });
     
-    console.log("Async Cache Sync metadata updated successfully!");
-
     revalidatePath('/api/world/scoreboard');
     revalidatePath('/api/world/geojson');
     revalidatePath('/api/world/meta');
-    console.log("Edge caches revalidated successfully!");
 
-    return NextResponse.json({ success: true, message: 'Caches rebuilt' });
+    return NextResponse.json({ success: true, worldId, message: `Caches rebuilt for world ${worldId}` });
   } catch (error) {
     console.error("Cache Sync Error:", error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
