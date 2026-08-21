@@ -22,6 +22,7 @@ export default function DeepDiveModal({ entity, onClose, worldId = 'hu119' }) {
 
   useEffect(() => {
     async function fetchData() {
+      if (!entity?.data?.id) return;
       setLoading(true);
       try {
         if (entity.type === 'town') {
@@ -43,11 +44,39 @@ export default function DeepDiveModal({ entity, onClose, worldId = 'hu119' }) {
     fetchData();
   }, [entity, worldId]);
 
+  if (!entity || !entity.data) return null;
+
   const renderIcon = () => {
-    if (entity.type === 'alliance') return <Users size={28} className="text-accent" />;
-    if (entity.type === 'player') return <Trophy size={28} className="text-primary" />;
-    return <MapPin size={28} className="text-emerald-400" />;
+    if (entity.type === 'alliance') return <Users size={26} className="text-accent" />;
+    if (entity.type === 'player') return <Trophy size={26} className="text-primary" />;
+    return <MapPin size={26} className="text-emerald-400" />;
   };
+
+  const getEntityTitle = () => {
+    return entity.data.name || (entity.type === 'town' ? `Town #${entity.data.id}` : 'Intelligence Report');
+  };
+
+  const getPlayerName = () => {
+    if (entity.type === 'player') return entity.data.name;
+    if (typeof entity.data.player === 'object') return entity.data.player?.name || 'Ghost Town';
+    if (typeof entity.data.player === 'string') return entity.data.player;
+    if (data?.town?.player?.name) return data.town.player.name;
+    return 'Ghost Town';
+  };
+
+  const getAllianceName = () => {
+    if (entity.type === 'alliance') return entity.data.name;
+    if (typeof entity.data.alliance === 'object') return entity.data.alliance?.name;
+    if (typeof entity.data.alliance === 'string') return entity.data.alliance;
+    if (typeof entity.data.player === 'object' && entity.data.player?.alliance?.name) return entity.data.player.alliance.name;
+    if (data?.town?.player?.alliance?.name) return data.town.player.alliance.name;
+    return null;
+  };
+
+  const totalPoints = entity.data.points || entity.data.pts || data?.town?.points || 0;
+  const islandSlot = entity.data.islandSlot ?? entity.data.slot ?? data?.town?.islandSlot ?? '-';
+  const coordsX = entity.data.islandX || entity.data.x || data?.town?.islandX;
+  const coordsY = entity.data.islandY || entity.data.y || data?.town?.islandY;
 
   return (
     <div 
@@ -75,24 +104,24 @@ export default function DeepDiveModal({ entity, onClose, worldId = 'hu119' }) {
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
-              <h2 className="text-2xl font-bold text-white tracking-tight truncate">{entity.data.name}</h2>
+              <h2 className="text-2xl font-bold text-white tracking-tight truncate">{getEntityTitle()}</h2>
               <span className="text-xs font-mono bg-primary/20 text-primary border border-primary/30 px-2 py-0.5 rounded shrink-0">
                 World {worldId.toUpperCase()}
               </span>
             </div>
-            {entity.type === 'player' && entity.data.alliance && (
+            {entity.type === 'player' && getAllianceName() && (
               <div className="text-sm font-semibold text-accent mt-0.5 truncate">
-                {entity.data.alliance.name || entity.data.alliance}
+                {getAllianceName()}
               </div>
             )}
             {entity.type === 'town' && (
               <div className="text-sm font-medium text-slate-300 mt-0.5 truncate">
-                {entity.data.player} • {entity.data.alliance}
+                {getPlayerName()} {getAllianceName() ? ` • [${getAllianceName()}]` : ''}
               </div>
             )}
             <div className="text-xs text-slate-400 capitalize mt-1">
               {entity.type} Intelligence
-              {entity.type === 'town' && ` • Coordinates (${entity.data.islandX || entity.data.x}, ${entity.data.islandY || entity.data.y})`}
+              {coordsX !== undefined && coordsY !== undefined && ` • Coordinates (${coordsX}, ${coordsY})`}
             </div>
           </div>
         </div>
@@ -102,7 +131,7 @@ export default function DeepDiveModal({ entity, onClose, worldId = 'hu119' }) {
           <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800 text-center">
             <Trophy size={18} className="text-amber-400 mx-auto mb-1" />
             <div className="text-2xl font-mono font-bold text-white">
-              {formatNumber(entity.data.points || entity.data.pts)}
+              {formatNumber(totalPoints)}
             </div>
             <div className="text-xs text-slate-400 mt-0.5">Total Points</div>
           </div>
@@ -136,7 +165,7 @@ export default function DeepDiveModal({ entity, onClose, worldId = 'hu119' }) {
               <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800 text-center">
                 <MapPin size={18} className="text-primary mx-auto mb-1" />
                 <div className="text-2xl font-mono font-bold text-white">
-                  #{entity.data.islandSlot ?? entity.data.slot ?? '-'}
+                  #{islandSlot}
                 </div>
                 <div className="text-xs text-slate-400 mt-0.5">Island Slot</div>
               </div>
@@ -152,6 +181,7 @@ export default function DeepDiveModal({ entity, onClose, worldId = 'hu119' }) {
             </h3>
             <div className="flex gap-1.5 bg-slate-900 p-1 rounded-lg border border-slate-800">
               <button 
+                type="button"
                 onClick={() => setViewType('area')}
                 className={`text-xs px-2.5 py-1 rounded font-medium transition-colors ${
                   viewType === 'area' ? 'bg-primary text-white' : 'text-slate-400 hover:text-white'
@@ -160,6 +190,7 @@ export default function DeepDiveModal({ entity, onClose, worldId = 'hu119' }) {
                 Total Curve
               </button>
               <button 
+                type="button"
                 onClick={() => setViewType('bar')}
                 className={`text-xs px-2.5 py-1 rounded font-medium transition-colors ${
                   viewType === 'bar' ? 'bg-primary text-white' : 'text-slate-400 hover:text-white'
@@ -232,11 +263,19 @@ export default function DeepDiveModal({ entity, onClose, worldId = 'hu119' }) {
                     className="flex justify-between items-center p-3 bg-slate-950/60 border border-slate-800 rounded-xl text-xs"
                   >
                     <div className="flex items-center gap-2">
-                      <span className={`px-2 py-0.5 rounded font-bold ${isGain ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'}`}>
-                        {isGain ? 'CONQUERED' : 'LOST'}
+                      <span className={`px-2 py-0.5 rounded font-bold ${
+                        entity.type === 'town' 
+                          ? 'bg-primary/20 text-primary' 
+                          : isGain 
+                          ? 'bg-emerald-500/20 text-emerald-400' 
+                          : 'bg-rose-500/20 text-rose-400'
+                      }`}>
+                        {entity.type === 'town' ? 'TRANSFERRED' : isGain ? 'CONQUERED' : 'LOST'}
                       </span>
                       <span className="text-slate-300">
-                        Town #{c.townId} ({formatNumber(c.townPoints)} pts)
+                        {entity.type === 'town' 
+                          ? `${c.oldPlayerObj?.name || 'Ghost'} → ${c.newPlayerObj?.name || 'Ghost'}`
+                          : `Town #${c.townId} (${formatNumber(c.townPoints)} pts)`}
                       </span>
                     </div>
                     <div className="text-slate-400 font-mono">

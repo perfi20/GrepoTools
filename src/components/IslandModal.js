@@ -1,7 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { MapPin, Copy, X, Swords, Users, ExternalLink, Activity } from 'lucide-react';
+import { MapPin, Copy, X, Swords, Users, ExternalLink, Activity, User } from 'lucide-react';
 
-export default function IslandModal({ islandData, onClose, customColors, onTownClick, worldId = 'hu119' }) {
+export default function IslandModal({ 
+  islandData, 
+  onClose, 
+  customColors, 
+  onTownClick, 
+  onPlayerClick,
+  onAllianceClick,
+  worldId = 'hu119' 
+}) {
   const [details, setDetails] = useState(null);
   const [loading, setLoading] = useState(true);
   const [copiedMsg, setCopiedMsg] = useState('');
@@ -167,6 +175,37 @@ export default function IslandModal({ islandData, onClose, customColors, onTownC
                 const isGhost = !hasPlayer;
                 const actDelta = town.activity?.pointDelta || 0;
 
+                const townPayload = {
+                  id: town.id,
+                  name: town.name,
+                  points: town.points,
+                  player: town.player ? town.player.name : 'Ghost Town',
+                  playerId: town.player ? town.player.id : null,
+                  alliance: town.player?.alliance ? town.player.alliance.name : 'No Alliance',
+                  allianceId: town.player?.alliance ? town.player.alliance.id : null,
+                  islandX: islandData.x,
+                  islandY: islandData.y,
+                  islandSlot: town.islandSlot
+                };
+
+                const playerPayload = town.player ? {
+                  id: town.player.id,
+                  name: town.player.name,
+                  points: town.player.points || 0,
+                  abp: town.player.abp || 0,
+                  dbp: town.player.dbp || 0,
+                  alliance: town.player.alliance ? town.player.alliance.name : 'No Alliance',
+                  allianceId: town.player.alliance?.id
+                } : null;
+
+                const alliancePayload = town.player?.alliance ? {
+                  id: town.player.alliance.id,
+                  name: town.player.alliance.name,
+                  points: town.player.alliance.points || 0,
+                  abp: town.player.alliance.abp || 0,
+                  dbp: town.player.alliance.dbp || 0
+                } : null;
+
                 return (
                   <div
                     key={town.id}
@@ -193,28 +232,53 @@ export default function IslandModal({ islandData, onClose, customColors, onTownC
                       </div>
 
                       <div className="mt-2.5 pt-2 border-t border-slate-800/80 flex items-center justify-between text-xs">
-                        <div>
+                        <div className="truncate mr-2">
                           {isGhost ? (
                             <span className="text-slate-500 italic">Ghost Town</span>
                           ) : (
                             <span className="text-slate-300">
-                              <strong className="text-white">{town.player.name}</strong>
+                              <strong 
+                                className="text-white hover:text-primary hover:underline cursor-pointer"
+                                onClick={() => playerPayload && onPlayerClick && onPlayerClick(playerPayload)}
+                                title="Inspect Player"
+                              >
+                                {town.player.name}
+                              </strong>
                               {town.player.alliance && (
-                                <span className="text-slate-400"> [{town.player.alliance.name}]</span>
+                                <span 
+                                  className="text-slate-400 hover:text-accent hover:underline cursor-pointer"
+                                  onClick={() => alliancePayload && onAllianceClick && onAllianceClick(alliancePayload)}
+                                  title="Inspect Alliance"
+                                >
+                                  {' '}[{town.player.alliance.name}]
+                                </span>
                               )}
                             </span>
                           )}
                         </div>
 
-                        {onTownClick && (
-                          <button
-                            type="button"
-                            onClick={() => onTownClick(town)}
-                            className="text-primary hover:underline text-xs flex items-center gap-1 font-semibold"
-                          >
-                            Inspect →
-                          </button>
-                        )}
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          {hasPlayer && onPlayerClick && (
+                            <button
+                              type="button"
+                              onClick={() => playerPayload && onPlayerClick(playerPayload)}
+                              className="text-accent hover:underline text-xs flex items-center gap-0.5 font-semibold py-0.5 px-1.5 rounded hover:bg-slate-800"
+                              title="Inspect Player"
+                            >
+                              <User size={12} /> Player
+                            </button>
+                          )}
+                          {onTownClick && (
+                            <button
+                              type="button"
+                              onClick={() => onTownClick(townPayload)}
+                              className="text-primary hover:underline text-xs flex items-center gap-0.5 font-semibold py-0.5 px-1.5 rounded hover:bg-slate-800"
+                              title="Inspect Town"
+                            >
+                              <MapPin size={12} /> Town
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>

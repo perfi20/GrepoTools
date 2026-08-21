@@ -276,7 +276,7 @@ export default function WorldMap() {
   };
 
   return (
-    <div style={{ position: 'fixed', top: '73px', left: 0, right: 0, bottom: 0, backgroundColor: '#0b101e', zIndex: 10 }}>
+    <div style={{ position: 'fixed', top: '64px', left: 0, right: 0, bottom: 0, backgroundColor: '#0b101e', zIndex: 10 }}>
 
       <div style={{ width: '100%', height: '100%', position: 'relative', zIndex: 0 }}>
         {loading && (
@@ -582,6 +582,8 @@ export default function WorldMap() {
           customColors={customColors}
           worldId={activeWorldId}
           onTownClick={(town) => setSelectedEntity({ type: 'town', data: town })}
+          onPlayerClick={(player) => setSelectedEntity({ type: 'player', data: player })}
+          onAllianceClick={(alliance) => setSelectedEntity({ type: 'alliance', data: alliance })}
         />
       )}
 

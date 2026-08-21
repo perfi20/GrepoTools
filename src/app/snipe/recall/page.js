@@ -63,6 +63,13 @@ export default function RecallSnipePage() {
     }
   }, [audioEnabled]);
 
+  // Sync default world type with active world
+  useEffect(() => {
+    if (activeWorld?.worldType) {
+      setNewGroupWorld(activeWorld.worldType.toLowerCase());
+    }
+  }, [activeWorld]);
+
   // Load from local storage for active world
   useEffect(() => {
     if (!activeWorldId) return;
@@ -238,6 +245,7 @@ export default function RecallSnipePage() {
     
     const csMovements = activeGroup.movements.filter(m => m.type === 'cs');
     const gaps = [];
+    const worldType = (activeGroup.worldType || activeWorld?.worldType || 'siege').toLowerCase();
 
     csMovements.forEach(cs => {
       const csTime = new Date(cs.arrivalTime).getTime();
@@ -247,25 +255,41 @@ export default function RecallSnipePage() {
       const lastClear = beforeAttacks.length > 0 ? beforeAttacks[beforeAttacks.length - 1] : null;
       const firstSupport = afterSupports.length > 0 ? afterSupports[0] : null;
 
-      if (activeGroup.worldType === 'siege') {
-        const gapStart = csTime;
-        const gapEnd = firstSupport ? new Date(firstSupport.arrivalTime).getTime() : csTime + 60000;
-        const returnTime = gapStart + 1000;
-        
-        gaps.push({
-          id: `gap_after_${cs.id}`,
-          desc: `Snipe Siege (Return 1s after CS from ${cs.attacker})`,
-          gapStart, gapEnd, returnTime
-        });
-      } else {
+      if (worldType === 'revolt') {
+        // In Revolt mode: CS landing instantly takes the city. Returning troops MUST land BEFORE the CS!
         const gapEnd = csTime;
         const gapStart = lastClear ? new Date(lastClear.arrivalTime).getTime() : csTime - 60000;
-        const returnTime = gapEnd - 1000;
+        const returnTime = gapEnd - 1000; // 1s before CS
 
         gaps.push({
           id: `gap_before_${cs.id}`,
-          desc: `Snipe CS (Return 1s before CS from ${cs.attacker})`,
-          gapStart, gapEnd, returnTime
+          desc: `⚡ Defend Revolt CS (Return 1s BEFORE CS from ${cs.attacker})`,
+          gapStart, 
+          gapEnd, 
+          returnTime
+        });
+      } else {
+        // In Siege mode: CS starts a siege.
+        // Primary Option: Break Siege (Return 1s AFTER CS before enemy support)
+        const gapStart = csTime;
+        const gapEnd = firstSupport ? new Date(firstSupport.arrivalTime).getTime() : csTime + 60000;
+        const returnTime = gapStart + 1000; // 1s after CS
+        
+        gaps.push({
+          id: `gap_after_${cs.id}`,
+          desc: `🛡️ Break Siege (Return 1s AFTER CS from ${cs.attacker})`,
+          gapStart, 
+          gapEnd, 
+          returnTime
+        });
+
+        // Secondary Option: Pre-CS Defense (Return 1s BEFORE CS)
+        gaps.push({
+          id: `gap_before_${cs.id}`,
+          desc: `⚔️ Pre-CS Defense (Return 1s BEFORE CS from ${cs.attacker})`,
+          gapStart: lastClear ? new Date(lastClear.arrivalTime).getTime() : csTime - 60000,
+          gapEnd: csTime,
+          returnTime: csTime - 1000
         });
       }
     });
@@ -431,7 +455,7 @@ export default function RecallSnipePage() {
         </div>
 
         {/* Add Group Form */}
-        <form onSubmit={createGroup} className="flex items-center gap-2">
+        <form onSubmit={createGroup} className="flex flex-wrap items-center gap-2">
           <input
             type="text"
             placeholder="Target City Name..."
@@ -439,6 +463,14 @@ export default function RecallSnipePage() {
             onChange={e => setNewGroupName(e.target.value)}
             className="input-field py-1.5 px-3 text-xs w-44"
           />
+          <select
+            value={newGroupWorld}
+            onChange={e => setNewGroupWorld(e.target.value)}
+            className="input-field py-1.5 px-2 text-xs font-semibold w-28"
+          >
+            <option value="siege">Siege</option>
+            <option value="revolt">Revolt</option>
+          </select>
           <button type="submit" className="btn btn-primary text-xs py-1.5 px-3">
             <Plus size={14} /> Add City
           </button>
@@ -453,13 +485,35 @@ export default function RecallSnipePage() {
             
             {/* Incoming Attacks & Supports Tracker */}
             <div className="glass-panel p-5 bg-slate-900/90 rounded-2xl">
-              <div className="flex justify-between items-center mb-4 border-b border-slate-800 pb-3">
-                <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                  <Shield size={18} className="text-amber-400" /> Incoming Attack & Support Queue
-                </h2>
+              <div className="flex flex-wrap justify-between items-center mb-4 border-b border-slate-800 pb-3 gap-2">
+                <div className="flex items-center gap-2">
+                  <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                    <Shield size={18} className="text-amber-400" /> Incoming Movements
+                  </h2>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const currentType = (activeGroup.worldType || activeWorld?.worldType || 'siege').toLowerCase();
+                      const newType = currentType === 'siege' ? 'revolt' : 'siege';
+                      const updated = groups.map(g => g.id === activeGroup.id ? { ...g, worldType: newType } : g);
+                      setGroups(updated);
+                    }}
+                    className={`text-xs px-2.5 py-1 rounded-lg border font-mono font-bold transition-all ${
+                      (activeGroup.worldType || activeWorld?.worldType || 'siege').toLowerCase() === 'revolt'
+                        ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 hover:bg-amber-500/30'
+                        : 'bg-primary/20 text-primary border-primary/40 hover:bg-primary/30'
+                    }`}
+                    title="Click to toggle Conquest Mode for this city"
+                  >
+                    {(activeGroup.worldType || activeWorld?.worldType || 'siege').toLowerCase() === 'revolt' 
+                      ? '⚡ Revolt Mode (Snipe Before CS)' 
+                      : '🛡️ Siege Mode (Break Siege After CS)'}
+                  </button>
+                </div>
                 <button
+                  type="button"
                   onClick={() => deleteGroup(activeGroup.id)}
-                  className="text-xs text-rose-400 hover:text-rose-300 flex items-center gap-1"
+                  className="text-xs text-rose-400 hover:text-rose-300 flex items-center gap-1 p-1 rounded hover:bg-rose-500/10"
                 >
                   <Trash2 size={13} /> Delete City
                 </button>

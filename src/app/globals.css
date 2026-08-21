@@ -192,10 +192,13 @@ input[type="number"]::-webkit-inner-spin-button {
   background: rgba(11, 17, 32, 0.85);
   backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--border-color);
-  padding: 0.75rem 2rem;
+  padding: 0 1.5rem;
+  height: 64px;
   position: sticky;
   top: 0;
   z-index: 100;
+  display: flex;
+  align-items: center;
 }
 
 .nav-links {
