@@ -1,14 +1,5 @@
 import { prisma } from '@/lib/prisma';
-
-const getBaselineTime = () => {
-  const now = new Date();
-  const baseline = new Date(now);
-  baseline.setHours(1, 50, 0, 0); // 01:50:00 AM local time
-  if (now < baseline) {
-    baseline.setDate(baseline.getDate() - 1);
-  }
-  return baseline;
-};
+import { getBaselineTime } from '@/lib/constants';
 
 export async function generateScoreboardData(worldId = 'hu119') {
   const world = await prisma.world.findUnique({ where: { id: worldId } });

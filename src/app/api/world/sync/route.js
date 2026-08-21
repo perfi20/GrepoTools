@@ -34,7 +34,7 @@ export async function GET(request) {
     return NextResponse.json(result);
   } catch (error) {
     console.error("GET /api/world/sync error:", error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 });
   }
 }
 
@@ -67,6 +67,6 @@ export async function POST(request) {
     return NextResponse.json(result);
   } catch (error) {
     console.error("POST /api/world/sync error:", error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 });
   }
 }

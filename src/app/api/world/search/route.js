@@ -37,6 +37,6 @@ export async function GET(request) {
     return NextResponse.json({ players, alliances, towns });
   } catch (error) {
     console.error("Search API Error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

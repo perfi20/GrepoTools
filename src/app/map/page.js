@@ -101,6 +101,7 @@ export default function WorldMap() {
   const [manualHighlightInput, setManualHighlightInput] = useState("");
   const [selectedEntity, setSelectedEntity] = useState(null);
   const mapRef = useRef();
+  const rafRef = useRef(null);
   const oceanGrid = useMemo(() => generateOceanGrid(), []);
   
   useEffect(() => {
@@ -314,20 +315,28 @@ export default function WorldMap() {
           onMouseMove={(e) => {
             const lng = e.lngLat.lng;
             const lat = e.lngLat.lat;
-            const gridX = Math.round((lng + 180) / 360 * 1000);
-            const gridY = Math.round((90 - lat) / 0.18);
-            setCursorGrid({ x: gridX, y: gridY });
+            const features = e.features;
+            const pointX = e.point.x;
+            const pointY = e.point.y;
+            const lngLat = e.lngLat;
 
-            if (e.features && e.features.length > 0) {
-              setHoverInfo({
-                feature: e.features[0],
-                x: e.point.x,
-                y: e.point.y,
-                lngLat: e.lngLat
-              });
-            } else {
-              setHoverInfo(null);
-            }
+            if (rafRef.current) cancelAnimationFrame(rafRef.current);
+            rafRef.current = requestAnimationFrame(() => {
+              const gridX = Math.round((lng + 180) / 360 * 1000);
+              const gridY = Math.round((90 - lat) / 0.18);
+              setCursorGrid({ x: gridX, y: gridY });
+
+              if (features && features.length > 0) {
+                setHoverInfo({
+                  feature: features[0],
+                  x: pointX,
+                  y: pointY,
+                  lngLat: lngLat
+                });
+              } else {
+                setHoverInfo(null);
+              }
+            });
           }}
           onClick={(e) => {
             if (e.features && e.features.length > 0) {
@@ -623,6 +632,7 @@ export default function WorldMap() {
                         return copy;
                       })}
                       className="cursor-pointer"
+                      aria-label={`Toggle highlight for ${a.name}`}
                     >
                       <div 
                         style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: activeColor, flexShrink: 0 }}
@@ -693,6 +703,7 @@ export default function WorldMap() {
                       return copy;
                     })}
                     className="cursor-pointer"
+                    aria-label={`Toggle highlight for ${p.name}`}
                   >
                     <div 
                       style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: highlightColor, flexShrink: 0 }}
@@ -765,6 +776,7 @@ export default function WorldMap() {
                         })}
                         style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer' }}
                         title="Remove highlight"
+                        aria-label="Remove highlight"
                       >
                         ✕
                       </button>

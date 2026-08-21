@@ -1,11 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getCachedSyncEpoch } from '@/lib/syncMetadata';
-
-const PALETTE = [
-  "#ef4444", "#3b82f6", "#22c55e", "#a855f7", "#f97316", 
-  "#ec4899", "#eab308", "#06b6d4", "#84cc16", "#14b8a6"
-];
+import { PALETTE } from '@/lib/constants';
 
 export const dynamic = 'force-dynamic';
 
@@ -152,6 +148,6 @@ export async function GET(request, props) {
 
   } catch (error) {
     console.error("Ocean API Error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

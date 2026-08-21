@@ -1,13 +1,8 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { PALETTE } from '@/lib/constants';
 
 export const dynamic = 'force-dynamic';
-
-const PALETTE = [
-  "#ef4444", "#3b82f6", "#22c55e", "#a855f7", "#f97316", 
-  "#ec4899", "#eab308", "#06b6d4", "#84cc16", "#14b8a6"
-];
-
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const worldId = (searchParams.get('world') || 'hu119').toLowerCase();
@@ -71,6 +66,6 @@ export async function GET(request) {
 
   } catch (error) {
     console.error("Meta API Error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

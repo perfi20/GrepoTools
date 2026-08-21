@@ -1,18 +1,9 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getCachedSyncEpoch } from '@/lib/syncMetadata';
+import { getBaselineTime } from '@/lib/constants';
 
 export const dynamic = 'force-dynamic';
-
-const getBaselineTime = () => {
-  const now = new Date();
-  const baseline = new Date(now);
-  baseline.setHours(1, 50, 0, 0); // 01:50:00 AM local time
-  if (now < baseline) {
-    baseline.setDate(baseline.getDate() - 1);
-  }
-  return baseline;
-};
 
 export async function GET(request) {
   try {
@@ -69,6 +60,6 @@ export async function GET(request) {
     return NextResponse.json({ worldId, history: formattedHistory });
   } catch (error) {
     console.error("Hourly History API Error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

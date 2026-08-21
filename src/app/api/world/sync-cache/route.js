@@ -49,6 +49,6 @@ export async function POST(request) {
     return NextResponse.json({ success: true, worldId, message: `Caches rebuilt for world ${worldId}` });
   } catch (error) {
     console.error("Cache Sync Error:", error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 });
   }
 }

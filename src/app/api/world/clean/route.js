@@ -1,8 +1,14 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
-export async function GET() {
+export async function DELETE(request) {
   try {
+    const authHeader = request.headers.get('authorization');
+    const adminPassword = process.env.ADMIN_PASSWORD || 'admin';
+    if (!authHeader || authHeader !== `Bearer ${adminPassword}`) {
+      return new NextResponse('Unauthorized', { status: 401 });
+    }
+
     // Fetch all towns to know which islands are populated
     const towns = await prisma.town.findMany({
       select: { islandX: true, islandY: true }
@@ -35,6 +41,7 @@ export async function GET() {
 
     return NextResponse.json({ success: true, deleted: toDelete.length });
   } catch (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error(error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

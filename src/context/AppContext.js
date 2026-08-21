@@ -5,8 +5,24 @@ const AppContext = createContext(null);
 
 export function AppContextProvider({ children }) {
   const [worlds, setWorlds] = useState([]);
-  const [activeWorldId, setActiveWorldId] = useState('hu119');
-  const [activePlayerName, setActivePlayerName] = useState('');
+  const [activeWorldId, setActiveWorldId] = useState(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('grepo_active_world');
+        if (saved && saved.trim()) return saved.trim().toLowerCase();
+      } catch (e) {}
+    }
+    return 'hu119';
+  });
+  const [activePlayerName, setActivePlayerName] = useState(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('grepo_active_player');
+        if (saved && saved.trim()) return saved.trim();
+      } catch (e) {}
+    }
+    return '';
+  });
   const [activePlayer, setActivePlayer] = useState(null);
   const [masterData, setMasterData] = useState(null);
   const [loadingWorlds, setLoadingWorlds] = useState(true);
@@ -15,22 +31,6 @@ export function AppContextProvider({ children }) {
   const activeWorldIdRef = useRef(activeWorldId);
   activeWorldIdRef.current = activeWorldId;
 
-  // 1. Initial Load from LocalStorage (runs once on mount)
-  useEffect(() => {
-    try {
-      const savedWorld = localStorage.getItem('grepo_active_world');
-      if (savedWorld && savedWorld.trim()) {
-        const cleanWorld = savedWorld.trim().toLowerCase();
-        setActiveWorldId(cleanWorld);
-        activeWorldIdRef.current = cleanWorld;
-      }
-
-      const savedPlayer = localStorage.getItem('grepo_active_player');
-      if (savedPlayer && savedPlayer.trim()) {
-        setActivePlayerName(savedPlayer.trim());
-      }
-    } catch (e) {}
-  }, []);
 
   // 2. Fetch Worlds list (does not recreate on activeWorldId change)
   const refreshWorlds = useCallback(async () => {

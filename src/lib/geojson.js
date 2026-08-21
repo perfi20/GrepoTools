@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { unstable_cache } from 'next/cache';
+import { PALETTE } from '@/lib/constants';
 
 // Convert Grepolis Grid (0-1000) to Geographic coordinates
 const gridToLng = (x) => (x / 1000) * 360 - 180;
@@ -38,19 +39,6 @@ export async function generateGeoJSON(worldId = 'hu119') {
   });
   const topAlliances = dbAlliances.map(a => a.name);
     
-  // Pre-assign a specific color palette to the top 10 alliances
-  const PALETTE = [
-    "#ef4444", // Red
-    "#3b82f6", // Blue
-    "#22c55e", // Green
-    "#a855f7", // Purple
-    "#f97316", // Orange
-    "#ec4899", // Pink
-    "#eab308", // Yellow
-    "#06b6d4", // Cyan
-    "#84cc16", // Lime
-    "#14b8a6"  // Teal
-  ];
   
   const allianceColors = {};
   topAlliances.forEach((name, i) => {

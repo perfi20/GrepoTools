@@ -36,7 +36,7 @@ export async function GET() {
     });
   } catch (error) {
     console.error("GET /api/worlds error:", error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 });
   }
 }
 
@@ -77,7 +77,7 @@ export async function POST(request) {
     return NextResponse.json({ success: true, world });
   } catch (error) {
     console.error("POST /api/worlds error:", error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 });
   }
 }
 
@@ -108,7 +108,7 @@ export async function PUT(request) {
     return NextResponse.json({ success: true, world });
   } catch (error) {
     console.error("PUT /api/worlds error:", error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 });
   }
 }
 
@@ -129,6 +129,6 @@ export async function DELETE(request) {
     return NextResponse.json({ success: true, message: `World ${id} deleted` });
   } catch (error) {
     console.error("DELETE /api/worlds error:", error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 });
   }
 }
