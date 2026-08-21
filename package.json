@@ -7,8 +7,8 @@
     "build": "next build && prisma generate",
     "start": "next start",
     "lint": "eslint",
-    // "postinstall": "prisma generate && prisma db push"  //vercel-re
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "sync": "node scripts/sync.js"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",

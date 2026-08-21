@@ -1,6 +1,6 @@
 # GrepoTools VPS & Docker Deployment Guide
 
-This guide describes how to deploy GrepoTools with a local PostgreSQL container and Caddy reverse proxy on your VPS.
+This guide describes how to deploy GrepoTools with a local PostgreSQL container, multi-world automated sync cronjobs, and Caddy reverse proxy on your VPS.
 
 ---
 
@@ -84,8 +84,26 @@ caddy reload
 
 ---
 
-## 6. Daily Database Backups (Cron)
-Add this cron job to your VPS (`crontab -e`):
+## 6. Automated Multi-World Sync Cronjob
+To periodically sync all active game worlds (players, alliances, towns, conquers, kill points, and caches), configure a cron job on your host VPS (`crontab -e`):
+
+### Option A: Run inside Docker Container directly (Recommended)
+Syncs all active worlds every hour (at minute 5):
+```cron
+5 * * * * docker exec -t grepotools-app node scripts/sync.js >> /var/log/grepotools_sync.log 2>&1
+```
+
+### Option B: Trigger via Local HTTP Endpoint
+```cron
+5 * * * * curl -s -X POST http://localhost:3000/api/world/sync -H "Content-Type: application/json" -d '{"all": true}' >> /var/log/grepotools_sync.log 2>&1
+```
+
+*(You can also force sync a specific world manually anytime: `docker exec -t grepotools-app node scripts/sync.js --world=hu119 --force`)*
+
+---
+
+## 7. Daily Database Backups (Cron)
+Add this daily backup cron job to your VPS (`crontab -e`):
 ```cron
 0 3 * * * docker exec grepotools-db pg_dump -U grepo_user grepotools | gzip > /var/backups/grepotools_$(date +\%F).sql.gz
 ```
