@@ -1,5 +1,6 @@
 'use client';
 import React, { useState } from 'react';
+import { Hammer, Users } from 'lucide-react';
 
 const buildingBasePop = {
   main: { base: 1.17, factor: 1.25 },
@@ -58,29 +59,39 @@ export default function DemolitionSimulator({ currentLevels }) {
   const additionalSlingers = populationSaved;
 
   return (
-    <div className="glass-panel p-6 rounded-xl border border-slate-700/50 bg-slate-900/60 backdrop-blur-md">
-      <h3 className="text-lg font-bold text-accent mb-4">Building Demolition Simulator</h3>
-      <div className="grid grid-cols-2 gap-4 text-sm mb-6">
+    <div className="glass-panel p-6 rounded-2xl border border-slate-800 bg-slate-900/60 backdrop-blur-md">
+      <div className="flex items-center gap-2 mb-4">
+        <Hammer size={18} className="text-primary" />
+        <h3 className="text-lg font-bold text-white tracking-tight">Building Demolition Simulator</h3>
+      </div>
+      <p className="text-xs text-slate-400 mb-4">
+        Simulate target levels to calculate reclaimable farm population for extra combat units.
+      </p>
+
+      <div className="grid grid-cols-2 gap-2.5 text-xs mb-5">
         {Object.keys(buildingBasePop).map(bId => (
-          <div key={bId} className="flex justify-between items-center bg-slate-950/40 p-2 rounded">
+          <div key={bId} className="flex justify-between items-center bg-slate-950/60 p-2 px-3 rounded-xl border border-slate-800">
             <span className="capitalize font-medium text-slate-300">{bId}:</span>
             <div className="flex items-center gap-2">
-              <span className="text-secondary text-xs">Cur: {currentLevels?.[bId] || 0}</span>
+              <span className="text-slate-500 font-mono text-[11px]">Cur: {currentLevels?.[bId] || 0}</span>
               <input
                 type="number"
+                min="0"
+                max="45"
                 value={targets[bId]}
-                onChange={e => setTargets({...targets, [bId]: Math.max(0, parseInt(e.target.value) || 0)})}
-                className="w-12 text-center bg-slate-900 border border-slate-700 rounded text-slate-100"
+                onChange={e => setTargets({...targets, [bId]: Math.max(0, parseInt(e.target.value, 10) || 0)})}
+                className="input-field w-12 py-0.5 px-1 text-center font-mono text-xs font-bold"
               />
             </div>
           </div>
         ))}
       </div>
-      <div className="p-4 bg-slate-950/60 rounded-lg text-center">
-        <div className="text-xs text-secondary uppercase tracking-wider">Population Reclaimed</div>
-        <div className="text-3xl font-mono text-green-400 font-bold mt-1">+{populationSaved}</div>
-        <div className="text-xs text-slate-400 mt-2">
-          Equivalent to: <span className="text-accent font-bold">+{additionalLightShips} Light Ships</span> or <span className="text-accent font-bold">+{additionalSlingers} Slingers</span>
+
+      <div className="p-4 bg-slate-950/80 rounded-xl border border-slate-800 text-center">
+        <div className="text-xs text-slate-400 uppercase tracking-wider font-semibold">Population Reclaimed</div>
+        <div className="text-3xl font-mono text-emerald-400 font-bold mt-1">+{populationSaved}</div>
+        <div className="text-xs text-slate-300 mt-2">
+          Equivalent to: <span className="text-amber-400 font-bold">+{additionalLightShips} Light Ships</span> or <span className="text-primary font-bold">+{additionalSlingers} Slingers</span>
         </div>
       </div>
     </div>

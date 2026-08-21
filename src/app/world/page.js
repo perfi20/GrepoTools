@@ -564,10 +564,13 @@ export default function AdminWorldCenter() {
       {/* Edit World Modal */}
       {editingWorld && (
         <div 
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4"
+          className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fade-in"
           onClick={(e) => { if (e.target === e.currentTarget) setEditingWorld(null); }}
         >
-          <div className="glass-panel w-full max-w-lg p-6 bg-slate-900/95 border border-slate-700/80 rounded-2xl shadow-2xl">
+          <div 
+            className="glass-panel w-full max-w-lg p-6 bg-slate-900/95 border border-slate-700/80 rounded-2xl shadow-2xl relative my-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex justify-between items-center mb-4 border-b border-slate-800 pb-3">
               <div>
                 <h3 className="text-lg font-bold text-white flex items-center gap-2">
@@ -577,7 +580,8 @@ export default function AdminWorldCenter() {
               </div>
               <button 
                 onClick={() => setEditingWorld(null)}
-                className="text-slate-400 hover:text-white p-1"
+                className="p-1 rounded-lg bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 transition-colors"
+                title="Close"
               >
                 <X size={18} />
               </button>
@@ -663,7 +667,7 @@ export default function AdminWorldCenter() {
                 <button
                   type="button"
                   onClick={() => setEditingWorld(null)}
-                  className="btn bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs"
+                  className="btn bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs border border-slate-700"
                 >
                   Cancel
                 </button>

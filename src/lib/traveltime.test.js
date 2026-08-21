@@ -28,7 +28,7 @@ describe('Recall Timer Midpoint Logic', () => {
     expect(timings.totalElapsedSeconds).toBe(480);
   });
 
-  test('calculates exact midpoint recall from actual launch epoch', () => {
+  test('calculates exact midpoint recall from actual launch epoch (Date objects)', () => {
     const target = new Date("2026-06-20T12:00:00.000Z");
     const launch = new Date("2026-06-20T11:50:00.000Z"); // 10 minutes total gap -> 5 min cancel delay
     const timings = calculateMidpointRecall(target, launch);
@@ -36,6 +36,27 @@ describe('Recall Timer Midpoint Logic', () => {
     expect(timings.cancelDelaySeconds).toBe(300);
     expect(timings.recallTime.toISOString()).toBe("2026-06-20T11:55:00.000Z");
     expect(timings.totalElapsedSeconds).toBe(600);
+  });
+
+  test('calculates exact midpoint recall from numeric epoch milliseconds', () => {
+    const targetMs = new Date("2026-06-20T12:00:00.000Z").getTime();
+    const launchMs = new Date("2026-06-20T11:50:00.000Z").getTime();
+    const timings = calculateMidpointRecall(targetMs, launchMs);
+    
+    expect(timings.cancelDelaySeconds).toBe(300);
+    expect(timings.sendTime instanceof Date).toBe(true);
+    expect(timings.recallTime instanceof Date).toBe(true);
+    expect(timings.recallTime.toISOString()).toBe("2026-06-20T11:55:00.000Z");
+    expect(timings.totalElapsedSeconds).toBe(600);
+  });
+
+  test('calculates exact midpoint recall from ISO strings', () => {
+    const targetStr = "2026-06-20T12:00:00.000Z";
+    const launchStr = "2026-06-20T11:50:00.000Z";
+    const timings = calculateMidpointRecall(targetStr, launchStr);
+    
+    expect(timings.cancelDelaySeconds).toBe(300);
+    expect(timings.recallTime.toISOString()).toBe("2026-06-20T11:55:00.000Z");
   });
 
   test('throws error if cancel delay is greater than 600', () => {

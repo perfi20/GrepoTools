@@ -7,6 +7,14 @@ export default function IslandModal({ islandData, onClose, customColors, onTownC
   const [copiedMsg, setCopiedMsg] = useState('');
 
   useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
+  useEffect(() => {
     async function fetchDetails() {
       try {
         setLoading(true);
@@ -52,21 +60,25 @@ export default function IslandModal({ islandData, onClose, customColors, onTownC
 
   return (
     <div 
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-4 animate-in fade-in duration-150"
-      onClick={(e) => { if(e.target === e.currentTarget) onClose() }}
+      className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fade-in"
+      onClick={(e) => { if(e.target === e.currentTarget) onClose(); }}
     >
-      <div className="glass-panel w-full max-w-3xl max-h-[90vh] overflow-y-auto p-6 bg-slate-900/95 border border-slate-700/80 rounded-2xl shadow-2xl relative flex flex-col">
+      <div 
+        className="glass-panel w-full max-w-3xl max-h-[90vh] overflow-y-auto p-6 bg-slate-900/95 border border-slate-700/80 rounded-2xl shadow-2xl relative flex flex-col my-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
         
         {/* Close Button */}
         <button 
           onClick={onClose} 
-          className="absolute top-4 right-4 p-1.5 rounded-lg bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 transition-colors"
+          className="absolute top-4 right-4 p-1.5 rounded-lg bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 transition-colors z-10"
+          title="Close (Esc)"
         >
           <X size={18} />
         </button>
 
         {/* Header */}
-        <div className="border-b border-slate-800 pb-4 mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="border-b border-slate-800 pb-4 mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 pr-8">
           <div>
             <div className="flex items-center gap-2">
               <h2 className="text-2xl font-bold text-white tracking-tight flex items-center gap-2">
@@ -83,12 +95,14 @@ export default function IslandModal({ islandData, onClose, customColors, onTownC
 
           <div className="flex items-center gap-2">
             <button 
+              type="button"
               onClick={handleCopyCoords} 
               className="btn text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 py-1.5 px-3 rounded-lg border border-slate-700 flex items-center gap-1.5"
             >
               <Copy size={13} /> Copy [island]
             </button>
             <button 
+              type="button"
               onClick={handleCopyBBCode} 
               className="btn text-xs bg-primary/20 hover:bg-primary/30 text-primary py-1.5 px-3 rounded-lg border border-primary/40 flex items-center gap-1.5"
             >
@@ -194,6 +208,7 @@ export default function IslandModal({ islandData, onClose, customColors, onTownC
 
                         {onTownClick && (
                           <button
+                            type="button"
                             onClick={() => onTownClick(town)}
                             className="text-primary hover:underline text-xs flex items-center gap-1 font-semibold"
                           >

@@ -1,8 +1,9 @@
+'use client';
 import React, { useState } from 'react';
-import { Target, Search, ArrowRight, Clock, AlertCircle } from 'lucide-react';
+import { Target, Search, Clock, AlertCircle } from 'lucide-react';
 
 export default function DummyFinder({ originTownId, durationSeconds, worldSpeed = 2, worldId = 'hu119' }) {
-  const [unitSpeed, setUnitSpeed] = useState(13); // Default light ship speed roughly
+  const [unitSpeed, setUnitSpeed] = useState(13); // Default light ship speed
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState([]);
   const [error, setError] = useState('');
@@ -40,23 +41,23 @@ export default function DummyFinder({ originTownId, durationSeconds, worldSpeed 
   };
 
   return (
-    <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800 mt-4">
+    <div className="glass-panel p-4 rounded-xl border border-slate-800 bg-slate-900/70">
       <div className="flex items-center justify-between mb-2">
         <h3 className="text-sm font-bold text-slate-200 flex items-center gap-1.5">
           <Target size={15} className="text-primary" /> Dummy Target Finder
         </h3>
-        <span className="text-xs font-mono text-slate-400">Min Travel: {durationSeconds}s</span>
+        <span className="text-xs font-mono text-slate-400 bg-slate-800 px-2 py-0.5 rounded border border-slate-700">Min: {durationSeconds}s</span>
       </div>
       <p className="text-xs text-slate-400 mb-3">
         Find a ghost town or neutral target far enough away to execute your {Math.ceil(durationSeconds / 60)} min recall timer.
       </p>
       
-      <div className="flex flex-wrap items-end gap-3 mb-3">
+      <div className="flex flex-wrap items-end gap-2.5 mb-3">
         <div>
           <label className="text-[11px] font-semibold text-slate-400 block mb-1">Unit Speed</label>
           <input 
             type="number" 
-            className="input-field py-1 px-2 w-24 text-center font-mono text-xs"
+            className="input-field py-1 px-2 w-20 text-center font-mono text-xs font-bold"
             value={unitSpeed}
             onChange={(e) => setUnitSpeed(parseInt(e.target.value, 10) || 0)}
           />
@@ -66,7 +67,7 @@ export default function DummyFinder({ originTownId, durationSeconds, worldSpeed 
           <input 
             type="number" 
             step="0.5"
-            className="input-field py-1 px-2 w-24 text-center font-mono text-xs"
+            className="input-field py-1 px-2 w-20 text-center font-mono text-xs font-bold opacity-75"
             value={worldSpeed}
             disabled
           />
@@ -74,7 +75,7 @@ export default function DummyFinder({ originTownId, durationSeconds, worldSpeed 
         <button 
           onClick={handleSearch}
           disabled={loading}
-          className="btn btn-primary text-xs py-1 px-4 h-[30px]"
+          className="btn btn-primary text-xs py-1.5 px-3.5 h-[34px]"
         >
           <Search size={13} /> {loading ? 'Searching...' : 'Find Safe Targets'}
         </button>
@@ -88,11 +89,11 @@ export default function DummyFinder({ originTownId, durationSeconds, worldSpeed 
       )}
 
       {results.length > 0 && (
-        <div className="flex flex-col gap-1.5 max-h-48 overflow-y-auto">
+        <div className="flex flex-col gap-1.5 max-h-48 overflow-y-auto pr-1">
           {results.map((target) => (
             <div 
               key={target.id} 
-              className="flex justify-between items-center bg-slate-900/80 p-2 rounded-lg border border-slate-800 text-xs hover:border-slate-700"
+              className="flex justify-between items-center bg-slate-950/60 p-2.5 rounded-xl border border-slate-800 text-xs hover:border-slate-700"
             >
               <div>
                 <span className="font-bold text-slate-200">{target.name}</span>
@@ -100,7 +101,7 @@ export default function DummyFinder({ originTownId, durationSeconds, worldSpeed 
                   ({target.islandX}, {target.islandY}) • {target.playerName}
                 </span>
               </div>
-              <div className="flex items-center gap-2 font-mono text-emerald-400 font-semibold">
+              <div className="flex items-center gap-1.5 font-mono text-emerald-400 font-semibold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
                 <Clock size={12} />
                 <span>{formatTime(target.travelTime)}</span>
               </div>

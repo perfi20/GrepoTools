@@ -282,7 +282,7 @@ export default function RecallSnipePage() {
       return;
     }
 
-    const { recallTime } = calculateMidpointRecall(sendTime, returnTime);
+    const { recallTime } = calculateMidpointRecall(returnTime, sendTime);
 
     const newPlan = {
       id: Date.now().toString(),
@@ -597,25 +597,54 @@ export default function RecallSnipePage() {
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <button
+                          type="button"
                           onClick={() => createPlanFromGap(gap, 10)}
                           className="btn text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 py-1.5 px-3 rounded-lg border border-slate-700"
                         >
                           10m Delay
                         </button>
                         <button
+                          type="button"
                           onClick={() => createPlanFromGap(gap, 5)}
                           className="btn text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 py-1.5 px-3 rounded-lg border border-slate-700"
                         >
                           5m Delay
                         </button>
                         <button
+                          type="button"
                           onClick={() => createPlanFromGap(gap, 2)}
                           className="btn text-xs bg-primary/20 hover:bg-primary/30 text-primary py-1.5 px-3 rounded-lg border border-primary/40"
                         >
                           2m Delay
                         </button>
+                        <div className="flex items-center gap-1">
+                          <input
+                            type="number"
+                            min="0.5"
+                            max="10"
+                            step="0.5"
+                            placeholder="Mins"
+                            value={customMins[gap.id] || ''}
+                            onChange={(e) => setCustomMins({ ...customMins, [gap.id]: e.target.value })}
+                            className="input-field w-16 py-1 px-1.5 text-xs text-center font-mono"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const val = parseFloat(customMins[gap.id]);
+                              if (val && val > 0 && val <= 10) {
+                                createPlanFromGap(gap, val);
+                              } else {
+                                alert("Please enter a valid delay between 0.5 and 10 minutes.");
+                              }
+                            }}
+                            className="btn text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 py-1.5 px-2.5 rounded-lg border border-slate-700"
+                          >
+                            Set
+                          </button>
+                        </div>
                       </div>
                     </div>
                   ))}

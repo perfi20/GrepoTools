@@ -251,10 +251,13 @@ export default function Navigation() {
       {/* Switch Player Modal */}
       {playerModalOpen && (
         <div 
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+          className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fade-in"
           onClick={(e) => { if (e.target === e.currentTarget) setPlayerModalOpen(false); }}
         >
-          <div className="glass-panel w-full max-w-md p-6 bg-slate-900/95 border border-slate-700/80 rounded-2xl shadow-2xl">
+          <div 
+            className="glass-panel w-full max-w-md p-6 bg-slate-900/95 border border-slate-700/80 rounded-2xl shadow-2xl relative my-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex justify-between items-center mb-4 border-b border-slate-800 pb-3">
               <div>
                 <h3 className="text-lg font-bold text-white flex items-center gap-2">
@@ -266,7 +269,8 @@ export default function Navigation() {
               </div>
               <button 
                 onClick={() => setPlayerModalOpen(false)}
-                className="text-slate-400 hover:text-white text-lg p-1"
+                className="p-1 rounded-lg bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 transition-colors"
+                title="Close"
               >
                 ✕
               </button>
@@ -274,17 +278,17 @@ export default function Navigation() {
 
             {/* Search Input */}
             <div className="relative mb-4">
-              <Search size={16} className="absolute left-3 top-3 text-slate-400" />
+              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
               <input
                 type="text"
                 placeholder="Search player name in this world..."
                 value={playerSearchQuery}
                 onChange={(e) => setPlayerSearchQuery(e.target.value)}
-                className="input-field pl-9 bg-slate-950/80 border-slate-700 text-sm"
+                className="input-field pl-9 pr-9 bg-slate-950/80 border-slate-700 text-sm"
                 autoFocus
               />
               {searchingPlayers && (
-                <RefreshCw size={14} className="absolute right-3 top-3 animate-spin text-primary" />
+                <RefreshCw size={14} className="absolute right-3 top-1/2 -translate-y-1/2 animate-spin text-primary pointer-events-none" />
               )}
             </div>
 
@@ -342,7 +346,7 @@ export default function Navigation() {
             <div className="mt-4 pt-3 border-t border-slate-800 flex justify-end">
               <button
                 onClick={() => setPlayerModalOpen(false)}
-                className="btn text-sm bg-slate-800 hover:bg-slate-700 text-slate-300 py-1.5 px-4 rounded-lg"
+                className="btn text-sm bg-slate-800 hover:bg-slate-700 text-slate-300 py-1.5 px-4 rounded-lg border border-slate-700"
               >
                 Done
               </button>

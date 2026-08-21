@@ -1,4 +1,16 @@
 /**
+ * Helper to safely convert Date, epoch number, or ISO string to epoch milliseconds.
+ * @param {Date|number|string} input 
+ * @returns {number} Epoch in milliseconds
+ */
+function toEpochMs(input) {
+  if (input instanceof Date) return input.getTime();
+  if (typeof input === 'number') return input;
+  const d = new Date(input);
+  return d.getTime();
+}
+
+/**
  * Calculates the travel time in seconds between coordinates.
  * @param {number} x1 - Origin X
  * @param {number} y1 - Origin Y
@@ -33,7 +45,7 @@ export function calculateTravelTime(x1, y1, x2, y2, unitSpeed, worldSpeed, modif
 
 /**
  * Calculates the launch and recall timings for planned cancel delay D.
- * @param {Date} targetReturnTime - The target time to land (e.g. CS arrival +/- 1s)
+ * @param {Date|number|string} targetReturnTime - The target time to land (e.g. CS arrival +/- 1s)
  * @param {number} cancelDelaySeconds - Outward travel duration before recall (D)
  * @returns {object} Timing details
  */
@@ -43,7 +55,7 @@ export function calculateRecallTiming(targetReturnTime, cancelDelaySeconds) {
     throw new Error("Recall sniping requires cancel delay to be <= 10 minutes (600 seconds).");
   }
 
-  const targetReturnEpoch = targetReturnTime.getTime();
+  const targetReturnEpoch = toEpochMs(targetReturnTime);
   
   // Send time is (2 * D) before the target return time
   const sendEpoch = targetReturnEpoch - (2 * D * 1000);
@@ -64,13 +76,13 @@ export function calculateRecallTiming(targetReturnTime, cancelDelaySeconds) {
 /**
  * Calculates the exact recall time given an actual launch time and target landing time.
  * Formula: RecallTime = LaunchTime + (TargetTime - LaunchTime) / 2
- * @param {Date} targetReturnTime 
- * @param {Date} actualLaunchTime 
+ * @param {Date|number|string} targetReturnTime 
+ * @param {Date|number|string} actualLaunchTime 
  * @returns {object} Timing details
  */
 export function calculateMidpointRecall(targetReturnTime, actualLaunchTime) {
-  const tReturn = targetReturnTime.getTime();
-  const tLaunch = actualLaunchTime.getTime();
+  const tReturn = toEpochMs(targetReturnTime);
+  const tLaunch = toEpochMs(actualLaunchTime);
   
   const diffMs = tReturn - tLaunch;
   if (diffMs <= 0) {
@@ -84,10 +96,11 @@ export function calculateMidpointRecall(targetReturnTime, actualLaunchTime) {
     throw new Error(`Cancel delay of ${cancelDelaySeconds}s exceeds Grepolis 10-minute (600s) cancel window.`);
   }
 
+  const sendTime = new Date(tLaunch);
   const recallTime = new Date(tLaunch + halfDiffMs);
 
   return {
-    sendTime: actualLaunchTime,
+    sendTime,
     recallTime,
     cancelDelaySeconds,
     totalElapsedSeconds: cancelDelaySeconds * 2

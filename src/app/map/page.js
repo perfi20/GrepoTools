@@ -342,6 +342,20 @@ export default function WorldMap() {
                   resourcePlus: feature.properties.resourcePlus,
                   resourceMinus: feature.properties.resourceMinus
                 });
+              } else if (feature.properties.renderType === 'town') {
+                setSelectedEntity({
+                  type: 'town',
+                  data: {
+                    id: feature.properties.id,
+                    name: feature.properties.name,
+                    player: feature.properties.player,
+                    alliance: feature.properties.alliance,
+                    points: feature.properties.points,
+                    islandX: feature.properties.islandX || feature.properties.x,
+                    islandY: feature.properties.islandY || feature.properties.y,
+                    islandSlot: feature.properties.islandSlot
+                  }
+                });
               }
             }
           }}
@@ -557,28 +571,28 @@ export default function WorldMap() {
               </div>
             </Popup>
           )}
-
-          {/* Detailed Island Modal */}
-          {selectedIsland && (
-            <IslandModal 
-              islandData={selectedIsland} 
-              onClose={() => setSelectedIsland(null)} 
-              customColors={customColors}
-              worldId={activeWorldId}
-              onTownClick={(town) => setSelectedEntity({ type: 'town', data: town })}
-            />
-          )}
-
-          {/* Deep Dive Modal */}
-          {selectedEntity && (
-            <DeepDiveModal 
-              entity={selectedEntity} 
-              onClose={() => setSelectedEntity(null)} 
-              worldId={activeWorldId}
-            />
-          )}
         </Map>
       </div>
+
+      {/* Detailed Island Modal */}
+      {selectedIsland && (
+        <IslandModal 
+          islandData={selectedIsland} 
+          onClose={() => setSelectedIsland(null)} 
+          customColors={customColors}
+          worldId={activeWorldId}
+          onTownClick={(town) => setSelectedEntity({ type: 'town', data: town })}
+        />
+      )}
+
+      {/* Deep Dive Modal */}
+      {selectedEntity && (
+        <DeepDiveModal 
+          entity={selectedEntity} 
+          onClose={() => setSelectedEntity(null)} 
+          worldId={activeWorldId}
+        />
+      )}
 
       {/* LEFT SIDEBAR (General Info & Legend) */}
       <div className="glass-panel flex flex-col gap-4" style={{ position: 'absolute', top: '1rem', left: '1rem', zIndex: 50, width: '320px', maxHeight: 'calc(100% - 2rem)', overflowY: 'auto', scrollbarWidth: 'none' }}>
