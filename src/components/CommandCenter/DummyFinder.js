@@ -41,7 +41,7 @@ export default function DummyFinder({ originTownId, durationSeconds, worldSpeed 
   };
 
   return (
-    <div className="glass-panel p-4 rounded-xl border border-slate-800 bg-slate-900/70">
+    <div className="glass-panel p-5 rounded-2xl border border-slate-800 bg-slate-900/90">
       <div className="flex items-center justify-between mb-2">
         <h3 className="text-sm font-bold text-slate-200 flex items-center gap-1.5">
           <Target size={15} className="text-primary" /> Dummy Target Finder
