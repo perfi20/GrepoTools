@@ -69,6 +69,33 @@ export default function ScoreboardDashboard() {
       .then(res => res.json())
       .then(d => {
         setData(d);
+        
+        setPinnedAlliances(prev => prev.map(pinned => {
+          let fresh = null;
+          if (d.alliances) {
+            for (const key in d.alliances) {
+              if (Array.isArray(d.alliances[key])) {
+                const match = d.alliances[key].find(item => item.id === pinned.id);
+                if (match) { fresh = match; break; }
+              }
+            }
+          }
+          return fresh ? { ...pinned, ...fresh, _isFresh: false } : pinned;
+        }));
+
+        setPinnedPlayers(prev => prev.map(pinned => {
+          let fresh = null;
+          if (d.players) {
+            for (const key in d.players) {
+              if (Array.isArray(d.players[key])) {
+                const match = d.players[key].find(item => item.id === pinned.id);
+                if (match) { fresh = match; break; }
+              }
+            }
+          }
+          return fresh ? { ...pinned, ...fresh, _isFresh: false } : pinned;
+        }));
+
         setLoading(false);
       })
       .catch(err => {
@@ -400,7 +427,7 @@ export default function ScoreboardDashboard() {
         <div style={{ backgroundColor: 'rgba(15, 23, 42, 0.95)', border: '1px solid rgba(255,255,255,0.1)', padding: '10px', borderRadius: '8px', color: 'white', backdropFilter: 'blur(10px)', zIndex: 9999 }}>
           <p style={{ fontWeight: 'bold', margin: '0 0 4px 0' }}>{label}</p>
           <p style={{ fontSize: '14px', margin: 0, color: payload[0].fill }}>
-            Daily Gain: +{formatNumber(payload[0].value)}
+            Daily Gain: {payload[0].value > 0 ? `+${formatNumber(payload[0].value)}` : formatNumber(payload[0].value)}
           </p>
           {payload[0].payload.recentGain > 0 && (
              <p style={{ fontSize: '12px', margin: '4px 0 0 0', color: '#4ade80' }}>
@@ -833,7 +860,8 @@ export default function ScoreboardDashboard() {
                       <Tooltip 
                         contentStyle={{ backgroundColor: 'rgba(15, 23, 42, 0.95)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: 'white' }}
                         itemStyle={{ color: selectedHourlyEntity.colorHex, fontWeight: 'bold' }}
-                        formatter={(val) => [`+${formatNumber(val)}`, 'Gain']}
+                        formatter={(val) => [val > 0 ? `+${formatNumber(val)}` : formatNumber(val), 'Gain']}
+                        cursor={{ fill: 'rgba(255,255,255,0.05)' }}
                       />
                       <Bar 
                         dataKey={selectedHourlyEntity.metricKey.toLowerCase().includes('abp') ? 'abpDelta' : selectedHourlyEntity.metricKey.toLowerCase().includes('dbp') ? 'dbpDelta' : 'ptsDelta'} 
@@ -857,6 +885,7 @@ export default function ScoreboardDashboard() {
                         contentStyle={{ backgroundColor: 'rgba(15, 23, 42, 0.95)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: 'white' }}
                         itemStyle={{ color: selectedHourlyEntity.colorHex, fontWeight: 'bold' }}
                         formatter={(val) => [`${formatNumber(val)}`, 'Total']}
+                        cursor={{ fill: 'rgba(255,255,255,0.05)' }}
                       />
                       <Area 
                         type="monotone" 

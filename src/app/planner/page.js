@@ -233,7 +233,7 @@ export default function PlannerPage() {
 
               <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-800 text-center">
                 <div className="text-xs text-slate-400">Def (H / P / D)</div>
-                <div className="text-xs font-mono font-bold text-blue-400 mt-2">
+                <div className="text-lg font-mono font-bold text-blue-400 mt-1">
                   {totalDefHack} / {totalDefPierce} / {totalDefDistance}
                 </div>
               </div>

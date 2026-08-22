@@ -714,16 +714,58 @@ export default function RecallSnipePage() {
             <span className="text-[11px] font-semibold text-slate-400 mr-1 flex items-center gap-1">
               <Sparkles size={12} className="text-amber-400" /> Quick Add Your Cities:
             </span>
-            {unaddedTowns.slice(0, 6).map(t => (
-              <button
-                key={t.id}
-                type="button"
-                onClick={() => addCityGroup(t.name, t.id)}
-                className="text-[11px] bg-slate-950/70 hover:bg-slate-800 text-slate-300 hover:text-white px-2.5 py-1 rounded-lg border border-slate-800 transition-colors flex items-center gap-1 font-mono"
-              >
-                <Plus size={11} className="text-primary" /> {t.name}
-              </button>
-            ))}
+            {unaddedTowns.length <= 8 ? (
+              unaddedTowns.map(t => (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => addCityGroup(t.name, t.id)}
+                  className="text-[11px] bg-slate-950/70 hover:bg-slate-800 text-slate-300 hover:text-white px-2.5 py-1 rounded-lg border border-slate-800 transition-colors flex items-center gap-1 font-mono"
+                >
+                  <Plus size={11} className="text-primary" /> {t.name}
+                </button>
+              ))
+            ) : (
+              <>
+                {unaddedTowns.slice(0, 5).map(t => (
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() => addCityGroup(t.name, t.id)}
+                    className="text-[11px] bg-slate-950/70 hover:bg-slate-800 text-slate-300 hover:text-white px-2.5 py-1 rounded-lg border border-slate-800 transition-colors flex items-center gap-1 font-mono"
+                  >
+                    <Plus size={11} className="text-primary" /> {t.name}
+                  </button>
+                ))}
+                <div className="flex items-center gap-1 ml-1">
+                  <select 
+                    id="more-cities-select"
+                    className="text-[11px] bg-slate-950/70 border border-slate-800 text-slate-300 rounded-lg px-2 py-1 outline-none focus:border-primary transition-colors cursor-pointer"
+                  >
+                    <option value="">+{unaddedTowns.length - 5} more...</option>
+                    {unaddedTowns.slice(5).map(t => (
+                      <option key={t.id} value={`${t.name}|${t.id}`}>
+                        {t.name}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const sel = document.getElementById('more-cities-select');
+                      if (sel && sel.value) {
+                        const [name, id] = sel.value.split('|');
+                        addCityGroup(name, id);
+                        sel.value = '';
+                      }
+                    }}
+                    className="text-[11px] bg-primary hover:bg-primary-hover text-white px-2 py-1 rounded-lg font-bold transition-colors shadow"
+                  >
+                    Add
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         )}
       </div>
@@ -860,7 +902,7 @@ export default function RecallSnipePage() {
                     return (
                       <div
                         key={mov.id}
-                        className={`p-3 rounded-xl border flex items-center justify-between gap-3 text-xs transition-all ${
+                        className={`p-3.5 rounded-xl border flex items-center justify-between gap-3 text-xs transition-all ${
                           mov.type === 'cs'
                             ? 'bg-rose-950/40 border-rose-500/60 shadow-lg'
                             : mov.type === 'attack'
@@ -908,7 +950,7 @@ export default function RecallSnipePage() {
             {/* 2. Detected Recall Snipe Gaps (Action Center) */}
             {gaps.length > 0 && (
               <div className="glass-panel p-6 bg-slate-900/90 rounded-2xl">
-                <div className="flex items-center justify-between mb-4 border-b border-slate-800 pb-3">
+                <div className="flex items-center justify-between mb-5 border-b border-slate-800 pb-4">
                   <h2 className="text-lg font-bold text-white flex items-center gap-2">
                     <Target size={19} className="text-emerald-400" /> Detected Recall Snipe Gaps ({gaps.length})
                   </h2>

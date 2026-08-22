@@ -136,7 +136,7 @@ export default function CommandCenter() {
                     {masterData?.recentConquers?.length > 0 ? (
                       <ul className="flex flex-col gap-2 text-sm">
                         {masterData.recentConquers.map(c => (
-                          <li key={c.id} className="flex justify-between items-center text-slate-300 p-2 bg-slate-900/60 rounded-lg">
+                          <li key={c.id} className="flex justify-between items-center text-slate-300 p-2.5 bg-slate-900/60 rounded-lg">
                             <span className="flex items-center gap-1.5 text-emerald-400">
                               <MapPin size={13}/> Town #{c.townId}
                             </span>
@@ -156,7 +156,7 @@ export default function CommandCenter() {
                     {masterData?.recentLosses?.length > 0 ? (
                       <ul className="flex flex-col gap-2 text-sm">
                         {masterData.recentLosses.map(c => (
-                          <li key={c.id} className="flex justify-between items-center text-slate-300 p-2 bg-slate-900/60 rounded-lg">
+                          <li key={c.id} className="flex justify-between items-center text-slate-300 p-2.5 bg-slate-900/60 rounded-lg">
                             <span className="flex items-center gap-1.5 text-rose-400">
                               <MapPin size={13}/> Town #{c.townId}
                             </span>
